@@ -1,5 +1,3 @@
-// main.js (موديول - يتطلب <script type="module"> في الـ HTML)
-
 // ===== استيراد Firebase =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
@@ -7,7 +5,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
     getFirestore, doc, getDoc, setDoc, updateDoc,
-    arrayUnion, arrayRemove, increment, onSnapshot, serverTimestamp
+    arrayUnion, arrayRemove, increment, onSnapshot, serverTimestamp,
+    collection, addDoc, query, orderBy
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ===== تكوين Firebase =====
@@ -35,12 +34,13 @@ const commentsContainer = document.getElementById("commentsContainer");
 
 // ===== مرجع الوثيقة =====
 const postRef = doc(db, "posts", "main-post");
+const commentsRef = collection(postRef, "comments");
 
 // ===== تهيئة الوثيقة =====
 async function ensureDoc() {
     const snap = await getDoc(postRef);
     if (!snap.exists()) {
-        await setDoc(postRef, { likes: 0, likedBy: [], comments: [] });
+        await setDoc(postRef, { likes: 0, likedBy: [] });
     }
 }
 
@@ -49,38 +49,29 @@ function listenPost() {
     onSnapshot(postRef, (snap) => {
         if (!snap.exists()) return;
         const data = snap.data();
-
-        // تحديث عدد الإعجابات
         likeCountSpan.textContent = data.likes ?? 0;
-
-        // تحديث حالة زر الإعجاب
         const user = auth.currentUser;
         likeBtn.classList.toggle("liked", user && data.likedBy?.includes(user.uid));
+    });
 
-        // عرض التعليقات
-        commentsContainer.querySelectorAll(".comment").forEach(el => el.remove()); // مسح التعليقات السابقة
-        (data.comments || []).forEach(item => {
+    const q = query(commentsRef, orderBy("createdAt", "asc"));
+    onSnapshot(q, (snapshot) => {
+        commentsContainer.innerHTML = "";
+        snapshot.forEach(docSnap => {
+            const item = docSnap.data();
             const div = document.createElement("div");
             div.classList.add("comment");
-
-            let author = "عضو";
-            let createdText = "الآن";
-
-            if (typeof item === "string") {
-                div.innerHTML = `<div class="comment-author">${author}</div>
-                                 <div class="comment-text">${escapeHtml(item)}</div>`;
-            } else if (item?.text) {
-                if (item.authorName) author = item.authorName;
-                if (item.createdAt?.seconds) {
-                    createdText = new Date(item.createdAt.seconds * 1000).toLocaleString();
-                }
-                div.innerHTML = `<div class="comment-author">${escapeHtml(author)} <span class="comment-time">• ${escapeHtml(createdText)}</span></div>
-                                 <div class="comment-text">${escapeHtml(item.text)}</div>`;
-            }
-
+            const author = item.authorName || "عضو";
+            const created = item.createdAt?.seconds
+                ? new Date(item.createdAt.seconds * 1000).toLocaleString()
+                : "";
+            div.innerHTML = `
+                <div class="comment-author">${escapeHtml(author)}${created ? ` <span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
+                <div class="comment-text">${escapeHtml(item.text)}</div>
+            `;
             commentsContainer.appendChild(div);
         });
-    }, err => console.error("خطأ في الاستماع:", err));
+    });
 }
 
 // ===== تسجيل الدخول =====
@@ -152,36 +143,14 @@ commentBtn.addEventListener("click", async () => {
         document.getElementById("addCommentBtn").addEventListener("click", async () => {
             const txt = document.getElementById("newCommentInput").value.trim();
             if (!txt) return alert("الرجاء كتابة تعليق!");
-
             const user = auth.currentUser;
-            const newComment = {
+            await addDoc(commentsRef, {
                 authorName: user?.displayName || "عضو",
                 authorId: user?.uid || null,
                 text: txt,
-                createdAt: new Date() // يظهر فورًا
-            };
-
-            // إضافة التعليق فورًا للواجهة
-            const div = document.createElement("div");
-            div.classList.add("comment");
-            div.innerHTML = `
-                <div class="comment-author">${escapeHtml(newComment.authorName)} <span class="comment-time">• الآن</span></div>
-                <div class="comment-text">${escapeHtml(newComment.text)}</div>
-            `;
-            commentsContainer.appendChild(div);
-
-            // حفظ التعليق في Firebase
+                createdAt: serverTimestamp()
+            });
             document.getElementById("newCommentInput").value = "";
-            try {
-                await updateDoc(postRef, {
-                    comments: arrayUnion({
-                        ...newComment,
-                        createdAt: serverTimestamp() // التاريخ الرسمي من السيرفر
-                    })
-                });
-            } catch (e) {
-                console.error("فشل إضافة التعليق:", e);
-            }
         });
     } else {
         commentsContainer.querySelector(".comment-input-area")?.remove();
