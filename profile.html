@@ -5,101 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ملفي الشخصي - منتدى العشيرة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* تنسيقات خاصة بهذه الصفحة لتكملة التنسيق العام */
-        .page-content {
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 50px auto;
-        }
-        .page-content h1 {
-            color: #2c3e50;
-            font-size: 2.2em;
-            margin-bottom: 20px;
-        }
-        .page-content p {
-            font-size: 1.1em;
-            color: #555;
-        }
-        .profile-info {
-            margin-top: 30px;
-            text-align: right;
-            padding: 20px;
-            background-color: #fcfcfc;
-            border-radius: 10px;
-            box-shadow: inset 0 1px 4px rgba(0,0,0,0.07);
-        }
-        .profile-info img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #3498db;
-            margin-bottom: 15px;
-            display: block; /* لجعل الصورة تأخذ سطرًا كاملاً */
-            margin-right: auto; /* لتوسيط الصورة عند الاتجاه اليمين لليسار */
-            margin-left: auto;
-        }
-        .profile-info h3 {
-            color: #34495e;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-            text-align: center; /* لتوسيط اسم المستخدم */
-        }
-        .profile-info p {
-            margin-bottom: 8px;
-            text-align: center; /* لتوسيط تفاصيل البروفايل */
-        }
-
-        /* تحسينات التجاوبية لهذه الصفحة */
-        @media (max-width: 768px) {
-            .page-content {
-                margin-top: 30px;
-                padding: 15px;
-            }
-            .page-content h1 {
-                font-size: 1.8em;
-            }
-            .page-content p {
-                font-size: 0.95em;
-            }
-            .profile-info {
-                padding: 15px;
-            }
-        }
-    </style>
 </head>
 <body>
     <header class="main-header">
         <nav class="navbar">
             <div class="nav-left">
-                <a href="groups.html" class="nav-icon" title="المجموعات">
-                    <i class="fas fa-users"></i>
-                    <span>المجموعات</span>
-                </a>
-                <a href="updates.html" class="nav-icon" title="التحديثات">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>التحديثات</span>
-                </a>
-                <a href="notifications.html" class="nav-icon" title="الإشعارات">
-                    <i class="fas fa-bell"></i>
-                    <span>الإشعارات</span>
-                </a>
+                <a href="groups.html" class="nav-icon"><i class="fas fa-users"></i><span>المجموعات</span></a>
+                <a href="updates.html" class="nav-icon"><i class="fas fa-bullhorn"></i><span>التحديثات</span></a>
+                <a href="notifications.html" class="nav-icon"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
             </div>
             <div class="nav-right">
-                <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
-                    <i class="fas fa-user-circle"></i>
-                    <span>ملفي الشخصي</span>
-                </a>
+                <a href="profile.html" class="nav-icon profile-icon"><i class="fas fa-user-circle"></i><span>ملفي الشخصي</span></a>
             </div>
         </nav>
     </header>
@@ -107,13 +25,11 @@
     <main class="container">
         <section class="page-content">
             <h1>ملفي الشخصي</h1>
-            <p>هنا يمكنك عرض وتعديل معلومات ملفك الشخصي.</p>
             <div class="profile-info">
-                <img src="https://via.placeholder.com/100" alt="صورة الملف الشخصي">
-                <h3>اسم المستخدم: أحمد</h3>
-                <p>البريد الإلكتروني: ahmed@example.com</p>
-                <p>تاريخ الانضمام: 1 يناير 2025</p>
-                <button class="auth-btn" style="background-color: #2ecc71;">تعديل الملف الشخصي</button>
+                <img id="profile-pic" src="https://via.placeholder.com/100" alt="صورة الملف الشخصي">
+                <h3 id="profile-name">اسم المستخدم</h3>
+                <p id="profile-email">البريد الإلكتروني</p>
+                <button onclick="logout()" class="auth-btn" style="background-color: #e74c3c;">تسجيل الخروج</button>
             </div>
             <a href="index.html" class="auth-btn" style="margin-top: 20px; background-color: #7f8c8d;">العودة للرئيسية</a>
         </section>
@@ -122,6 +38,43 @@
     <footer class="main-footer">
         <p>&copy; 2025 منتدى العشيرة. جميع الحقوق محفوظة.</p>
     </footer>
-    <script src="script.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script>
+        // بيانات الفايربيز بتاعتك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
+            authDomain: "clan-forum.firebaseapp.com",
+            projectId: "clan-forum",
+            storageBucket: "clan-forum.firebasestorage.app",
+            messagingSenderId: "1011903491894",
+            appId: "1:1011903491894:web:f1bc46a549e74b3717cd97",
+            measurementId: "G-G6D8V7KSNH"
+        };
+
+        // تشغيل الفايربيز
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // التأكد من تسجيل الدخول
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('profile-name').textContent = user.displayName;
+                document.getElementById('profile-email').textContent = user.email;
+                document.getElementById('profile-pic').src = user.photoURL;
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // تسجيل الخروج
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = "login.html";
+            });
+        }
+    </script>
 </body>
 </html>
