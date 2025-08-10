@@ -1,5 +1,3 @@
-// main.js (موديول - يتطلب <script type="module"> في الـ HTML)
-
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
@@ -22,7 +20,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 /* ======= تكوين Firebase ======= */
-/* إذا كانت بياناتك مختلفة غيّرها هنا */
 const firebaseConfig = {
   apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
   authDomain: "clan-forum.firebaseapp.com",
@@ -46,7 +43,7 @@ const commentBtn = document.getElementById("commentBtn");
 const commentsContainer = document.getElementById("commentsContainer");
 
 /* ======= مرجع الوثيقة في Firestore ======= */
-const postRef = doc(db, "posts", "main-post"); // collection: posts , doc id: main-post
+const postRef = doc(db, "posts", "main-post");
 
 /* ======= تهيئة الوثيقة إذا مش موجودة ======= */
 async function ensureDoc() {
@@ -65,7 +62,7 @@ function listenPost() {
     // تحديث عدد الإعجابات
     likeCountSpan.textContent = data.likes ?? 0;
 
-    // تفعيل/تعطيل حالة الزر بناءً على ما إذا المستخدم ضاغط إعجاب أو لا
+    // تفعيل/تعطيل حالة زر الإعجاب
     const user = auth.currentUser;
     if (user && Array.isArray(data.likedBy)) {
       if (data.likedBy.includes(user.uid)) {
@@ -74,11 +71,10 @@ function listenPost() {
         likeBtn.classList.remove("liked");
       }
     } else {
-      // لو مش مسجل، نزيل حالة liked
       likeBtn.classList.remove("liked");
     }
 
-    // عرض التعليقات (نراعي شكل العناصر لو كانت قديمة - مجرد نصوص - أو عناصر objects)
+    // عرض التعليقات
     commentsContainer.innerHTML = "";
     const comments = data.comments || [];
     comments.forEach(item => {
@@ -105,7 +101,6 @@ if (loginBtn) {
   loginBtn.addEventListener("click", async () => {
     try {
       await signInWithPopup(auth, provider);
-      // بعد تسجيل الدخول onAuthStateChanged سيخفي الزر تلقائياً
     } catch (err) {
       console.error("فشل تسجيل الدخول:", err);
       alert("حصل خطأ أثناء محاولة تسجيل الدخول. افتح Console لمزيد من التفاصيل.");
@@ -116,7 +111,6 @@ if (loginBtn) {
 /* ======= متابعة حالة الدخول ======= */
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // عرض اسم المستخدم في الـ navbar بدل الزر
     loginContainer.innerHTML = `
       <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
         <i class="fas fa-user-circle"></i>
@@ -124,9 +118,7 @@ onAuthStateChanged(auth, (user) => {
       </a>
     `;
   } else {
-    // إرجاع زر تسجيل الدخول
     loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
-    // ربط المستمع الجديد بالزر (لأننا استبدلنا الـ innerHTML)
     const newBtn = document.getElementById("googleLoginBtn");
     if (newBtn) {
       newBtn.addEventListener("click", async () => {
@@ -138,7 +130,6 @@ onAuthStateChanged(auth, (user) => {
 
 /* ======= وظيفة الإعجاب (toggle) ======= */
 likeBtn.addEventListener("click", async () => {
-  // نطلب تسجيل الدخول أولاً لو مش مسجل
   if (!auth.currentUser) {
     try {
       await signInWithPopup(auth, provider);
@@ -151,7 +142,6 @@ likeBtn.addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return;
 
-  // قراءه سريعة لحالة الوثيقة ونتصرف بناءً عليها
   const snap = await getDoc(postRef);
   if (!snap.exists()) {
     await setDoc(postRef, { likes: 0, likedBy: [], comments: [] });
@@ -161,13 +151,11 @@ likeBtn.addEventListener("click", async () => {
   const already = likedBy.includes(user.uid);
 
   if (already) {
-    // إزالة الإعجاب
     await updateDoc(postRef, {
       likedBy: arrayRemove(user.uid),
       likes: increment(-1)
     });
   } else {
-    // إضافة إعجاب
     await updateDoc(postRef, {
       likedBy: arrayUnion(user.uid),
       likes: increment(1)
@@ -175,10 +163,8 @@ likeBtn.addEventListener("click", async () => {
   }
 });
 
-/* ======= وظيفة التعليقات (يظهر حقل إدخال داخل الصفحة) ======= */
-let commentsVisible = false;
+/* ======= وظيفة التعليقات (نافذة Prompt) ======= */
 commentBtn.addEventListener("click", async () => {
-  // نطلب تسجيل الدخول لو مش مسجل
   if (!auth.currentUser) {
     try {
       await signInWithPopup(auth, provider);
@@ -188,48 +174,19 @@ commentBtn.addEventListener("click", async () => {
     }
   }
 
-  if (!commentsVisible) {
-    // إضافة منطقة الإدخال في أعلى قائمة التعليقات
-    const inputArea = document.createElement("div");
-    inputArea.classList.add("comment-input-area");
-    inputArea.innerHTML = `
-      <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
-      <button id="addCommentBtn">إضافة تعليق</button>
-    `;
-    // إدراج في أعلى الـ container
-    commentsContainer.insertAdjacentElement("afterbegin", inputArea);
-    commentsVisible = true;
+  const comment = prompt("اكتب تعليقك:");
+  if (comment && comment.trim() !== "") {
+    const user = auth.currentUser;
+    const authorName = user ? (user.displayName || "عضو") : "عضو";
 
-    const addBtn = document.getElementById("addCommentBtn");
-    const inputEl = document.getElementById("newCommentInput");
-
-    addBtn.addEventListener("click", async () => {
-      const txt = inputEl.value.trim();
-      if (!txt) {
-        alert("الرجاء كتابة تعليق!");
-        return;
-      }
-
-      const user = auth.currentUser;
-      const authorName = user ? (user.displayName || "عضو") : "عضو";
-
-      // نضيف التعليق ككائن مع اسم المؤلف ووقت الخادم
-      await updateDoc(postRef, {
-        comments: arrayUnion({
-          authorName,
-          authorId: user ? user.uid : null,
-          text: txt,
-          createdAt: serverTimestamp()
-        })
-      });
-      inputEl.value = "";
-      // لا نحتاج لإعادة تحميل لأن onSnapshot سيحدّث الواجهة تلقائياً
+    await updateDoc(postRef, {
+      comments: arrayUnion({
+        authorName,
+        authorId: user ? user.uid : null,
+        text: comment.trim(),
+        createdAt: serverTimestamp()
+      })
     });
-  } else {
-    // إخفاء حقل الإدخال
-    const inputArea = commentsContainer.querySelector(".comment-input-area");
-    if (inputArea) inputArea.remove();
-    commentsVisible = false;
   }
 });
 
