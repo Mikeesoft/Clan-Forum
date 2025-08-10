@@ -9,6 +9,52 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script type="module">
+        // استيراد مكتبات Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+        // بيانات Firebase الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
+            authDomain: "clan-forum.firebaseapp.com",
+            projectId: "clan-forum",
+            storageBucket: "clan-forum.firebasestorage.app",
+            messagingSenderId: "1011903491894",
+            appId: "1:1011903491894:web:f1bc46a549e74b3717cd97",
+            measurementId: "G-G6D8V7KSNH"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // دالة تسجيل الدخول بجوجل
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginBtn = document.getElementById("googleLoginBtn");
+
+            if (loginBtn) {
+                loginBtn.addEventListener("click", () => {
+                    signInWithPopup(auth, provider)
+                        .then((result) => {
+                            console.log("تم تسجيل الدخول:", result.user);
+                            window.location.href = "profile.html";
+                        })
+                        .catch((error) => {
+                            console.error("خطأ في تسجيل الدخول:", error);
+                        });
+                });
+            }
+
+            // مراقبة حالة تسجيل الدخول
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    document.getElementById("loginBtnContainer").style.display = "none";
+                }
+            });
+        });
+    </script>
 </head>
 <body>
     <header class="main-header">
@@ -27,9 +73,11 @@
                     <span>الإشعارات</span>
                 </a>
             </div>
-            <div class="nav-right">
-                <a href="login.html" class="auth-btn">تسجيل الدخول</a>
-                </div>
+            <div class="nav-right" id="loginBtnContainer">
+                <button id="googleLoginBtn" class="auth-btn">
+                    <i class="fab fa-google"></i> تسجيل الدخول
+                </button>
+            </div>
         </nav>
     </header>
 
@@ -37,7 +85,7 @@
         <section class="admin-message-section">
             <div class="message-card">
                 <h2>رسالة من إدارة المنتدى</h2>
-                <p id="adminMessageContent">
+                <p>
                     أهلاً وسهلاً بكم في منتدى العشيرة! هذا المكان مخصص للتواصل الهادف وتبادل الخبرات بين الأعضاء.
                     نرجو من الجميع الالتزام بقوانين المنتدى واحترام الآخرين. نتمنى لكم وقتاً ممتعاً ومفيداً معنا.
                 </p>
@@ -49,17 +97,12 @@
                         <i class="fas fa-comment"></i> تعليق
                     </button>
                 </div>
-                <div class="comments-section" id="adminCommentsSection">
-                    </div>
             </div>
         </section>
-
-        </main>
+    </main>
 
     <footer class="main-footer">
         <p>&copy; 2025 منتدى العشيرة. جميع الحقوق محفوظة.</p>
     </footer>
-
-    <script src="main.js"></script>
 </body>
 </html>
