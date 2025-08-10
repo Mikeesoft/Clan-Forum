@@ -1,120 +1,52 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منتدى العشيرة</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
-            authDomain: "clan-forum.firebaseapp.com",
-            projectId: "clan-forum",
-            storageBucket: "clan-forum.firebasestorage.app",
-            messagingSenderId: "1011903491894",
-            appId: "1:1011903491894:web:f1bc46a549e74b3717cd97",
-            measurementId: "G-G6D8V7KSNH"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        document.addEventListener("DOMContentLoaded", async () => {
-            const likeCountSpan = document.getElementById("likeCount");
-            const commentSection = document.getElementById("adminCommentsSection");
-
-            const postRef = doc(db, "posts", "main-post");
-
-            // جلب البيانات أول ما الصفحة تفتح
-            async function loadPost() {
-                const snap = await getDoc(postRef);
-                if (snap.exists()) {
-                    const data = snap.data();
-                    likeCountSpan.textContent = data.likes || 0;
-                    commentSection.innerHTML = "";
-                    (data.comments || []).forEach(c => {
-                        const p = document.createElement("p");
-                        p.textContent = c;
-                        commentSection.appendChild(p);
-                    });
-                }
-            }
-
-            await loadPost();
-
-            // زر الإعجاب
-            document.querySelector(".like-btn").addEventListener("click", async () => {
-                await updateDoc(postRef, { likes: increment(1) });
-                await loadPost();
-            });
-
-            // زر التعليق
-            document.querySelector(".comment-btn").addEventListener("click", async () => {
-                const comment = prompt("اكتب تعليقك:");
-                if (comment && comment.trim() !== "") {
-                    await updateDoc(postRef, { comments: arrayUnion(comment.trim()) });
-                    await loadPost();
-                }
-            });
-        });
-    </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>منتدى العشيرة</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body>
-    <header class="main-header">
-        <nav class="navbar">
-            <div class="nav-left">
-                <a href="groups.html" class="nav-icon" title="المجموعات">
-                    <i class="fas fa-users"></i>
-                    <span>المجموعات</span>
-                </a>
-                <a href="updates.html" class="nav-icon" title="التحديثات">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>التحديثات</span>
-                </a>
-                <a href="notifications.html" class="nav-icon" title="الإشعارات">
-                    <i class="fas fa-bell"></i>
-                    <span>الإشعارات</span>
-                </a>
-            </div>
-            <div class="nav-right" id="loginBtnContainer">
-                <button id="googleLoginBtn" class="auth-btn">
-                    <i class="fab fa-google"></i> تسجيل الدخول
-                </button>
-            </div>
-        </nav>
-    </header>
+  <header class="main-header">
+    <nav class="navbar">
+      <div class="nav-left">
+        <a href="groups.html" class="nav-icon"><i class="fas fa-users"></i><span>المجموعات</span></a>
+        <a href="updates.html" class="nav-icon"><i class="fas fa-bullhorn"></i><span>التحديثات</span></a>
+        <a href="notifications.html" class="nav-icon"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
+      </div>
 
-    <main class="container">
-        <section class="admin-message-section">
-            <div class="message-card">
-                <h2>رسالة من إدارة المنتدى</h2>
-                <p>
-                    أهلاً وسهلاً بكم في منتدى العشيرة! هذا المكان مخصص للتواصل الهادف وتبادل الخبرات بين الأعضاء.
-                    نرجو من الجميع الالتزام بقوانين المنتدى واحترام الآخرين. نتمنى لكم وقتاً ممتعاً ومفيداً معنا.
-                </p>
-                <div class="message-actions">
-                    <button class="action-btn like-btn">
-                        <i class="fas fa-heart"></i> إعجاب (<span id="likeCount">0</span>)
-                    </button>
-                    <button class="action-btn comment-btn">
-                        <i class="fas fa-comment"></i> تعليق
-                    </button>
-                </div>
-                <div class="comments-section" id="adminCommentsSection"></div>
-            </div>
-        </section>
-    </main>
+      <div class="nav-right" id="loginBtnContainer">
+        <!-- زر تسجيل الدخول يظهر هنا أو يتم استبداله باسم المستخدم بعد تسجيل الدخول -->
+        <button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>
+      </div>
+    </nav>
+  </header>
 
-    <footer class="main-footer">
-        <p>&copy; 2025 منتدى العشيرة. جميع الحقوق محفوظة.</p>
-    </footer>
+  <main class="container">
+    <section class="admin-message-section">
+      <div class="message-card">
+        <h2>رسالة من إدارة المنتدى</h2>
+        <p>
+          أهلاً وسهلاً بكم في منتدى العشيرة! هذا المكان مخصص للتواصل الهادف وتبادل الخبرات بين الأعضاء.
+          نرجو من الجميع الالتزام بقوانين المنتدى واحترام الآخرين.
+        </p>
+
+        <div class="message-actions">
+          <button id="likeBtn" class="action-btn"><i class="fas fa-heart"></i> إعجاب (<span id="likeCount">0</span>)</button>
+          <button id="commentBtn" class="action-btn"><i class="fas fa-comment"></i> تعليق</button>
+        </div>
+
+        <div id="commentsContainer" class="comments-section"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="main-footer">
+    <p>&copy; 2025 منتدى العشيرة. جميع الحقوق محفوظة.</p>
+  </footer>
+
+  <!-- ملف الجافاسكريبت (موديول) -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
