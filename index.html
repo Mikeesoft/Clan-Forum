@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منتدى العشيرة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+
     <script type="module">
-        // استيراد مكتبات Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-        // بيانات Firebase الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
             authDomain: "clan-forum.firebaseapp.com",
@@ -25,12 +22,10 @@
             measurementId: "G-G6D8V7KSNH"
         };
 
-        // تهيئة Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // دالة تسجيل الدخول بجوجل
         document.addEventListener("DOMContentLoaded", () => {
             const loginBtn = document.getElementById("googleLoginBtn");
 
@@ -41,16 +36,81 @@
                             console.log("تم تسجيل الدخول:", result.user);
                             window.location.href = "profile.html";
                         })
-                        .catch((error) => {
-                            console.error("خطأ في تسجيل الدخول:", error);
-                        });
+                        .catch((error) => console.error("خطأ:", error));
                 });
             }
 
-            // مراقبة حالة تسجيل الدخول
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     document.getElementById("loginBtnContainer").style.display = "none";
+                }
+            });
+
+            // ====== نظام الإعجاب والتعليقات ======
+            const likeButton = document.querySelector('.like-btn');
+            const likeCountSpan = document.getElementById('likeCount');
+            const commentButton = document.querySelector('.comment-btn');
+            const commentsSection = document.createElement('div');
+            commentsSection.id = "adminCommentsSection";
+            document.querySelector('.message-card').appendChild(commentsSection);
+
+            let likes = parseInt(localStorage.getItem("likes") || "0");
+            let liked = localStorage.getItem("liked") === "true";
+            likeCountSpan.textContent = likes;
+            if (liked) likeButton.classList.add("liked");
+
+            likeButton.addEventListener('click', () => {
+                if (liked) {
+                    likes--;
+                    liked = false;
+                    likeButton.classList.remove('liked');
+                } else {
+                    likes++;
+                    liked = true;
+                    likeButton.classList.add('liked');
+                }
+                likeCountSpan.textContent = likes;
+                localStorage.setItem("likes", likes);
+                localStorage.setItem("liked", liked);
+            });
+
+            let comments = JSON.parse(localStorage.getItem("comments") || "[]");
+            let commentsVisible = false;
+
+            function renderComments() {
+                commentsSection.innerHTML = `
+                    <div class="comment-input-area">
+                        <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا...">
+                        <button id="addCommentBtn">إضافة تعليق</button>
+                    </div>
+                `;
+                comments.forEach(c => {
+                    const div = document.createElement('div');
+                    div.classList.add('comment');
+                    div.innerHTML = `<div class="comment-author">عضو جديد</div><div class="comment-text">${c}</div>`;
+                    commentsSection.insertBefore(div, commentsSection.querySelector('.comment-input-area'));
+                });
+
+                document.getElementById('addCommentBtn').addEventListener('click', () => {
+                    const input = document.getElementById('newCommentInput');
+                    const text = input.value.trim();
+                    if (text) {
+                        comments.push(text);
+                        localStorage.setItem("comments", JSON.stringify(comments));
+                        renderComments();
+                    } else {
+                        alert("الرجاء كتابة تعليق!");
+                    }
+                });
+            }
+
+            commentButton.addEventListener('click', () => {
+                if (!commentsVisible) {
+                    renderComments();
+                    commentsVisible = true;
+                } else {
+                    commentsSection.innerHTML = '';
+                    commentsVisible = false;
                 }
             });
         });
@@ -60,23 +120,12 @@
     <header class="main-header">
         <nav class="navbar">
             <div class="nav-left">
-                <a href="groups.html" class="nav-icon" title="المجموعات">
-                    <i class="fas fa-users"></i>
-                    <span>المجموعات</span>
-                </a>
-                <a href="updates.html" class="nav-icon" title="التحديثات">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>التحديثات</span>
-                </a>
-                <a href="notifications.html" class="nav-icon" title="الإشعارات">
-                    <i class="fas fa-bell"></i>
-                    <span>الإشعارات</span>
-                </a>
+                <a href="groups.html" class="nav-icon"><i class="fas fa-users"></i><span>المجموعات</span></a>
+                <a href="updates.html" class="nav-icon"><i class="fas fa-bullhorn"></i><span>التحديثات</span></a>
+                <a href="notifications.html" class="nav-icon"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
             </div>
             <div class="nav-right" id="loginBtnContainer">
-                <button id="googleLoginBtn" class="auth-btn">
-                    <i class="fab fa-google"></i> تسجيل الدخول
-                </button>
+                <button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>
             </div>
         </nav>
     </header>
@@ -85,17 +134,10 @@
         <section class="admin-message-section">
             <div class="message-card">
                 <h2>رسالة من إدارة المنتدى</h2>
-                <p>
-                    أهلاً وسهلاً بكم في منتدى العشيرة! هذا المكان مخصص للتواصل الهادف وتبادل الخبرات بين الأعضاء.
-                    نرجو من الجميع الالتزام بقوانين المنتدى واحترام الآخرين. نتمنى لكم وقتاً ممتعاً ومفيداً معنا.
-                </p>
+                <p>أهلاً وسهلاً بكم في منتدى العشيرة! نرجو الالتزام بالقوانين واحترام الجميع.</p>
                 <div class="message-actions">
-                    <button class="action-btn like-btn">
-                        <i class="fas fa-heart"></i> إعجاب (<span id="likeCount">0</span>)
-                    </button>
-                    <button class="action-btn comment-btn">
-                        <i class="fas fa-comment"></i> تعليق
-                    </button>
+                    <button class="action-btn like-btn"><i class="fas fa-heart"></i> إعجاب (<span id="likeCount">0</span>)</button>
+                    <button class="action-btn comment-btn"><i class="fas fa-comment"></i> تعليق</button>
                 </div>
             </div>
         </section>
