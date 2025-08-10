@@ -6,115 +6,6 @@
   <title>منتدى العشيرة</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
-      authDomain: "clan-forum.firebaseapp.com",
-      projectId: "clan-forum",
-      storageBucket: "clan-forum.firebasestorage.app",
-      messagingSenderId: "1011903491894",
-      appId: "1:1011903491894:web:f1bc46a549e74b3717cd97",
-      measurementId: "G-G6D8V7KSNH"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const loginBtn = document.getElementById("googleLoginBtn");
-
-      if (loginBtn) {
-        loginBtn.addEventListener("click", () => {
-          signInWithPopup(auth, provider)
-            .then((result) => {
-              console.log("تم تسجيل الدخول:", result.user);
-              window.location.href = "profile.html";
-            })
-            .catch((error) => console.error("خطأ:", error));
-        });
-      }
-
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          document.getElementById("loginBtnContainer").innerHTML =
-            `<span class="user-name">مرحباً، ${user.displayName}</span>`;
-        }
-      });
-
-      // ====== نظام الإعجاب ======
-      const likeButton = document.getElementById('likeBtn');
-      const likeCountSpan = document.getElementById('likeCount');
-      let likes = parseInt(localStorage.getItem("likes") || "0");
-      let liked = localStorage.getItem("liked") === "true";
-
-      likeCountSpan.textContent = likes;
-      if (liked) likeButton.classList.add("liked");
-
-      likeButton.addEventListener('click', () => {
-        if (liked) {
-          likes--;
-          liked = false;
-          likeButton.classList.remove('liked');
-        } else {
-          likes++;
-          liked = true;
-          likeButton.classList.add('liked');
-        }
-        likeCountSpan.textContent = likes;
-        localStorage.setItem("likes", likes);
-        localStorage.setItem("liked", liked);
-      });
-
-      // ====== نظام التعليقات ======
-      const commentButton = document.getElementById('commentBtn');
-      const commentsContainer = document.getElementById('commentsContainer');
-      let comments = JSON.parse(localStorage.getItem("comments") || "[]");
-      let commentsVisible = false;
-
-      function renderComments() {
-        commentsContainer.innerHTML = `
-          <div class="comment-input-area">
-            <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا...">
-            <button id="addCommentBtn">إضافة تعليق</button>
-          </div>
-        `;
-        comments.forEach(c => {
-          const div = document.createElement('div');
-          div.classList.add('comment');
-          div.innerHTML = `<div class="comment-author">عضو جديد</div><div class="comment-text">${c}</div>`;
-          commentsContainer.insertBefore(div, commentsContainer.querySelector('.comment-input-area'));
-        });
-
-        document.getElementById('addCommentBtn').addEventListener('click', () => {
-          const input = document.getElementById('newCommentInput');
-          const text = input.value.trim();
-          if (text) {
-            comments.push(text);
-            localStorage.setItem("comments", JSON.stringify(comments));
-            renderComments();
-          } else {
-            alert("الرجاء كتابة تعليق!");
-          }
-        });
-      }
-
-      commentButton.addEventListener('click', () => {
-        if (!commentsVisible) {
-          renderComments();
-          commentsVisible = true;
-        } else {
-          commentsContainer.innerHTML = '';
-          commentsVisible = false;
-        }
-      });
-    });
-  </script>
 </head>
 <body>
   <header class="main-header">
@@ -124,7 +15,9 @@
         <a href="updates.html" class="nav-icon"><i class="fas fa-bullhorn"></i><span>التحديثات</span></a>
         <a href="notifications.html" class="nav-icon"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
       </div>
+
       <div class="nav-right" id="loginBtnContainer">
+        <!-- زر تسجيل الدخول يظهر هنا أو يتم استبداله باسم المستخدم بعد تسجيل الدخول -->
         <button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>
       </div>
     </nav>
@@ -152,5 +45,8 @@
   <footer class="main-footer">
     <p>&copy; 2025 منتدى العشيرة. جميع الحقوق محفوظة.</p>
   </footer>
+
+  <!-- ملف الجافاسكريبت (موديول) -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
