@@ -1,0 +1,492 @@
+/* إعادة تعيين أساسي وتنسيقات عامة */
+body {
+    /* تغيير الخطوط: Cairo للعربية، Poppins للأرقام/الأجنبية، Arial كخط احتياطي */
+    font-family: 'Cairo', 'Poppins', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    
+    /* ======== بداية كود الخلفية المتحركة ======== */
+    background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71); /* تدرج لوني أساسي */
+    background-size: 400% 400%; /* لتمكين الحركة على مساحة أكبر */
+    animation: gradientAnimation 15s ease infinite; /* اسم الحركة، المدة، نوع الحركة، تكرار لانهائي */
+    /* ======== نهاية كود الخلفية المتحركة ======== */
+
+    color: #333;
+    direction: rtl; /* لجعل الاتجاه من اليمين لليسار للصفحة بالكامل */
+    text-align: right; /* محاذاة النص لليمين افتراضياً */
+    overflow-x: hidden; /* لمنع ظهور شريط تمرير أفقي غير مرغوب فيه */
+}
+
+/* تعريف حركة التدرج اللوني */
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%; /* تبدأ من هذا الموضع */
+    }
+    50% {
+        background-position: 100% 50%; /* تتحرك إلى هذا الموضع */
+    }
+    100% {
+        background-position: 0% 50%; /* تعود للموضع الأصلي */
+    }
+}
+
+/* التنسيقات العامة للروابط والأزرار */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    outline: none; /* إزالة الخط الأزرق حول الأزرار عند التركيز عليها */
+}
+
+/* الشريط العلوي (Header) */
+.main-header {
+    background-color: #2c3e50; /* لون داكن وأنيق للرأس */
+    color: #ecf0f1;
+    padding: 15px 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25); /* ظل أقوى وأكثر انتشاراً */
+    position: sticky; /* لجعل الهيدر يلتصق بالأعلى عند التمرير */
+    top: 0;
+    z-index: 1000; /* لضمان ظهوره فوق المحتوى الآخر */
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 25px;
+}
+
+.nav-left, .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 25px; /* مسافة بين الأيقونات */
+}
+
+.nav-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.95em; /* حجم أكبر قليلاً للنص */
+    color: #ecf0f1;
+    transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease; /* إضافة تأثير للظل النصي */
+    padding: 5px; /* مساحة حول الأيقونة لتسهيل النقر */
+    border-radius: 5px;
+}
+
+.nav-icon i {
+    font-size: 2em; /* حجم أكبر للأيقونات لتبدو أفخم */
+    margin-bottom: 5px;
+    /* تأثير بسيط لعمق الأيقونة */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.nav-icon:hover {
+    color: #5dade2; /* لون أزرق فاتح وجذاب عند التمرير */
+    transform: translateY(-5px) scale(1.05); /* تأثير ارتداد و تكبير خفيف */
+    text-shadow: 0px 0px 8px rgba(255,255,255,0.7); /* ظل مضيء للأيقونة */
+}
+
+.nav-icon.active { /* فئة لتحديد الأيقونة النشطة للصفحة الحالية */
+    color: #5dade2;
+    font-weight: bold;
+    border-bottom: 2px solid #5dade2;
+    padding-bottom: 3px;
+}
+
+
+.auth-btn {
+    background-color: #3498db;
+    color: #fff;
+    padding: 12px 25px; /* بادينج أكبر قليلاً */
+    border-radius: 8px; /* زوايا أكثر استدارة */
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* ظل لزر تسجيل الدخول */
+}
+
+.auth-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-3px); /* تأثير ارتداد للزر */
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* ظل أكبر عند التمرير */
+}
+
+/* المحتوى الرئيسي (Main Content) */
+.container {
+    max-width: 950px; /* عرض متوسط للمحتوى ليتسع أكثر قليلاً */
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.admin-message-section {
+    background-color: #ffffff;
+    border-radius: 15px; /* زوايا أكثر استدارة */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* ظل أقوى وأكثر انتشاراً */
+    padding: 35px; /* بادينج أكبر */
+    border-right: 6px solid #3498db; /* شريط جانبي أزرق أسمك وأفخم */
+}
+
+.message-card h2 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 20px; /* مسافة أكبر */
+    font-size: 2em; /* حجم أكبر للعنوان */
+    border-bottom: 2px solid #e0e0e0; /* لون أفتح للحد السفلي */
+    padding-bottom: 12px;
+    text-align: right;
+}
+
+.message-card p {
+    font-size: 1.15em; /* حجم أكبر للنص */
+    line-height: 1.9; /* تباعد أسطر أكبر لراحة العين */
+    color: #555;
+    margin-bottom: 30px; /* مسافة أكبر */
+    text-align: justify;
+}
+
+.message-actions {
+    display: flex;
+    gap: 25px; /* مسافة أكبر بين الأزرار */
+    padding-top: 18px;
+    border-top: 1px solid #f0f0f0;
+    justify-content: flex-start; /* الأزرار تبدأ من اليمين */
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    color: #7f8c8d;
+    font-size: 1.15em; /* حجم أكبر للنص */
+    font-weight: bold;
+    transition: color 0.3s ease, transform 0.2s ease;
+    padding: 8px 12px; /* إضافة بادينج خفيف لتسهيل النقر */
+    border-radius: 5px;
+}
+
+.action-btn i {
+    margin-left: 10px; /* مسافة أكبر بين الأيقونة والنص */
+    font-size: 1.4em; /* حجم أكبر للأيقونة */
+}
+
+.action-btn:hover {
+    color: #2c3e50;
+    transform: translateY(-3px) scale(1.05); /* تأثير ارتداد وتكبير خفيف */
+    background-color: #f9f9f9; /* خلفية خفيفة عند التمرير */
+}
+
+.like-btn.liked {
+    color: #e74c3c;
+    /* إضافة تأثير نبض خفيف عند الإعجاب */
+    animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* تنسيقات قسم التعليقات */
+.comments-section {
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px dashed #e0e0e0; /* لون أفتح للخط المتقطع */
+}
+
+.comment {
+    background-color: #fcfcfc; /* لون أفتح للتعليقات */
+    border-radius: 10px; /* زوايا أكثر استدارة */
+    padding: 12px 18px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.07); /* ظل داخلي خفيف */
+    border-right: 3px solid #b3e0ff; /* شريط جانبي خفيف للتعليقات */
+}
+
+.comment-author {
+    font-weight: bold;
+    color: #34495e;
+    margin-bottom: 6px;
+    font-size: 1.05em;
+}
+
+.comment-text {
+    font-size: 1em;
+    color: #444;
+}
+
+.comment-input-area {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.comment-input-area input[type="text"] {
+    flex-grow: 1;
+    padding: 12px 15px; /* بادينج أكبر */
+    border: 1px solid #ccc;
+    border-radius: 8px; /* زوايا أكثر استدارة */
+    font-size: 1.1em;
+    font-family: inherit;
+    text-align: right;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* ظل داخلي خفيف */
+}
+
+.comment-input-area button {
+    background-color: #2ecc71;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.comment-input-area button:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+}
+
+
+/* التذييل (Footer) */
+.main-footer {
+    text-align: center;
+    padding: 25px;
+    margin-top: 50px; /* مسافة أكبر من المحتوى */
+    background-color: #2c3e50;
+    color: #bdc3c7;
+    font-size: 0.95em;
+    box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.15); /* ظل أقوى */
+}
+
+/* ====== تحسينات التجاوبية (Responsiveness) ====== */
+
+@media (max-width: 768px) { /* للشاشات الأصغر من 768px (الأجهزة اللوحية والهواتف) */
+    .navbar {
+        flex-direction: column; /* جعل شريط التنقل عموديًا */
+        gap: 15px; /* مسافة بين العناصر العمودية */
+    }
+
+    .nav-left, .nav-right {
+        width: 100%; /* جعل عناصر التنقل تأخذ العرض الكامل */
+        justify-content: center; /* توسيط الأيقونات في المنتصف */
+        gap: 15px;
+    }
+    
+    .nav-left {
+        order: 2; /* لتغيير ترتيب الظهور بعد زر تسجيل الدخول */
+        margin-top: 10px; /* مسافة من زر تسجيل الدخول */
+    }
+
+    .nav-right {
+        order: 1; /* زر تسجيل الدخول يظهر أولاً */
+    }
+
+    .auth-btn, .profile-icon {
+        width: auto; /* لضبط عرض الزر تلقائيا */
+        padding: 10px 20px;
+    }
+
+    .nav-icon {
+        flex-direction: row; /* الأيقونة والنص بجانب بعضهما البعض على الهواتف */
+        font-size: 1em;
+        padding: 8px 12px;
+        background-color: rgba(255,255,255,0.1); /* خلفية خفيفة للأيقونات في الشريط العلوي */
+        border-radius: 8px;
+    }
+
+    .nav-icon i {
+        font-size: 1.5em; /* حجم أصغر قليلاً للأيقونات على الهواتف */
+        margin-left: 8px; /* مسافة على اليسار (للأيقونة والنص) */
+        margin-bottom: 0; /* إزالة المسافة السفلية */
+    }
+    
+    .nav-icon span {
+        display: block; /* للتأكد من أن النص يظهر */
+    }
+
+    .container {
+        margin: 20px auto;
+        padding: 0 15px; /* بادينج أقل على الجوانب */
+    }
+
+    .admin-message-section {
+        padding: 25px; /* بادينج أقل */
+        border-right: none; /* إزالة الشريط الجانبي في الهواتف */
+        border-top: 5px solid #3498db; /* شريط علوي بدلاً من الجانبي */
+    }
+
+    .message-card h2 {
+        font-size: 1.6em; /* حجم أصغر للعنوان */
+    }
+
+    .message-card p {
+        font-size: 1em; /* حجم أصغر للنص */
+    }
+
+    .message-actions {
+        flex-direction: column; /* الأزرار تصبح عمودية */
+        align-items: stretch; /* تمتد لتملأ العرض */
+        gap: 15px;
+    }
+    
+    .action-btn {
+        justify-content: center; /* توسيط محتوى الزر (أيقونة ونص) */
+        padding: 10px 0;
+        font-size: 1em;
+    }
+    
+    .comment-input-area {
+        flex-direction: column; /* مربع التعليق والزر عموديًا */
+        gap: 10px;
+    }
+    
+    .comment-input-area button {
+        width: 100%; /* الزر يأخذ العرض الكامل */
+    }
+
+    .login-card {
+        padding: 30px;
+        margin: 40px auto;
+    }
+    .login-card h1 {
+        font-size: 2em;
+    }
+    .input-group input {
+        width: calc(100% - 24px); /* ضبط العرض ليتناسب مع البادينج */
+    }
+}
+
+@media (max-width: 480px) { /* للهواتف الصغيرة جداً */
+    .nav-icon {
+        font-size: 0.85em;
+    }
+    .nav-icon i {
+        font-size: 1.3em;
+    }
+    .message-card p {
+        font-size: 0.95em;
+    }
+}
+
+/* تنسيقات خاصة بصفحة تسجيل الدخول (login.html) */
+.login-card {
+    background-color: #ffffff;
+    border-radius: 15px; /* زوايا أكثر استدارة */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* ظل أقوى */
+    padding: 40px;
+    max-width: 450px;
+    margin: 80px auto; /* مسافة من الأعلى */
+    text-align: center;
+}
+.login-card h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+.input-group {
+    margin-bottom: 25px; /* مسافة أكبر بين حقول الإدخال */
+    text-align: right;
+}
+.input-group label {
+    display: block;
+    margin-bottom: 10px; /* مسافة أكبر بين Label والإدخال */
+    color: #555;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.input-group input {
+    width: calc(100% - 24px); /* مع الأخذ في الاعتبار البادينج */
+    padding: 14px 12px; /* بادينج أكبر */
+    border: 1px solid #ddd;
+    border-radius: 10px; /* زوايا أكثر استدارة */
+    font-size: 1.1em;
+    font-family: inherit; /* لاستخدام الخطوط الجديدة */
+    text-align: right;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); /* ظل داخلي خفيف */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.input-group input:focus {
+    border-color: #3498db; /* لون الحدود عند التركيز */
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.08), 0 0 8px rgba(52, 152, 219, 0.3); /* ظل خارجي عند التركيز */
+    outline: none; /* إزالة التركيز الافتراضي */
+}
+.login-btn {
+    background-color: #3498db;
+    color: white;
+    padding: 16px 30px; /* بادينج أكبر */
+    border-radius: 10px; /* زوايا أكثر استدارة */
+    font-size: 1.3em; /* حجم خط أكبر */
+    font-weight: bold;
+    width: 100%;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    margin-top: 30px; /* مسافة أكبر */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+.login-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+.signup-link {
+    margin-top: 30px; /* مسافة أكبر */
+    font-size: 1.05em;
+    color: #777;
+}
+.signup-link a {
+    color: #3498db;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+.signup-link a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+/* لتوسيط شريط التنقل في صفحة تسجيل الدخول */
+.login-page-header .navbar {
+    justify-content: center; /* توسيط العناصر في المنتصف */
+}
+.login-page-header .nav-left, .login-page-header .nav-right .nav-icon {
+    display: none; /* إخفاء الأيقونات في صفحة تسجيل الدخول لتبسيطها */
+}
+/* تعديل خاص بزر العودة للرئيسية في صفحة تسجيل الدخول */
+.login-card .auth-btn {
+    margin-top: 25px; /* مسافة كافية */
+    background-color: #7f8c8d; /* لون رمادي لزر العودة */
+}
+.login-card .auth-btn:hover {
+    background-color: #6c7a89;
+}
+
+/* تنسيقات خاصة بزر تسجيل الدخول بواسطة جوجل */
+.google-login-btn {
+    background-color: #db4437; /* لون أحمر جوجل الشهير */
+    margin-top: 20px; /* مسافة بينه وبين زر تسجيل الدخول التقليدي */
+    display: flex; /* لترتيب الأيقونة والنص جنباً إلى جنب */
+    align-items: center; /* لمحاذاة الأيقونة والنص عمودياً */
+    justify-content: center; /* لتوسيط الأيقونة والنص أفقياً */
+    gap: 10px; /* مسافة بين الأيقونة والنص */
+}
+.google-login-btn:hover {
+    background-color: #c0392b; /* لون أحمر أغمق عند التمرير */
+}
+.google-login-btn i {
+    font-size: 1.5em; /* حجم أكبر لأيقونة جوجل */
+}
+
+/* تحسينات التجاوبية لزر جوجل */
+@media (max-width: 768px) {
+    .google-login-btn {
+        padding: 12px 20px; /* ضبط البادينج على الشاشات الصغيرة */
+        font-size: 1em; /* ضبط حجم الخط */
+    }
+    .google-login-btn i {
+        font-size: 1.3em; /* ضبط حجم الأيقونة على الشاشات الصغيرة */
+    }
+}
