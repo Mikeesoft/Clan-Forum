@@ -82,3 +82,64 @@ onSnapshot(q, (snapshot) => {
     commentsContainer.appendChild(div);
   });
 });
+import { runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// تأكد إن likeBtn موجود
+if (!likeBtn) {
+  console.warn("لا يوجد عنصر #likeBtn في الصفحة — تأكد من وجوده بالـ HTML");
+} else {
+  likeBtn.addEventListener("click", async () => {
+    // إذا مش مسجل، حاول تسجّل الدخول
+    if (!auth.currentUser) {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        console.error("فشل تسجيل الدخول (لا يوجد like):", err);
+        alert("لا يمكن الإعجاب قبل تسجيل الدخول.");
+        return;
+      }
+    }
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(postRef);
+        if (!snap.exists()) {
+          // أنشئ المستند إن لم يكن موجوداً
+          transaction.set(postRef, { likes: 1, likedBy: [user.uid], comments: [] });
+          return;
+        }
+
+        const data = snap.data();
+        const likedBy = Array.isArray(data.likedBy) ? data.likedBy.slice() : [];
+        const likesNow = typeof data.likes === "number" ? data.likes : 0;
+        const already = likedBy.includes(user.uid);
+
+        if (already) {
+          // إزالة الإعجاب
+          const newLikedBy = likedBy.filter(id => id !== user.uid);
+          transaction.update(postRef, {
+            likedBy: newLikedBy,
+            likes: Math.max(0, likesNow - 1)
+          });
+        } else {
+          // إضافة إعجاب
+          likedBy.push(user.uid);
+          transaction.update(postRef, {
+            likedBy: likedBy,
+            likes: likesNow + 1
+          });
+        }
+      });
+      // نجاح — التحديث سيظهر تلقائياً لأن عندك onSnapshot()
+    } catch (err) {
+      console.error("خطأ أثناء تحديث الإعجاب:", err);
+      // إذا كان الخطأ من صلاحيات Firestore سيظهر هنا كـ permission-denied
+      if (err && err.code && err.code.includes("permission")) {
+        alert("لا تملك صلاحية تحديث الإعجاب — تأكد من قواعد Firestore.");
+      }
+    }
+  });
+}
