@@ -90,20 +90,24 @@
   <i class="fas fa-comment-dots"></i>
 </button>
 
+<!-- زر العالم للمحادثة -->
+<button id="chatBtn" class="chat-fab">
+  <i class="fas fa-globe"></i>
+</button>
+
 <!-- نافذة المحادثة -->
 <div id="chatWindow" class="chat-window">
   <div class="chat-header">
     <span>المحادثة</span>
-    <button id="closeChat"><i class="fas fa-times"></i></button>
+    <button id="closeChat" class="close-btn">&times;</button>
   </div>
-  <div class="chat-messages" id="chatMessages">
-    <div class="msg received">مرحبًا 👋</div>
-  </div>
-  <div class="chat-input">
-    <input type="text" id="chatInput" placeholder="اكتب رسالة...">
-    <button id="sendMsg"><i class="fas fa-paper-plane"></i></button>
+  <div id="chatMessages" class="chat-messages"></div>
+  <div class="chat-input-area">
+    <input type="text" id="chatInput" placeholder="اكتب رسالة..." />
+    <button id="sendMsg" class="send-btn"><i class="fas fa-paper-plane"></i></button>
   </div>
 </div>
+
   <!-- الفوتر -->
   <footer class="main-footer">
     <p>© 2025 المنتدى - جميع الحقوق محفوظة</p>

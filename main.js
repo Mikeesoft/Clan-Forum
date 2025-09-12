@@ -296,3 +296,22 @@ sendMsg.addEventListener("click", () => {
   chatInput.value = "";
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
+sendMsg.addEventListener("click", () => {
+  const txt = chatInput.value.trim();
+  if (!txt) return;
+
+  // صورة المرسل (ممكن من Google Auth أو صورة افتراضية)
+  const user = auth.currentUser;
+  const photo = user?.photoURL || "https://i.ibb.co/2d3F5tF/default-avatar.png";
+
+  const msg = document.createElement("div");
+  msg.classList.add("msg", "sent");
+  msg.innerHTML = `
+    <div class="bubble">${txt}</div>
+    <img src="${photo}" alt="me">
+  `;
+  chatMessages.appendChild(msg);
+
+  chatInput.value = "";
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
