@@ -4,7 +4,7 @@
 /* ======== إعداد عام وخلفية متحركة ======== */
 :root{
   --primary: #3498DB;
-  --dark: #2C3E50;
+  --dark: #2C3E5000;
   --muted: #7f8c8d;
   --accent: #2ecc71;
   --danger: #e74c3c;
