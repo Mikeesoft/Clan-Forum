@@ -470,20 +470,83 @@ button {
   font-size: 0.9em;
   color: #7f8c8d;
 }
-/* لما الشاشة تبقى صغيرة جدا */
+/* ======= تجاوب (Responsive) للشاشات الصغيرة جداً ======= */
 @media (max-width: 480px) {
   .nav-right {
     display: flex;
-    overflow-x: auto;    /* يسمح بالتمرير الأفقي */
-    white-space: nowrap; /* يخلي العناصر في صف واحد */
+    overflow-x: auto;
+    white-space: nowrap;
     gap: 10px;
-    padding-bottom: 6px; /* عشان الاسكرول مايبقاش لازق */
-    -webkit-overflow-scrolling: touch; /* تمرير ناعم في iOS */
+    padding: 6px 12px; /* padding يمين وشمال يخلي أول وآخر أيقونة تبان كاملة */
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 12px; /* يخلي أول وآخر عنصر يبقوا ظاهرين بالكامل */
   }
 
   .nav-icon {
-    flex: 0 0 auto; /* يمنع الايقونة من التمدد */
-    min-width: 70px; /* حجم مناسب لكل زر */
+    flex: 0 0 auto;
+    min-width: 70px;
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 6px;
+    scroll-snap-align: start; /* يخلي الأيقونة تبان كاملة عند التمرير */
+  }
+
+  .nav-icon i {
+    font-size: 1.4em;
+  }
+}
+/* ======= تجاوب (Responsive) للشاشات المتوسطة ======= */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 16px;
+  }
+
+  .nav-left, .nav-right {
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    justify-content: flex-start;
+    gap: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .nav-icon {
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9em;
+    padding: 8px 10px;
+    background-color: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    scroll-snap-align: center;
+  }
+
+  .nav-icon i {
+    font-size: 1.6em;
+  }
+}
+
+/* ======= تجاوب (Responsive) للشاشات الصغيرة جداً ======= */
+@media (max-width: 480px) {
+  .nav-right {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 10px;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-icon {
+    flex: 0 0 auto;
+    min-width: 70px;
     text-align: center;
     background: rgba(255,255,255,0.08);
     border-radius: 12px;
@@ -491,6 +554,6 @@ button {
   }
 
   .nav-icon i {
-    font-size: 1.4em; /* تصغير الايقونة شوية */
+    font-size: 1.4em;
   }
 }
