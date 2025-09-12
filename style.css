@@ -449,3 +449,27 @@ button {
   font-size: 0.9em;
   color: #7f8c8d;
 }
+/* لما الشاشة تبقى صغيرة جدا */
+@media (max-width: 480px) {
+  .nav-right {
+    display: flex;
+    overflow-x: auto;    /* يسمح بالتمرير الأفقي */
+    white-space: nowrap; /* يخلي العناصر في صف واحد */
+    gap: 10px;
+    padding-bottom: 6px; /* عشان الاسكرول مايبقاش لازق */
+    -webkit-overflow-scrolling: touch; /* تمرير ناعم في iOS */
+  }
+
+  .nav-icon {
+    flex: 0 0 auto; /* يمنع الايقونة من التمدد */
+    min-width: 70px; /* حجم مناسب لكل زر */
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 6px;
+  }
+
+  .nav-icon i {
+    font-size: 1.4em; /* تصغير الايقونة شوية */
+  }
+}
