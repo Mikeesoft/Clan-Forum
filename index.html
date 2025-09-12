@@ -10,14 +10,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <!-- ملف التنسيقات -->
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* إخفاء الأقسام غير الرئيسية افتراضيًا */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+  </style>
 </head>
 <body>
   <!-- الهيدر -->
   <header class="main-header">
     <nav class="navbar">
       <div class="nav-right">
-        <a href="#" class="nav-icon active"><i class="fas fa-home"></i><span>الرئيسية</span></a>
-        <a href="#" class="nav-icon"><i class="fas fa-users"></i><span>الأعضاء</span></a>
+        <a href="#" class="nav-icon active" data-section="home"><i class="fas fa-home"></i><span>الرئيسية</span></a>
+        <a href="#" class="nav-icon" data-section="members"><i class="fas fa-users"></i><span>الأعضاء</span></a>
+        <a href="#" class="nav-icon" data-section="groups"><i class="fas fa-layer-group"></i><span>المجموعات</span></a>
+        <a href="#" class="nav-icon" data-section="notifications"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
+        <a href="#" class="nav-icon" data-section="updates"><i class="fas fa-sync-alt"></i><span>التحديثات</span></a>
       </div>
       <div id="loginBtnContainer" class="nav-left">
         <button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>
@@ -27,27 +35,54 @@
 
   <!-- المحتوى -->
   <main class="container">
-    <section class="admin-message-section">
-      <div class="message-card">
-        <h2>رسالة المدير</h2>
-        <p>
-          مرحبًا بكم في المنتدى! 🎉  
-          هنا تقدروا تتفاعلوا، تضيفوا إعجاب وتعليقات في أي وقت.  
-          سجل دخولك بجوجل علشان تظهر باسمك وتشاركنا رأيك.
-        </p>
-        <div class="message-actions">
-          <button id="likeBtn" class="action-btn like-btn">
-            <i class="fas fa-heart"></i>
-            <span>إعجاب (<span id="likeCount">0</span>)</span>
-          </button>
-          <button id="commentBtn" class="action-btn comment-btn">
-            <i class="fas fa-comment"></i>
-            <span>تعليق</span>
-          </button>
+    <!-- الرئيسية -->
+    <section id="home" class="page-section active">
+      <div class="admin-message-section">
+        <div class="message-card">
+          <h2>رسالة المدير</h2>
+          <p>
+            مرحبًا بكم في المنتدى! 🎉  
+            هنا تقدروا تتفاعلوا، تضيفوا إعجاب وتعليقات في أي وقت.  
+            سجل دخولك بجوجل علشان تظهر باسمك وتشاركنا رأيك.
+          </p>
+          <div class="message-actions">
+            <button id="likeBtn" class="action-btn like-btn">
+              <i class="fas fa-heart"></i>
+              <span>إعجاب (<span id="likeCount">0</span>)</span>
+            </button>
+            <button id="commentBtn" class="action-btn comment-btn">
+              <i class="fas fa-comment"></i>
+              <span>تعليق</span>
+            </button>
+          </div>
+          <!-- التعليقات -->
+          <div id="commentsContainer" class="comments-section"></div>
         </div>
-        <!-- التعليقات -->
-        <div id="commentsContainer" class="comments-section"></div>
       </div>
+    </section>
+
+    <!-- الأعضاء -->
+    <section id="members" class="page-section">
+      <h2>الأعضاء</h2>
+      <p>هنا هنعرض قائمة الأعضاء المسجلين.</p>
+    </section>
+
+    <!-- المجموعات -->
+    <section id="groups" class="page-section">
+      <h2>المجموعات</h2>
+      <p>هنا هنعرض المجموعات المتاحة.</p>
+    </section>
+
+    <!-- الإشعارات -->
+    <section id="notifications" class="page-section">
+      <h2>الإشعارات</h2>
+      <p>هنا هتظهر إشعاراتك.</p>
+    </section>
+
+    <!-- التحديثات -->
+    <section id="updates" class="page-section">
+      <h2>التحديثات</h2>
+      <p>هنا هنكتب آخر التحديثات الخاصة بالموقع.</p>
     </section>
   </main>
 
@@ -58,5 +93,25 @@
 
   <!-- ربط ملف الجافاسكربت -->
   <script type="module" src="main.js"></script>
+  <script>
+    // التحكم في عرض الأقسام
+    const navLinks = document.querySelectorAll('.nav-icon');
+    const sections = document.querySelectorAll('.page-section');
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // إزالة active من الكل
+        navLinks.forEach(l => l.classList.remove('active'));
+        sections.forEach(s => s.classList.remove('active'));
+        
+        // تفعيل القسم المطلوب
+        link.classList.add('active');
+        const sectionId = link.getAttribute('data-section');
+        document.getElementById(sectionId).classList.add('active');
+      });
+    });
+  </script>
 </body>
 </html>
