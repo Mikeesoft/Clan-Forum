@@ -3,8 +3,8 @@
 
 /* ======== إعداد عام وخلفية متحركة ======== */
 :root{
-  --primary: #3498db;
-  --dark: #2c3e50;
+  --primary: #3498DB;
+  --dark: #2C3E50;
   --muted: #7f8c8d;
   --accent: #2ecc71;
   --danger: #e74c3c;
@@ -373,8 +373,29 @@ button {
 
 /* أصغر الشاشات */
 @media (max-width: 480px) {
-  .nav-icon { font-size: 0.9em; }
-  .nav-icon i { font-size: 1.3em; }
+  .nav-right,
+  .nav-left {
+    display: flex;
+    overflow-x: auto;    /* يسمح بالتمرير الأفقي */
+    white-space: nowrap; /* يخلي العناصر في صف واحد */
+    gap: 10px;
+    padding-bottom: 6px; /* عشان الاسكرول مايبقاش لازق */
+    -webkit-overflow-scrolling: touch; /* تمرير ناعم في iOS */
+  }
+
+  .nav-icon {
+    flex: 0 0 auto; /* يمنع الايقونة من التمدد */
+    min-width: 70px; /* حجم مناسب لكل زر */
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 6px;
+  }
+
+  .nav-icon i {
+    font-size: 1.4em; /* تصغير الايقونة شوية */
+  }
+
   .message-card p { font-size: 0.95em; }
 }
 
