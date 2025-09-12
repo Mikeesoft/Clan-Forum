@@ -7,6 +7,7 @@
   --dark: #2c3e50;
   --muted: #7f8c8d;
   --accent: #2ecc71;
+  --danger: #e74c3c;
   --card-bg: #ffffff;
 }
 
@@ -23,7 +24,7 @@ body {
   /* خلفية متحركة جميلة */
   background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71);
   background-size: 400% 400%;
-  animation: gradientAnimation 15s ease infinite;
+  animation: gradientAnimation 10s ease infinite;
 }
 
 /* حركة التدرج */
@@ -147,7 +148,7 @@ button {
   border-radius: 15px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   padding: 35px;
-  border-right: 6px solid var(--primary); /* شريط جانبي أنيق */
+  border-right: 6px solid var(--primary);
 }
 
 /* عنوان الكارد */
@@ -175,21 +176,21 @@ button {
   gap: 18px;
   padding-top: 14px;
   border-top: 1px solid #f0f0f0;
-  justify-content: flex-start; /* في rtl يكون هذا على اليمين */
+  justify-content: flex-start;
 }
 
-/* ===== تصحيح: استخدمنا action-btn كقاعدة واحدة (يدعم like-btn للأمان) ===== */
+/* ===== أزرار التفاعل ===== */
 .action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px; /* مهم لدعم RTL/LTR بدون استخدام margin-left */
+  gap: 10px;
   color: var(--muted);
   font-size: 1.12em;
   font-weight: 700;
   transition: color 0.25s ease, transform 0.15s ease, background-color 0.2s ease;
   padding: 8px 12px;
   border-radius: 7px;
-  background-color: transparent;
+  background-color: #f7f7f7;
 }
 
 .action-btn i {
@@ -197,21 +198,25 @@ button {
   display: inline-block;
 }
 
-/* حالة التمرير للأزرار */
+/* حالة التمرير */
 .action-btn:hover {
   color: var(--dark);
   transform: translateY(-3px) scale(1.03);
-  background-color: #fbfbfb;
+  background-color: #f0f0f0;
 }
 
-/* دعم لتوافق أسماء الكلاسات: .action-btn.liked و .like-btn.liked */
+/* زر الإعجاب */
 .action-btn.liked,
 .like-btn.liked {
-  color: #e74c3c;
+  color: #fff;
+  background-color: var(--danger);
   animation: pulse 0.55s ease-in-out;
 }
 
-/* نبضة عند الإعجاب */
+.like-btn.liked i {
+  color: #fff;
+}
+
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.08); }
@@ -232,6 +237,13 @@ button {
   margin-bottom: 12px;
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.04);
   border-right: 3px solid #b3e0ff;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .comment-author {
@@ -251,7 +263,7 @@ button {
 .comment-text {
   font-size: 1em;
   color: #444;
-  white-space: pre-wrap; /* للحفاظ على السطور */
+  white-space: pre-wrap;
 }
 
 /* منطقة إدخال التعليق */
@@ -273,7 +285,7 @@ button {
 }
 
 .comment-input-area button {
-  background-color: var(--accent);
+  background-color: var(--primary);
   color: #fff;
   padding: 12px 18px;
   border-radius: 10px;
@@ -283,7 +295,7 @@ button {
 }
 
 .comment-input-area button:hover {
-  background-color: #27ae60;
+  background-color: #2980b9;
   transform: translateY(-2px);
 }
 
@@ -315,7 +327,6 @@ button {
   .nav-left { order: 2; margin-top: 6px; }
   .nav-right { order: 1; }
 
-  /* أيقونات التنقل: اجعلها صفياً على الشاشات الصغيرة */
   .nav-icon {
     flex-direction: row;
     gap: 10px;
@@ -367,7 +378,7 @@ button {
   .message-card p { font-size: 0.95em; }
 }
 
-/* ======= صفحة تسجيل الدخول - أنماط مساعدة (إن أضفت login.html لاحقاً) ======= */
+/* ======= صفحة تسجيل الدخول ======= */
 .login-card {
   background-color: var(--card-bg);
   border-radius: 15px;
@@ -401,6 +412,7 @@ button {
   color: #fff;
   display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:10px;
 }
+
 /* ======= صفحة الأعضاء ======= */
 .members-list {
   display: grid;
