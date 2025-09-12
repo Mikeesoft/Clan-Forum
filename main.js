@@ -1,4 +1,4 @@
-// main.js (موديول - متكامل للتسجيل + لايك toggle + تعليقات subcollection)
+// main.js (محسّن - تسجيل + لايك toggle + تعليقات subcollection + تحسينات)
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -20,12 +20,13 @@ import {
   addDoc,
   query,
   orderBy,
+  limit,
+  startAfter,
   onSnapshot,
-  serverTimestamp,
-  increment
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ====== تكوين Firebase (استبدل بالقيم الخاصة بمشروعك لو مختلفة) ====== */
+/* ====== تكوين Firebase ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
   authDomain: "clan-forum.firebaseapp.com",
@@ -49,53 +50,45 @@ const commentBtn = document.getElementById("commentBtn");
 const commentsContainer = document.getElementById("commentsContainer");
 
 /* ====== مراجع Firestore ====== */
-const postRef = doc(db, "posts", "main-post"); // مستند رئيسي للبوست
-const commentsCol = collection(db, "posts", "main-post", "comments"); // subcollection للتعليقات
+const postRef = doc(db, "posts", "main-post");
+const commentsCol = collection(db, "posts", "main-post", "comments");
 
-/* ====== دالة إظهار أخطاء مبسطة على الصفحة (يساعد لو مش شايف الـ Console) ====== */
-function showErrorOnPage(msg) {
-  let el = document.getElementById("chatgpt-error-box");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "chatgpt-error-box";
-    Object.assign(el.style, {
-      position: "fixed",
-      left: "10px",
-      bottom: "10px",
-      background: "#f44336",
-      color: "#fff",
-      padding: "10px 14px",
-      borderRadius: "8px",
-      zIndex: 9999,
-      boxShadow: "0 4px 14px rgba(0,0,0,0.25)"
-    });
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  setTimeout(() => { if (el) el.remove(); }, 6000);
+/* ====== Toast Notification بدل مربع أحمر ====== */
+function showToast(msg, type = "error") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    background: type === "error" ? "#e74c3c" : "#2ecc71",
+    color: "#fff",
+    padding: "10px 16px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+    zIndex: 9999,
+    opacity: "0",
+    transition: "opacity 0.3s ease"
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => (toast.style.opacity = "1"), 50);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 
 /* ====== تأكيد وجود المستند الرئيسي ====== */
 async function ensureDoc() {
-  try {
-    const snap = await getDoc(postRef);
-    if (!snap.exists()) {
-      await setDoc(postRef, { likes: 0, likedBy: [] });
-    } else {
-      // ضمان تواجد الحقول الأساسية
-      const data = snap.data();
-      const updates = {};
-      if (typeof data.likes === "undefined") updates.likes = 0;
-      if (!Array.isArray(data.likedBy)) updates.likedBy = [];
-      if (Object.keys(updates).length) await updateDoc(postRef, updates);
-    }
-  } catch (err) {
-    console.error("ensureDoc error:", err);
-    showErrorOnPage("خطأ في الاتصال بقاعدة البيانات عند التهيئة.");
+  const snap = await getDoc(postRef);
+  if (!snap.exists()) {
+    await setDoc(postRef, { likes: 0, likedBy: [] });
   }
 }
 
-/* ====== الاستماع للبوست (عدد اللايكات وحالة الزر) ====== */
+/* ====== الاستماع للبوست ====== */
 function listenPost() {
   onSnapshot(postRef, (snap) => {
     if (!snap.exists()) return;
@@ -103,209 +96,165 @@ function listenPost() {
     likeCountSpan.textContent = data.likes ?? 0;
 
     const user = auth.currentUser;
-    if (user && Array.isArray(data.likedBy)) {
-      if (data.likedBy.includes(user.uid)) {
-        likeBtn.classList.add("liked");
-        likeBtn.setAttribute("aria-pressed", "true");
-      } else {
-        likeBtn.classList.remove("liked");
-        likeBtn.setAttribute("aria-pressed", "false");
-      }
+    if (user && Array.isArray(data.likedBy) && data.likedBy.includes(user.uid)) {
+      likeBtn.classList.add("liked");
     } else {
       likeBtn.classList.remove("liked");
-      likeBtn.setAttribute("aria-pressed", "false");
     }
-  }, (err) => {
-    console.error("listenPost onSnapshot error:", err);
-    showErrorOnPage("فشل استلام تحديثات اللايكات.");
-  });
+  }, () => showToast("فشل استلام تحديثات اللايكات"));
 }
 
-/* ====== وظيفة اللايك (toggle باستخدام transaction لسلامة التحديث) ====== */
+/* ====== Toggle Like ====== */
 if (likeBtn) {
   likeBtn.addEventListener("click", async () => {
-    // نحتاج المستخدم مسجل
     if (!auth.currentUser) {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        console.error("Login required:", err);
-        showErrorOnPage("يجب تسجيل الدخول أولاً.");
-        return;
-      }
+      try { await signInWithPopup(auth, provider); } 
+      catch { return showToast("يجب تسجيل الدخول أولاً."); }
     }
-
     const user = auth.currentUser;
     if (!user) return;
-
     likeBtn.disabled = true;
 
     try {
-      await runTransaction(db, async (transaction) => {
-        const snap = await transaction.get(postRef);
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(postRef);
         if (!snap.exists()) {
-          // إذا المستند مش موجود، نعمله مع لايك واحد
-          transaction.set(postRef, { likes: 1, likedBy: [user.uid] });
+          tx.set(postRef, { likes: 1, likedBy: [user.uid] });
           return;
         }
         const data = snap.data();
         const likedBy = Array.isArray(data.likedBy) ? [...data.likedBy] : [];
-        const already = likedBy.includes(user.uid);
-
-        if (already) {
-          // إلغاء الإعجاب
-          const newLiked = likedBy.filter(id => id !== user.uid);
-          const newLikes = Math.max((data.likes || 1) - 1, 0);
-          transaction.update(postRef, { likedBy: newLiked, likes: newLikes });
+        if (likedBy.includes(user.uid)) {
+          tx.update(postRef, {
+            likedBy: likedBy.filter(id => id !== user.uid),
+            likes: Math.max((data.likes || 1) - 1, 0)
+          });
         } else {
-          // إضافة إعجاب
           likedBy.push(user.uid);
-          const newLikes = (data.likes || 0) + 1;
-          transaction.update(postRef, { likedBy: likedBy, likes: newLikes });
+          tx.update(postRef, {
+            likedBy,
+            likes: (data.likes || 0) + 1
+          });
         }
       });
-    } catch (err) {
-      console.error("Error toggling like:", err);
-      // أهم خطأ محتمل: permission-denied
-      if (err && err.code && err.code.includes("permission")) {
-        showErrorOnPage("صلاحيات Firestore تمنع التعديل — راجع قواعد الأمان.");
-      } else {
-        showErrorOnPage("حدث خطأ أثناء تغيير حالة الإعجاب.");
-      }
+    } catch {
+      showToast("خطأ أثناء تحديث الإعجاب.");
     } finally {
       likeBtn.disabled = false;
     }
   });
 }
 
-/* ====== التعليقات (subcollection) ====== */
-// الاستماع للتعليقات realtime
-function listenComments() {
-  const q = query(commentsCol, orderBy("createdAt", "asc"));
+/* ====== التعليقات مع Load More ====== */
+let lastVisible = null;
+const COMMENTS_LIMIT = 5;
+
+async function loadComments(initial = false) {
+  let q = query(commentsCol, orderBy("createdAt", "asc"), limit(COMMENTS_LIMIT));
+  if (lastVisible && !initial) {
+    q = query(commentsCol, orderBy("createdAt", "asc"), startAfter(lastVisible), limit(COMMENTS_LIMIT));
+  }
+
   onSnapshot(q, (snapshot) => {
-    commentsContainer.innerHTML = "";
+    if (initial) commentsContainer.innerHTML = "";
     snapshot.forEach(docSnap => {
+      lastVisible = docSnap;
       const item = docSnap.data();
       const div = document.createElement("div");
       div.classList.add("comment");
-
       const author = item.authorName || "عضو";
       let created = "";
-      if (item.createdAt && typeof item.createdAt.toDate === "function") {
-        created = item.createdAt.toDate().toLocaleString();
-      }
+      if (item.createdAt?.toDate) created = item.createdAt.toDate().toLocaleString();
 
-      div.innerHTML = `<div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
-                       <div class="comment-text">${escapeHtml(item.text)}</div>`;
+      div.innerHTML = `
+        <div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
+        <div class="comment-text">${linkify(escapeHtml(item.text))}</div>
+      `;
       commentsContainer.appendChild(div);
     });
-  }, (err) => {
-    console.error("خطأ في الاستماع للتعليقات:", err);
-    showErrorOnPage("فشل استلام التعليقات — تفقد قواعد الأمان أو الاتصال.");
+
+    if (snapshot.size === COMMENTS_LIMIT) {
+      const loadBtn = document.createElement("button");
+      loadBtn.textContent = "عرض المزيد";
+      loadBtn.className = "load-more-btn";
+      loadBtn.onclick = () => loadComments(false);
+      commentsContainer.appendChild(loadBtn);
+    }
   });
 }
 
-// إضافة تعليق جديد (يفتح حقل الإدخال ويضيف عبر addDoc)
-let commentsVisible = false;
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
+    try { await signInWithPopup(auth, provider); } 
+    catch { return showToast("يجب تسجيل الدخول للتعليق."); }
+  }
+  const inputArea = document.createElement("div");
+  inputArea.className = "comment-input-area";
+  inputArea.innerHTML = `
+    <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
+    <button id="addCommentBtn">إضافة تعليق</button>
+  `;
+  commentsContainer.insertAdjacentElement("afterbegin", inputArea);
+
+  document.getElementById("addCommentBtn").onclick = async () => {
+    const txt = document.getElementById("newCommentInput").value.trim();
+    if (!txt) return showToast("الرجاء كتابة تعليق!");
     try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error("Login required for commenting:", err);
-      showErrorOnPage("يجب تسجيل الدخول للتعليق.");
-      return;
+      const user = auth.currentUser;
+      await addDoc(commentsCol, {
+        authorName: user?.displayName || "عضو",
+        authorId: user?.uid || null,
+        text: txt,
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("newCommentInput").value = "";
+      showToast("تمت إضافة التعليق", "success");
+    } catch {
+      showToast("فشل إرسال التعليق");
     }
-  }
-
-  if (!commentsVisible) {
-    const inputArea = document.createElement("div");
-    inputArea.classList.add("comment-input-area");
-    inputArea.innerHTML = `
-      <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
-      <button id="addCommentBtn">إضافة تعليق</button>
-    `;
-    commentsContainer.insertAdjacentElement("afterbegin", inputArea);
-    commentsVisible = true;
-
-    const addBtn = document.getElementById("addCommentBtn");
-    const inputEl = document.getElementById("newCommentInput");
-
-    addBtn.addEventListener("click", async () => {
-      const txt = inputEl.value.trim();
-      if (!txt) {
-        alert("الرجاء كتابة تعليق!");
-        return;
-      }
-      addBtn.disabled = true;
-
-      try {
-        const user = auth.currentUser;
-        await addDoc(commentsCol, {
-          authorName: user ? user.displayName || "عضو" : "عضو",
-          authorId: user ? user.uid : null,
-          text: txt,
-          createdAt: serverTimestamp()
-        });
-        inputEl.value = "";
-      } catch (err) {
-        console.error("خطأ أثناء إضافة التعليق:", err);
-        if (err.code && err.code.includes("permission")) {
-          showErrorOnPage("صلاحيات Firestore تمنع إضافة التعليقات — راجع قواعد الأمان.");
-        } else {
-          showErrorOnPage("فشل إرسال التعليق.");
-        }
-      } finally {
-        addBtn.disabled = false;
-      }
-    });
-  } else {
-    const inputArea = commentsContainer.querySelector(".comment-input-area");
-    if (inputArea) inputArea.remove();
-    commentsVisible = false;
-  }
+  };
 });
 
-/* ====== تسجيل الدخول / واجهة المستخدم ====== */
+/* ====== Auth UI ====== */
 function bindAuthUI() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       const name = escapeHtml(user.displayName || "مستخدم");
-      const photo = user.photoURL ? `<img src="${user.photoURL}" alt="${name}" style="width:28px;height:28px;border-radius:50%;margin-inline-end:8px;">` : `<i class="fas fa-user-circle" style="margin-inline-end:8px;"></i>`;
+      const photo = user.photoURL
+        ? `<img src="${user.photoURL}" alt="${name}" style="width:28px;height:28px;border-radius:50%;margin-inline-end:8px;">`
+        : `<i class="fas fa-user-circle" style="margin-inline-end:8px;"></i>`;
       loginContainer.innerHTML = `
         <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
-          ${photo}
-          <span>${name}</span>
+          ${photo}<span>${name}</span>
         </a>
-        <button id="signOutBtn" class="auth-btn" title="تسجيل الخروج">خروج</button>
+        <button id="signOutBtn" class="auth-btn">خروج</button>
       `;
-      const outBtn = document.getElementById("signOutBtn");
-      if (outBtn) outBtn.onclick = () => signOut(auth);
+      document.getElementById("signOutBtn").onclick = () => signOut(auth);
     } else {
       loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
-      const googleBtn = document.getElementById("googleLoginBtn");
-      if (googleBtn) googleBtn.onclick = async () => {
-        try { await signInWithPopup(auth, provider); } catch (e) { console.error("Login failed:", e); showErrorOnPage("فشل تسجيل الدخول."); }
-      };
+      document.getElementById("googleLoginBtn").onclick = () => signInWithPopup(auth, provider);
     }
   });
 }
 
-/* ====== دالة مساعدة لتجنّب XSS ====== */
-function escapeHtml(unsafe) {
-  if (!unsafe && unsafe !== 0) return "";
-  return String(unsafe)
+/* ====== Helpers ====== */
+function escapeHtml(str) {
+  return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+}
 
 /* ====== init ====== */
 (async function init() {
   await ensureDoc();
   listenPost();
-  listenComments();
   bindAuthUI();
+  loadComments(true);
 })();
