@@ -53,7 +53,7 @@ const commentsContainer = document.getElementById("commentsContainer");
 const postRef = doc(db, "posts", "main-post");
 const commentsCol = collection(db, "posts", "main-post", "comments");
 
-/* ====== Toast Notification بدل مربع أحمر ====== */
+/* ====== Toast Notification ====== */
 function showToast(msg, type = "error") {
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
@@ -183,11 +183,19 @@ async function loadComments(initial = false) {
   });
 }
 
+/* ====== منع تكرار صندوق التعليق ====== */
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
-    try { await signInWithPopup(auth, provider); } 
-    catch { return showToast("يجب تسجيل الدخول للتعليق."); }
+    try { 
+      await signInWithPopup(auth, provider); 
+    } catch { 
+      return showToast("يجب تسجيل الدخول للتعليق."); 
+    }
   }
+
+  // ✅ لو فيه صندوق تعليق موجود بالفعل ما نكرروش
+  if (document.querySelector(".comment-input-area")) return;
+
   const inputArea = document.createElement("div");
   inputArea.className = "comment-input-area";
   inputArea.innerHTML = `
@@ -258,6 +266,8 @@ function linkify(text) {
   bindAuthUI();
   loadComments(true);
 })();
+
+/* ====== Chat UI (مبدئي) ====== */
 const chatBtn = document.getElementById("chatBtn");
 const chatWindow = document.getElementById("chatWindow");
 const closeChat = document.getElementById("closeChat");
