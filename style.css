@@ -401,3 +401,39 @@ button {
   color: #fff;
   display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:10px;
 }
+/* ======= صفحة الأعضاء ======= */
+.members-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.member-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.member-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.member-info h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: #2c3e50;
+}
+
+.member-info p {
+  margin: 4px 0 0;
+  font-size: 0.9em;
+  color: #7f8c8d;
+}
