@@ -1,492 +1,403 @@
-/* إعادة تعيين أساسي وتنسيقات عامة */
+/* style.css - محدث ليتوافق مع index.html و main.js */
+/* خطّاف: يستخدم Cairo للعربية و Poppins للأرقام/الإنجليزية (تحميل الخط من index.html) */
+
+/* ======== إعداد عام وخلفية متحركة ======== */
+:root{
+  --primary: #3498db;
+  --dark: #2c3e50;
+  --muted: #7f8c8d;
+  --accent: #2ecc71;
+  --card-bg: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
 body {
-    /* تغيير الخطوط: Cairo للعربية، Poppins للأرقام/الأجنبية، Arial كخط احتياطي */
-    font-family: 'Cairo', 'Poppins', Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    
-    /* ======== بداية كود الخلفية المتحركة ======== */
-    background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71); /* تدرج لوني أساسي */
-    background-size: 400% 400%; /* لتمكين الحركة على مساحة أكبر */
-    animation: gradientAnimation 15s ease infinite; /* اسم الحركة، المدة، نوع الحركة، تكرار لانهائي */
-    /* ======== نهاية كود الخلفية المتحركة ======== */
-
-    color: #333;
-    direction: rtl; /* لجعل الاتجاه من اليمين لليسار للصفحة بالكامل */
-    text-align: right; /* محاذاة النص لليمين افتراضياً */
-    overflow-x: hidden; /* لمنع ظهور شريط تمرير أفقي غير مرغوب فيه */
+  font-family: 'Cairo', 'Poppins', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #333;
+  direction: rtl; /* مهم للغة العربية */
+  text-align: right;
+  overflow-x: hidden;
+  /* خلفية متحركة جميلة */
+  background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
 }
 
-/* تعريف حركة التدرج اللوني */
+/* حركة التدرج */
 @keyframes gradientAnimation {
-    0% {
-        background-position: 0% 50%; /* تبدأ من هذا الموضع */
-    }
-    50% {
-        background-position: 100% 50%; /* تتحرك إلى هذا الموضع */
-    }
-    100% {
-        background-position: 0% 50%; /* تعود للموضع الأصلي */
-    }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* التنسيقات العامة للروابط والأزرار */
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
+/* روابط وأزرار عامة */
+a { text-decoration: none; color: inherit; }
 button {
-    cursor: pointer;
-    border: none;
-    background: none;
-    padding: 0;
-    font-family: inherit;
-    outline: none; /* إزالة الخط الأزرق حول الأزرار عند التركيز عليها */
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  outline: none;
 }
 
-/* الشريط العلوي (Header) */
+/* ======= الشريط العلوي (Header) ======= */
 .main-header {
-    background-color: #2c3e50; /* لون داكن وأنيق للرأس */
-    color: #ecf0f1;
-    padding: 15px 0;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25); /* ظل أقوى وأكثر انتشاراً */
-    position: sticky; /* لجعل الهيدر يلتصق بالأعلى عند التمرير */
-    top: 0;
-    z-index: 1000; /* لضمان ظهوره فوق المحتوى الآخر */
+  background-color: var(--dark);
+  color: #ecf0f1;
+  padding: 15px 0;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  gap: 15px;
 }
 
 .nav-left, .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 25px; /* مسافة بين الأيقونات */
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
+/* أيقونات التنقّل */
 .nav-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 0.95em; /* حجم أكبر قليلاً للنص */
-    color: #ecf0f1;
-    transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease; /* إضافة تأثير للظل النصي */
-    padding: 5px; /* مساحة حول الأيقونة لتسهيل النقر */
-    border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95em;
+  color: #ecf0f1;
+  transition: color 0.25s ease, transform 0.25s ease, text-shadow 0.25s ease;
+  padding: 6px;
+  border-radius: 6px;
 }
 
 .nav-icon i {
-    font-size: 2em; /* حجم أكبر للأيقونات لتبدو أفخم */
-    margin-bottom: 5px;
-    /* تأثير بسيط لعمق الأيقونة */
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  font-size: 1.9em;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.25);
 }
 
 .nav-icon:hover {
-    color: #5dade2; /* لون أزرق فاتح وجذاب عند التمرير */
-    transform: translateY(-5px) scale(1.05); /* تأثير ارتداد و تكبير خفيف */
-    text-shadow: 0px 0px 8px rgba(255,255,255,0.7); /* ظل مضيء للأيقونة */
+  color: #5dade2;
+  transform: translateY(-4px) scale(1.04);
+  text-shadow: 0 0 8px rgba(255,255,255,0.6);
 }
 
-.nav-icon.active { /* فئة لتحديد الأيقونة النشطة للصفحة الحالية */
-    color: #5dade2;
-    font-weight: bold;
-    border-bottom: 2px solid #5dade2;
-    padding-bottom: 3px;
+.nav-icon.active {
+  color: #5dade2;
+  font-weight: 700;
+  border-bottom: 2px solid #5dade2;
+  padding-bottom: 3px;
 }
 
-
+/* زر التسجيل/حالة الملف الشخصي */
 .auth-btn {
-    background-color: #3498db;
-    color: #fff;
-    padding: 12px 25px; /* بادينج أكبر قليلاً */
-    border-radius: 8px; /* زوايا أكثر استدارة */
-    font-weight: bold;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* ظل لزر تسجيل الدخول */
+  background-color: var(--primary);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 9px;
+  font-weight: 700;
+  transition: background-color 0.25s ease, transform 0.18s ease, box-shadow 0.25s ease;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.18);
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .auth-btn:hover {
-    background-color: #2980b9;
-    transform: translateY(-3px); /* تأثير ارتداد للزر */
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); /* ظل أكبر عند التمرير */
+  background-color: #2980b9;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
 }
 
-/* المحتوى الرئيسي (Main Content) */
+/* لو ظهر profile-icon مع صورة */
+.profile-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ecf0f1;
+}
+.profile-icon img {
+  width: 28px; height: 28px; border-radius: 50%;
+  object-fit: cover;
+  display: inline-block;
+}
+
+/* ======= المحتوى الرئيسي ======= */
 .container {
-    max-width: 950px; /* عرض متوسط للمحتوى ليتسع أكثر قليلاً */
-    margin: 30px auto;
-    padding: 0 20px;
+  max-width: 950px;
+  margin: 30px auto;
+  padding: 0 18px;
 }
 
 .admin-message-section {
-    background-color: #ffffff;
-    border-radius: 15px; /* زوايا أكثر استدارة */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* ظل أقوى وأكثر انتشاراً */
-    padding: 35px; /* بادينج أكبر */
-    border-right: 6px solid #3498db; /* شريط جانبي أزرق أسمك وأفخم */
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  padding: 35px;
+  border-right: 6px solid var(--primary); /* شريط جانبي أنيق */
 }
 
+/* عنوان الكارد */
 .message-card h2 {
-    color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 20px; /* مسافة أكبر */
-    font-size: 2em; /* حجم أكبر للعنوان */
-    border-bottom: 2px solid #e0e0e0; /* لون أفتح للحد السفلي */
-    padding-bottom: 12px;
-    text-align: right;
+  color: var(--dark);
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 1.9em;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
 }
 
+/* نص الرسالة */
 .message-card p {
-    font-size: 1.15em; /* حجم أكبر للنص */
-    line-height: 1.9; /* تباعد أسطر أكبر لراحة العين */
-    color: #555;
-    margin-bottom: 30px; /* مسافة أكبر */
-    text-align: justify;
+  font-size: 1.12em;
+  line-height: 1.8;
+  color: #444;
+  margin-bottom: 22px;
+  text-align: justify;
 }
 
+/* أزرار الإجراء */
 .message-actions {
-    display: flex;
-    gap: 25px; /* مسافة أكبر بين الأزرار */
-    padding-top: 18px;
-    border-top: 1px solid #f0f0f0;
-    justify-content: flex-start; /* الأزرار تبدأ من اليمين */
+  display: flex;
+  gap: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+  justify-content: flex-start; /* في rtl يكون هذا على اليمين */
 }
 
+/* ===== تصحيح: استخدمنا action-btn كقاعدة واحدة (يدعم like-btn للأمان) ===== */
 .action-btn {
-    display: flex;
-    align-items: center;
-    color: #7f8c8d;
-    font-size: 1.15em; /* حجم أكبر للنص */
-    font-weight: bold;
-    transition: color 0.3s ease, transform 0.2s ease;
-    padding: 8px 12px; /* إضافة بادينج خفيف لتسهيل النقر */
-    border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px; /* مهم لدعم RTL/LTR بدون استخدام margin-left */
+  color: var(--muted);
+  font-size: 1.12em;
+  font-weight: 700;
+  transition: color 0.25s ease, transform 0.15s ease, background-color 0.2s ease;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background-color: transparent;
 }
 
 .action-btn i {
-    margin-left: 10px; /* مسافة أكبر بين الأيقونة والنص */
-    font-size: 1.4em; /* حجم أكبر للأيقونة */
+  font-size: 1.35em;
+  display: inline-block;
 }
 
+/* حالة التمرير للأزرار */
 .action-btn:hover {
-    color: #2c3e50;
-    transform: translateY(-3px) scale(1.05); /* تأثير ارتداد وتكبير خفيف */
-    background-color: #f9f9f9; /* خلفية خفيفة عند التمرير */
+  color: var(--dark);
+  transform: translateY(-3px) scale(1.03);
+  background-color: #fbfbfb;
 }
 
+/* دعم لتوافق أسماء الكلاسات: .action-btn.liked و .like-btn.liked */
+.action-btn.liked,
 .like-btn.liked {
-    color: #e74c3c;
-    /* إضافة تأثير نبض خفيف عند الإعجاب */
-    animation: pulse 0.5s ease-in-out;
+  color: #e74c3c;
+  animation: pulse 0.55s ease-in-out;
 }
 
+/* نبضة عند الإعجاب */
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
-/* تنسيقات قسم التعليقات */
+/* ======= قسم التعليقات ======= */
 .comments-section {
-    margin-top: 25px;
-    padding-top: 25px;
-    border-top: 1px dashed #e0e0e0; /* لون أفتح للخط المتقطع */
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #e9ecef;
 }
 
 .comment {
-    background-color: #fcfcfc; /* لون أفتح للتعليقات */
-    border-radius: 10px; /* زوايا أكثر استدارة */
-    padding: 12px 18px;
-    margin-bottom: 12px;
-    box-shadow: inset 0 1px 4px rgba(0,0,0,0.07); /* ظل داخلي خفيف */
-    border-right: 3px solid #b3e0ff; /* شريط جانبي خفيف للتعليقات */
+  background-color: #fafafa;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.04);
+  border-right: 3px solid #b3e0ff;
 }
 
 .comment-author {
-    font-weight: bold;
-    color: #34495e;
-    margin-bottom: 6px;
-    font-size: 1.05em;
+  font-weight: 700;
+  color: #34495e;
+  margin-bottom: 6px;
+  font-size: 1.03em;
+}
+
+.comment-time {
+  font-weight: 400;
+  color: #7f8c8d;
+  font-size: 0.9em;
+  margin-inline-start: 8px;
 }
 
 .comment-text {
-    font-size: 1em;
-    color: #444;
+  font-size: 1em;
+  color: #444;
+  white-space: pre-wrap; /* للحفاظ على السطور */
 }
 
+/* منطقة إدخال التعليق */
 .comment-input-area {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .comment-input-area input[type="text"] {
-    flex-grow: 1;
-    padding: 12px 15px; /* بادينج أكبر */
-    border: 1px solid #ccc;
-    border-radius: 8px; /* زوايا أكثر استدارة */
-    font-size: 1.1em;
-    font-family: inherit;
-    text-align: right;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* ظل داخلي خفيف */
+  flex: 1 1 auto;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 1.03em;
+  font-family: inherit;
+  text-align: right;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
 }
 
 .comment-input-area button {
-    background-color: #2ecc71;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 1em;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+  background-color: var(--accent);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 700;
+  transition: background-color 0.2s ease, transform 0.12s ease;
 }
 
 .comment-input-area button:hover {
-    background-color: #27ae60;
-    transform: translateY(-2px);
+  background-color: #27ae60;
+  transform: translateY(-2px);
 }
 
-
-/* التذييل (Footer) */
+/* ======= الفوتر ======= */
 .main-footer {
-    text-align: center;
-    padding: 25px;
-    margin-top: 50px; /* مسافة أكبر من المحتوى */
-    background-color: #2c3e50;
-    color: #bdc3c7;
-    font-size: 0.95em;
-    box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.15); /* ظل أقوى */
+  text-align: center;
+  padding: 24px;
+  margin-top: 40px;
+  background-color: var(--dark);
+  color: #bdc3c7;
+  font-size: 0.95em;
+  box-shadow: 0 -3px 10px rgba(0,0,0,0.12);
 }
 
-/* ====== تحسينات التجاوبية (Responsiveness) ====== */
+/* ======= تجاوب (Responsive) ======= */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 16px;
+  }
 
-@media (max-width: 768px) { /* للشاشات الأصغر من 768px (الأجهزة اللوحية والهواتف) */
-    .navbar {
-        flex-direction: column; /* جعل شريط التنقل عموديًا */
-        gap: 15px; /* مسافة بين العناصر العمودية */
-    }
+  .nav-left, .nav-right {
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
 
-    .nav-left, .nav-right {
-        width: 100%; /* جعل عناصر التنقل تأخذ العرض الكامل */
-        justify-content: center; /* توسيط الأيقونات في المنتصف */
-        gap: 15px;
-    }
-    
-    .nav-left {
-        order: 2; /* لتغيير ترتيب الظهور بعد زر تسجيل الدخول */
-        margin-top: 10px; /* مسافة من زر تسجيل الدخول */
-    }
+  .nav-left { order: 2; margin-top: 6px; }
+  .nav-right { order: 1; }
 
-    .nav-right {
-        order: 1; /* زر تسجيل الدخول يظهر أولاً */
-    }
+  /* أيقونات التنقل: اجعلها صفياً على الشاشات الصغيرة */
+  .nav-icon {
+    flex-direction: row;
+    gap: 10px;
+    font-size: 1em;
+    padding: 8px 12px;
+    background-color: rgba(255,255,255,0.06);
+    border-radius: 10px;
+  }
+  .nav-icon i {
+    font-size: 1.45em;
+    margin-bottom: 0;
+  }
 
-    .auth-btn, .profile-icon {
-        width: auto; /* لضبط عرض الزر تلقائيا */
-        padding: 10px 20px;
-    }
+  .container { margin: 20px auto; padding: 0 14px; }
 
-    .nav-icon {
-        flex-direction: row; /* الأيقونة والنص بجانب بعضهما البعض على الهواتف */
-        font-size: 1em;
-        padding: 8px 12px;
-        background-color: rgba(255,255,255,0.1); /* خلفية خفيفة للأيقونات في الشريط العلوي */
-        border-radius: 8px;
-    }
+  .admin-message-section {
+    padding: 22px;
+    border-right: none;
+    border-top: 6px solid var(--primary);
+  }
 
-    .nav-icon i {
-        font-size: 1.5em; /* حجم أصغر قليلاً للأيقونات على الهواتف */
-        margin-left: 8px; /* مسافة على اليسار (للأيقونة والنص) */
-        margin-bottom: 0; /* إزالة المسافة السفلية */
-    }
-    
-    .nav-icon span {
-        display: block; /* للتأكد من أن النص يظهر */
-    }
+  .message-card h2 { font-size: 1.6em; }
+  .message-card p { font-size: 1em; }
 
-    .container {
-        margin: 20px auto;
-        padding: 0 15px; /* بادينج أقل على الجوانب */
-    }
+  .message-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
 
-    .admin-message-section {
-        padding: 25px; /* بادينج أقل */
-        border-right: none; /* إزالة الشريط الجانبي في الهواتف */
-        border-top: 5px solid #3498db; /* شريط علوي بدلاً من الجانبي */
-    }
+  .action-btn {
+    justify-content: center;
+    padding: 10px 0;
+    font-size: 1em;
+  }
 
-    .message-card h2 {
-        font-size: 1.6em; /* حجم أصغر للعنوان */
-    }
+  .comment-input-area {
+    flex-direction: column;
+    gap: 10px;
+  }
 
-    .message-card p {
-        font-size: 1em; /* حجم أصغر للنص */
-    }
-
-    .message-actions {
-        flex-direction: column; /* الأزرار تصبح عمودية */
-        align-items: stretch; /* تمتد لتملأ العرض */
-        gap: 15px;
-    }
-    
-    .action-btn {
-        justify-content: center; /* توسيط محتوى الزر (أيقونة ونص) */
-        padding: 10px 0;
-        font-size: 1em;
-    }
-    
-    .comment-input-area {
-        flex-direction: column; /* مربع التعليق والزر عموديًا */
-        gap: 10px;
-    }
-    
-    .comment-input-area button {
-        width: 100%; /* الزر يأخذ العرض الكامل */
-    }
-
-    .login-card {
-        padding: 30px;
-        margin: 40px auto;
-    }
-    .login-card h1 {
-        font-size: 2em;
-    }
-    .input-group input {
-        width: calc(100% - 24px); /* ضبط العرض ليتناسب مع البادينج */
-    }
+  .comment-input-area button { width: 100%; }
 }
 
-@media (max-width: 480px) { /* للهواتف الصغيرة جداً */
-    .nav-icon {
-        font-size: 0.85em;
-    }
-    .nav-icon i {
-        font-size: 1.3em;
-    }
-    .message-card p {
-        font-size: 0.95em;
-    }
+/* أصغر الشاشات */
+@media (max-width: 480px) {
+  .nav-icon { font-size: 0.9em; }
+  .nav-icon i { font-size: 1.3em; }
+  .message-card p { font-size: 0.95em; }
 }
 
-/* تنسيقات خاصة بصفحة تسجيل الدخول (login.html) */
+/* ======= صفحة تسجيل الدخول - أنماط مساعدة (إن أضفت login.html لاحقاً) ======= */
 .login-card {
-    background-color: #ffffff;
-    border-radius: 15px; /* زوايا أكثر استدارة */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* ظل أقوى */
-    padding: 40px;
-    max-width: 450px;
-    margin: 80px auto; /* مسافة من الأعلى */
-    text-align: center;
+  background-color: var(--card-bg);
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  padding: 36px;
+  max-width: 480px;
+  margin: 70px auto;
+  text-align: center;
 }
-.login-card h1 {
-    color: #2c3e50;
-    margin-bottom: 30px;
-    font-size: 2.5em;
-}
-.input-group {
-    margin-bottom: 25px; /* مسافة أكبر بين حقول الإدخال */
-    text-align: right;
-}
-.input-group label {
-    display: block;
-    margin-bottom: 10px; /* مسافة أكبر بين Label والإدخال */
-    color: #555;
-    font-weight: bold;
-    font-size: 1.1em;
-}
+.login-card h1 { color: var(--dark); margin-bottom: 22px; font-size: 2.2em; }
+.input-group { margin-bottom: 18px; text-align: right; }
+.input-group label { display:block; margin-bottom: 8px; color:#555; font-weight:700; }
 .input-group input {
-    width: calc(100% - 24px); /* مع الأخذ في الاعتبار البادينج */
-    padding: 14px 12px; /* بادينج أكبر */
-    border: 1px solid #ddd;
-    border-radius: 10px; /* زوايا أكثر استدارة */
-    font-size: 1.1em;
-    font-family: inherit; /* لاستخدام الخطوط الجديدة */
-    text-align: right;
-    box-shadow: inset 0 1px 4px rgba(0,0,0,0.08); /* ظل داخلي خفيف */
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.input-group input:focus {
-    border-color: #3498db; /* لون الحدود عند التركيز */
-    box-shadow: inset 0 1px 4px rgba(0,0,0,0.08), 0 0 8px rgba(52, 152, 219, 0.3); /* ظل خارجي عند التركيز */
-    outline: none; /* إزالة التركيز الافتراضي */
+  width: calc(100% - 24px);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 1.05em;
 }
 .login-btn {
-    background-color: #3498db;
-    color: white;
-    padding: 16px 30px; /* بادينج أكبر */
-    border-radius: 10px; /* زوايا أكثر استدارة */
-    font-size: 1.3em; /* حجم خط أكبر */
-    font-weight: bold;
-    width: 100%;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-    margin-top: 30px; /* مسافة أكبر */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  background-color: var(--primary);
+  color: white;
+  padding: 14px 26px;
+  border-radius: 10px;
+  font-size: 1.12em;
+  width: 100%;
+  font-weight: 700;
 }
-.login-btn:hover {
-    background-color: #2980b9;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-}
-.signup-link {
-    margin-top: 30px; /* مسافة أكبر */
-    font-size: 1.05em;
-    color: #777;
-}
-.signup-link a {
-    color: #3498db;
-    font-weight: bold;
-    transition: color 0.3s ease;
-}
-.signup-link a:hover {
-    color: #2980b9;
-    text-decoration: underline;
-}
-/* لتوسيط شريط التنقل في صفحة تسجيل الدخول */
-.login-page-header .navbar {
-    justify-content: center; /* توسيط العناصر في المنتصف */
-}
-.login-page-header .nav-left, .login-page-header .nav-right .nav-icon {
-    display: none; /* إخفاء الأيقونات في صفحة تسجيل الدخول لتبسيطها */
-}
-/* تعديل خاص بزر العودة للرئيسية في صفحة تسجيل الدخول */
-.login-card .auth-btn {
-    margin-top: 25px; /* مسافة كافية */
-    background-color: #7f8c8d; /* لون رمادي لزر العودة */
-}
-.login-card .auth-btn:hover {
-    background-color: #6c7a89;
-}
-
-/* تنسيقات خاصة بزر تسجيل الدخول بواسطة جوجل */
 .google-login-btn {
-    background-color: #db4437; /* لون أحمر جوجل الشهير */
-    margin-top: 20px; /* مسافة بينه وبين زر تسجيل الدخول التقليدي */
-    display: flex; /* لترتيب الأيقونة والنص جنباً إلى جنب */
-    align-items: center; /* لمحاذاة الأيقونة والنص عمودياً */
-    justify-content: center; /* لتوسيط الأيقونة والنص أفقياً */
-    gap: 10px; /* مسافة بين الأيقونة والنص */
-}
-.google-login-btn:hover {
-    background-color: #c0392b; /* لون أحمر أغمق عند التمرير */
-}
-.google-login-btn i {
-    font-size: 1.5em; /* حجم أكبر لأيقونة جوجل */
-}
-
-/* تحسينات التجاوبية لزر جوجل */
-@media (max-width: 768px) {
-    .google-login-btn {
-        padding: 12px 20px; /* ضبط البادينج على الشاشات الصغيرة */
-        font-size: 1em; /* ضبط حجم الخط */
-    }
-    .google-login-btn i {
-        font-size: 1.3em; /* ضبط حجم الأيقونة على الشاشات الصغيرة */
-    }
+  background-color: #db4437;
+  color: #fff;
+  display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:10px;
 }
