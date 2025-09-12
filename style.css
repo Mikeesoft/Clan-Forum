@@ -557,3 +557,35 @@ button {
     font-size: 1.4em;
   }
 }
+/* ======= زر تسجيل الدخول على الموبايل ======= */
+@media (max-width: 480px) {
+  #loginBtnContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;  /* يخليها في النص */
+    margin: 15px 0;
+  }
+
+  #googleLoginBtn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8em;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #googleLoginBtn:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  #googleLoginBtn span {
+    display: none; /* يخفي النص لو فيه */
+  }
+}
