@@ -267,7 +267,7 @@ function linkify(text) {
   loadComments(true);
 })();
 
-/* ====== Chat UI (مبدئي) ====== */
+
 const chatBtn = document.getElementById("chatBtn");
 const chatWindow = document.getElementById("chatWindow");
 const closeChat = document.getElementById("closeChat");
@@ -275,43 +275,36 @@ const sendMsg = document.getElementById("sendMsg");
 const chatInput = document.getElementById("chatInput");
 const chatMessages = document.getElementById("chatMessages");
 
-// فتح/غلق النافذة
+// فتح/غلق النافذة (toggle)
 chatBtn.addEventListener("click", () => {
-  chatWindow.style.display = "flex";
+  chatWindow.style.display =
+    chatWindow.style.display === "flex" ? "none" : "flex";
 });
+
+// غلق النافذة بزر ×
 closeChat.addEventListener("click", () => {
   chatWindow.style.display = "none";
 });
+
+// دالة إضافة رسالة
+function addMessage(text, type = "sent", avatar = "user.jpg") {
+  const msg = document.createElement("div");
+  msg.classList.add("msg", type);
+
+  msg.innerHTML = `
+    ${type === "received" ? `<div class="avatar"><img src="${avatar}" alt=""></div>` : ""}
+    <div class="bubble">${text}</div>
+    ${type === "sent" ? `<div class="avatar"><img src="${avatar}" alt=""></div>` : ""}
+  `;
+
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
 // إرسال رسالة
 sendMsg.addEventListener("click", () => {
   const txt = chatInput.value.trim();
   if (!txt) return;
-
-  const msg = document.createElement("div");
-  msg.classList.add("msg", "sent");
-  msg.textContent = txt;
-  chatMessages.appendChild(msg);
-
+  addMessage(txt, "sent", "me.jpg"); // صورتك
   chatInput.value = "";
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-});
-sendMsg.addEventListener("click", () => {
-  const txt = chatInput.value.trim();
-  if (!txt) return;
-
-  // صورة المرسل (ممكن من Google Auth أو صورة افتراضية)
-  const user = auth.currentUser;
-  const photo = user?.photoURL || "https://i.ibb.co/2d3F5tF/default-avatar.png";
-
-  const msg = document.createElement("div");
-  msg.classList.add("msg", "sent");
-  msg.innerHTML = `
-    <div class="bubble">${txt}</div>
-    <img src="${photo}" alt="me">
-  `;
-  chatMessages.appendChild(msg);
-
-  chatInput.value = "";
-  chatMessages.scrollTop = chatMessages.scrollHeight;
 });
