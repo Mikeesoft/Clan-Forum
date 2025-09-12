@@ -1,4 +1,4 @@
-/* style.css (مُدمج ومُحدّث — شات مُحسّن) */
+/* style.css (مُعدّل ليظهر Nav icons كطبقة زجاجية متماشية مع الخلفية) */
 
 /* ======== إعداد عام وخلفية متحركة ======== */
 :root{
@@ -22,6 +22,7 @@ body {
   text-align: right;
   overflow-x: hidden;
 
+  /* الخلفية المتحركة */
   background: var(--gradient);
   background-size: 400% 400%;
   animation: gradientAnimation 10s ease infinite;
@@ -44,8 +45,9 @@ button {
   outline: none;
 }
 
-/* ======= الشريط العلوي (Header) ======= */
+/* ======= الشريط العلوي (Header) - شفاف لتمرير الخلفية تحته ======= */
 .main-header {
+  /* بدل اللون الصلب، خلي Header شبه شفاف علشان الخلفية تبان من تحته */
   background: rgba(44,62,80,0.28);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
@@ -71,10 +73,11 @@ button {
   display: flex;
   align-items: center;
   gap: 20px;
+  /* مهم: خلي padding جانبي بسيط عشان أول وآخر أيقونة ما تتاكلش عند التمرير */
   padding-inline: 8px;
 }
 
-/* ======= أيقونات التنقّل ======= */
+/* ======= أيقونات التنقّل (Glass) ======= */
 .nav-icon {
   display: flex;
   flex-direction: column;
@@ -86,6 +89,7 @@ button {
   padding: 8px 10px;
   border-radius: 12px;
 
+  /* طبقة زجاجية شفافة تظهر الخلفية المتحركة من تحت */
   background: rgba(255,255,255,0.06);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
@@ -93,8 +97,12 @@ button {
   text-shadow: 0 1px 2px rgba(0,0,0,0.18);
 }
 
-.nav-icon i { font-size: 1.9em; }
+.nav-icon i {
+  font-size: 1.9em;
+  display: block;
+}
 
+/* Hover و Active */
 .nav-icon:hover {
   transform: translateY(-4px) scale(1.03);
   background: rgba(255,255,255,0.12);
@@ -109,7 +117,7 @@ button {
   padding-bottom: 6px;
 }
 
-/* زر التسجيل */
+/* زر التسجيل/حالة الملف الشخصي - نفس الـ glass */
 .auth-btn, .profile-icon {
   display: inline-flex;
   align-items: center;
@@ -124,11 +132,26 @@ button {
   font-weight: 700;
   box-shadow: 0 3px 6px rgba(0,0,0,0.12);
 }
-.auth-btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-3px); }
-.profile-icon img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
-/* ======= المحتوى ======= */
-.container { max-width: 950px; margin: 30px auto; padding: 0 18px; }
+.auth-btn:hover {
+  background: rgba(255,255,255,0.14);
+  transform: translateY(-3px);
+}
+
+/* لو ظهر profile-icon بصورة */
+.profile-icon img {
+  width: 28px; height: 28px; border-radius: 50%;
+  object-fit: cover;
+  display: inline-block;
+}
+
+/* ======= المحتوى الرئيسي ======= */
+.container {
+  max-width: 950px;
+  margin: 30px auto;
+  padding: 0 18px;
+}
+
 .admin-message-section {
   background-color: var(--card-bg);
   border-radius: 15px;
@@ -136,6 +159,8 @@ button {
   padding: 35px;
   border-right: 6px solid var(--primary);
 }
+
+/* عنوان الكارد */
 .message-card h2 {
   color: var(--dark);
   margin-top: 0;
@@ -144,6 +169,8 @@ button {
   border-bottom: 2px solid #e9ecef;
   padding-bottom: 10px;
 }
+
+/* نص الرسالة */
 .message-card p {
   font-size: 1.12em;
   line-height: 1.8;
@@ -152,8 +179,48 @@ button {
   text-align: justify;
 }
 
-/* ======= التعليقات ======= */
-.comments-section { margin-top: 20px; padding-top: 20px; border-top: 1px dashed #e9ecef; }
+/* أزرار التفاعل (داخل الكارد) */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 1.12em;
+  font-weight: 700;
+  transition: color 0.25s ease, transform 0.15s ease, background-color 0.2s ease;
+  padding: 8px 12px;
+  border-radius: 7px;
+  background-color: #f7f7f7;
+}
+
+.action-btn i { font-size: 1.35em; display:inline-block; }
+
+.action-btn:hover {
+  color: var(--dark);
+  transform: translateY(-3px) scale(1.03);
+  background-color: #f0f0f0;
+}
+
+.action-btn.liked,
+.like-btn.liked {
+  color: #fff;
+  background-color: var(--danger);
+  animation: pulse 0.55s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ======= قسم التعليقات ======= */
+.comments-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #e9ecef;
+}
+
 .comment {
   background-color: #fafafa;
   border-radius: 10px;
@@ -161,12 +228,15 @@ button {
   margin-bottom: 12px;
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.04);
   border-right: 3px solid #b3e0ff;
-  opacity: 0; transform: translateY(10px);
+  opacity: 0;
+  transform: translateY(10px);
   animation: fadeInUp 0.4s ease forwards;
 }
+
 @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
-.comment-author { font-weight:700; color:#34495e; margin-bottom:6px; }
-.comment-time { font-size:0.9em; color:#7f8c8d; margin-inline-start:8px; }
+
+.comment-author { font-weight:700; color:#34495e; margin-bottom:6px; font-size:1.03em; }
+.comment-time { font-weight:400; color:#7f8c8d; font-size:0.9em; margin-inline-start:8px; }
 .comment-text { font-size:1em; color:#444; white-space:pre-wrap; }
 
 /* ======= الفوتر ======= */
@@ -222,6 +292,7 @@ button {
 /* شاشة صغيرة جداً (موبايل) */
 @media (max-width: 480px) {
 
+  /* اجعل كلا الجانبين قابلين للتمرير، مع Padding كافٍ لأول وآخر أيقونة */
   .nav-left, .nav-right {
     display:flex;
     overflow-x:auto;
@@ -271,8 +342,7 @@ button {
   .message-card p { font-size:0.95em; }
 }
 
-/* ======= Chat updated styles (استبدال قواعد الشات القديمة) ======= */
-/* زر المحادثة العائم (Glass) */
+/* ======= زر المحادثة العائم (Glass) ======= */
 .chat-fab {
   position: fixed;
   bottom: 20px;
@@ -288,181 +358,146 @@ button {
   cursor: pointer;
   z-index: 1000;
 
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  background: rgba(255, 255, 255, 0.1);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  transition: transform .18s ease, background .2s ease;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  transition: transform .2s ease, background .3s ease;
 }
-.chat-fab:hover { transform: scale(1.06); background: rgba(255,255,255,0.12); }
+.chat-fab:hover { transform: scale(1.1); background: rgba(255,255,255,0.18); }
 
-/* نافذة الدردشة */
+/* ======= نافذة الدردشة ======= */
 .chat-window {
   position: fixed;
   bottom: 90px;
   right: 20px;
-  width: 360px;
-  max-height: 520px;
-  display: none; /* تظهر بالـ JS */
+  width: 320px;
+  max-height: 420px;
+  display: none; /* بتظهر بالـ JS */
   flex-direction: column;
   border-radius: 16px;
   overflow: hidden;
   z-index: 1001;
 
-  background: linear-gradient(180deg, rgba(28,40,56,0.95), rgba(20,28,40,0.95));
+  background: rgba(44,62,80,0.75);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
 }
 
 /* رأس الدردشة */
 .chat-header {
-  padding: 12px 14px;
+  padding: 12px;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  background: rgba(255,255,255,0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
 }
-.chat-header span { display:flex; align-items:center; gap:8px; }
-.chat-header .close-btn { background: none; border: none; color: #fff; font-size: 1.4rem; cursor:pointer; }
+.chat-header button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
 
 /* منطقة الرسائل */
 .chat-messages {
   flex: 1;
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
 }
 
-/* كل رسالة */
+/* الرسائل */
 .msg {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  max-width: 90%;
-  transition: transform .15s ease, opacity .2s ease;
+  gap: 8px;
+  max-width: 80%;
 }
-
-/* Avatar */
-.msg .avatar img {
-  width: 36px;
-  height: 36px;
+.msg img {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255,255,255,0.06);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
 }
-
-/* Bubble */
 .msg .bubble {
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-size: 0.96rem;
-  line-height: 1.3;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  line-height: 1.4;
   word-wrap: break-word;
-  max-width: 100%;
-  box-shadow: 0 8px 20px rgba(2,6,23,0.6);
-  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  background: rgba(255,255,255,0.1);
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.04);
 }
 
-/* Meta (name + time) داخل الفقاعة */
-.msg-meta {
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  align-items:center;
-  margin-bottom:6px;
-  font-size:0.78rem;
-  color: rgba(255,255,255,0.75);
-}
-.msg-author { font-weight:700; color: rgba(255,255,255,0.95); }
-.msg-time { font-weight:400; color: rgba(255,255,255,0.6); font-size:0.75rem; }
-
-/* My messages (sent) */
+/* المرسل */
 .msg.sent {
   margin-left: auto;
   flex-direction: row-reverse;
 }
 .msg.sent .bubble {
-  background: linear-gradient(135deg, #3498db, #8e44ad);
+  background: #3498db;
+  border-bottom-right-radius: 4px;
   color: #fff;
-  border: none;
-  border-bottom-right-radius: 6px;
-  box-shadow: 0 12px 28px rgba(52,152,219,0.18);
 }
 
-/* Other messages (received) */
+/* المستقبل */
 .msg.received {
   margin-right: auto;
-  flex-direction: row;
 }
 .msg.received .bubble {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.04);
+  border-bottom-left-radius: 4px;
 }
 
-/* نص الرسالة */
-.msg-text { font-size: 0.96rem; color: inherit; white-space: pre-wrap; }
-
-/* منطقة الادخال (داخل نافذة الشات) */
-.chat-input-area {
+/* إدخال الرسائل */
+.chat-input {
   display: flex;
-  gap: 8px;
-  padding: 12px;
   align-items: center;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-top: 1px solid rgba(255,255,255,0.03);
+  gap: 8px;
+  padding: 10px;
+  background: rgba(255,255,255,0.08);
 }
-.chat-input-area input[type="text"] {
+.chat-input input {
   flex: 1;
   padding: 10px 14px;
-  border-radius: 12px;
   border: none;
-  background: rgba(255,255,255,0.06);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: rgba(255,255,255,0.15);
   color: #fff;
   outline: none;
-  font-size: 0.95rem;
 }
-.chat-input-area input::placeholder { color: rgba(255,255,255,0.6); }
-
-/* زر الإرسال (الشات) */
-.send-btn {
-  width: 46px;
-  height: 46px;
+.chat-input input::placeholder { color: rgba(255,255,255,0.7); }
+.chat-input button {
+  border: none;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:none;
-  background: linear-gradient(135deg,#2ecc71,#27ae60);
-  color:#fff;
-  box-shadow: 0 8px 20px rgba(39,174,96,0.18);
-  cursor:pointer;
-  transition: transform .12s ease;
-}
-.send-btn:active { transform: translateY(2px); }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
 
-/* تجاوب نافذة الشات */
-@media (max-width:420px) {
-  .chat-window { width: 95%; right: 10px; left: 10px; bottom: 80px; }
-  .chat-messages { padding: 10px; }
-  .msg .avatar img { width: 30px; height: 30px; }
+  background: linear-gradient(135deg,#3498db,#8e44ad);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: transform .2s ease;
 }
+.chat-input button:hover { transform: scale(1.1); }
 
 /* ======= بقية ستايلات (login-card, members, ...) ======= */
 /* احتفظت بباقي القواعد كما كانت في ملفك الأصلي: login-card, members-list, member-card ... */
-/* تصميم منطقة إضافة التعليق (تبقى كما هي) */
+/* لو حابب أدمج بقية الأقسام هنا بصيغة نظيفة ومندمجة أقدر أعملها فوراً. */
+/* ===== تصميم منطقة إضافة التعليق ===== */
 .comment-input-area {
   display: flex;
   gap: 12px;
@@ -513,4 +548,66 @@ button {
 .comment-input-area button:hover {
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+}
+/* زر الإرسال */
+.send-btn {
+  border: none;
+  padding: 10px 14px;
+  background: #2ecc71;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  margin: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+.send-btn:hover {
+  background: #27ae60;
+}
+
+/* الرسائل */
+.msg {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  max-width: 85%;
+}
+.msg img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin: 0 8px;
+  object-fit: cover;
+}
+.msg .bubble {
+  padding: 8px 12px;
+  border-radius: 12px;
+  word-wrap: break-word;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+/* المرسل */
+.msg.sent {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+.msg.sent .bubble {
+  background: #3498db;
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+
+/* المستقبل */
+.msg.received {
+  margin-right: auto;
+  flex-direction: row;
+}
+.msg.received .bubble {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-bottom-left-radius: 2px;
 }

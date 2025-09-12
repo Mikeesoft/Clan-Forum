@@ -1,4 +1,4 @@
-// main.js (نسخة نهائية - تسجيل + لايك toggle + تعليقات + شات متزامن)
+// main.js (مُحدّث — يشمل Chat مخزن في Firestore + تحسينات UI)
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -23,7 +23,8 @@ import {
   limit,
   startAfter,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  where
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 /* ====== تكوين Firebase ====== */
@@ -48,6 +49,7 @@ const likeBtn = document.getElementById("likeBtn");
 const likeCountSpan = document.getElementById("likeCount");
 const commentBtn = document.getElementById("commentBtn");
 const commentsContainer = document.getElementById("commentsContainer");
+
 const chatBtn = document.getElementById("chatBtn");
 const chatWindow = document.getElementById("chatWindow");
 const closeChat = document.getElementById("closeChat");
@@ -58,7 +60,9 @@ const chatMessages = document.getElementById("chatMessages");
 /* ====== مراجع Firestore ====== */
 const postRef = doc(db, "posts", "main-post");
 const commentsCol = collection(db, "posts", "main-post", "comments");
-const messagesCol = collection(db, "messages");
+
+// Chat: مجموعة الرسائل العامة
+const chatMessagesCol = collection(db, "chats", "global", "messages");
 
 /* ====== Toast Notification ====== */
 function showToast(msg, type = "error") {
@@ -262,74 +266,151 @@ function escapeHtml(str) {
 }
 function linkify(text) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+  return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
 }
 
-/* ====== Chat ====== */
+/* ====== Chat: حفظ وعرض الرسائل في Firestore (Realtime) ====== */
+
+let unsubscribeChat = null;
+
+function formatTime(ts) {
+  try {
+    if (!ts) return "";
+    const d = ts.toDate();
+    return d.toLocaleString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+      day: "numeric",
+      month: "short"
+    });
+  } catch {
+    return "";
+  }
+}
+
+function renderMessage(docData, currentUid) {
+  const authorId = docData.authorId || null;
+  const isMe = currentUid && authorId === currentUid;
+  const avatar = docData.avatar || (isMe ? "me.jpg" : "user.jpg");
+  const name = docData.authorName || "عضو";
+  const time = formatTime(docData.createdAt);
+  const textHtml = linkify(escapeHtml(docData.text || ""));
+
+  const msg = document.createElement("div");
+  msg.className = `msg ${isMe ? "sent" : "received"}`;
+
+  msg.innerHTML = `
+    ${isMe ? `
+      <div class="bubble">
+        <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span><span class="msg-time">${escapeHtml(time)}</span></div>
+        <div class="msg-text">${textHtml}</div>
+      </div>
+      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}"></div>
+    ` : `
+      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}"></div>
+      <div class="bubble">
+        <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span><span class="msg-time">${escapeHtml(time)}</span></div>
+        <div class="msg-text">${textHtml}</div>
+      </div>
+    `}
+  `;
+  return msg;
+}
+
+function scrollChatToBottom() {
+  chatMessages.scrollTop = chatMessages.scrollHeight + 200;
+}
+
+async function bindChatRealtime() {
+  // افصل أي مستمع قديم
+  if (unsubscribeChat) unsubscribeChat();
+
+  const q = query(chatMessagesCol, orderBy("createdAt", "asc"));
+  unsubscribeChat = onSnapshot(q, (snapshot) => {
+    // empty container and re-render all (بسيط وواضح)
+    chatMessages.innerHTML = "";
+    const user = auth.currentUser;
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const el = renderMessage(data, user?.uid);
+      chatMessages.appendChild(el);
+    });
+    scrollChatToBottom();
+  }, (err) => {
+    console.error("chat snapshot error", err);
+    showToast("فشل جلب محادثات الشات");
+  });
+}
+
+/* ارسال رسالة الى Firestore */
+async function sendChatMessage(text) {
+  if (!text) return;
+  if (!auth.currentUser) {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch {
+      return showToast("يجب تسجيل الدخول لإرسال رسالة.");
+    }
+  }
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const payload = {
+    text: text,
+    authorName: user.displayName || "مستخدم",
+    authorId: user.uid,
+    avatar: user.photoURL || null,
+    createdAt: serverTimestamp()
+  };
+
+  try {
+    sendMsg.disabled = true;
+    await addDoc(chatMessagesCol, payload);
+    sendMsg.disabled = false;
+  } catch (e) {
+    console.error("send msg error", e);
+    sendMsg.disabled = false;
+    showToast("فشل إرسال الرسالة");
+  }
+}
+
+/* ====== واجهة Chat: فتح/قفل + ربط الاحداث ====== */
+
+// فتح/غلق النافذة (toggle)
 chatBtn.addEventListener("click", () => {
   chatWindow.style.display =
     chatWindow.style.display === "flex" ? "none" : "flex";
+  // لو فتحنا الشات، نربط الـ realtime listener
+  if (chatWindow.style.display === "flex") {
+    bindChatRealtime();
+  }
 });
+
+// غلق النافذة بزر ×
 closeChat.addEventListener("click", () => {
   chatWindow.style.display = "none";
+  // نفصل الاستماع عشان نقلل القراءة لما مش مفتوح
+  if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
 });
 
-function addMessage(text, type = "sent", avatar = "user.jpg") {
-  const msg = document.createElement("div");
-  msg.classList.add("msg", type);
-
-  msg.innerHTML = `
-    ${type === "received" ? `<div class="avatar"><img src="${avatar}" alt=""></div>` : ""}
-    <div class="bubble">${text}</div>
-    ${type === "sent" ? `<div class="avatar"><img src="${avatar}" alt=""></div>` : ""}
-  `;
-
-  chatMessages.appendChild(msg);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-async function sendMessage(text) {
-  if (!auth.currentUser) {
-    try { await signInWithPopup(auth, provider); }
-    catch { return showToast("سجّل دخولك أولاً"); }
-  }
-
-  const user = auth.currentUser;
-  await addDoc(messagesCol, {
-    text,
-    userId: user.uid,
-    userName: user.displayName || "عضو",
-    userPhoto: user.photoURL || "user.jpg",
-    createdAt: serverTimestamp()
-  });
-}
-
-sendMsg.addEventListener("click", () => {
+// إرسال رسالة بالزر
+sendMsg.addEventListener("click", async () => {
   const txt = chatInput.value.trim();
   if (!txt) return;
-  sendMessage(txt);
+  await sendChatMessage(txt);
   chatInput.value = "";
 });
-chatInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
+
+// إرسال رسالة بالـ Enter (مع منع السطر الجديد)
+chatInput.addEventListener("keydown", async (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    sendMsg.click();
+    const txt = chatInput.value.trim();
+    if (!txt) return;
+    await sendChatMessage(txt);
+    chatInput.value = "";
   }
 });
-
-function listenMessages() {
-  const q = query(messagesCol, orderBy("createdAt", "asc"));
-  onSnapshot(q, (snapshot) => {
-    chatMessages.innerHTML = "";
-    snapshot.forEach((docSnap) => {
-      const msg = docSnap.data();
-      const currentUser = auth.currentUser?.uid;
-      const type = msg.userId === currentUser ? "sent" : "received";
-      const avatar = msg.userPhoto || "user.jpg";
-      addMessage(escapeHtml(msg.text), type, avatar);
-    });
-  });
-}
 
 /* ====== init ====== */
 (async function init() {
@@ -337,5 +418,5 @@ function listenMessages() {
   listenPost();
   bindAuthUI();
   loadComments(true);
-  listenMessages();
+  // لا نبدأ الاستماع للشات لحد ما يفتح المستخدم الشات (لتقليل القراءة)
 })();
