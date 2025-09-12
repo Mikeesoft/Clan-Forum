@@ -151,6 +151,67 @@ button {
   margin-bottom: 22px;
   text-align: justify;
 }
+/* زر الإعجاب */
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #f1f1f1; /* افتراضي رمادي فاتح */
+  color: #555;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.like-btn i {
+  font-size: 1.2em;
+  color: #555; /* لون أيقونة القلب الافتراضي */
+}
+
+.like-btn:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+/* حالة عند الضغط (إعجاب) */
+.like-btn.liked {
+  background-color: #e74c3c; /* أحمر */
+  color: #fff;
+}
+
+.like-btn.liked i {
+  color: #fff; /* القلب يبقى أبيض فوق الأحمر */
+}
+
+/* زر التعليق */
+.comment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #f1f1f1; /* رمادي فاتح */
+  color: #555;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.comment-btn i {
+  font-size: 1.2em;
+  color: #555;
+}
+
+.comment-btn:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
 
 /* ======= التعليقات ======= */
 .comments-section { margin-top: 20px; padding-top: 20px; border-top: 1px dashed #e9ecef; }
