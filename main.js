@@ -147,7 +147,7 @@ if (likeBtn) {
 
 /* ====== التعليقات مع Load More ====== */
 let lastVisible = null;
-const COMMENTS_LIMIT = 5;
+const COMMENTS_LIMIT = 2;
 
 async function loadComments(initial = false) {
   let q = query(commentsCol, orderBy("createdAt", "asc"), limit(COMMENTS_LIMIT));
