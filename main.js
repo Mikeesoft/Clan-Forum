@@ -1,16 +1,13 @@
-// main.js (موديول - يتطلب <script type="module"> في الـ HTML)
+// main.js (محسّن - تسجيل + لايك toggle + تعليقات subcollection + تحسينات)
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
-  signif (if (true) {
-    
-  }) {
-    
-  }InWithPopup,
-  onAuthStateChanged
+  signInWithPopup,
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   getFirestore,
@@ -18,15 +15,18 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  arrayUnion,
-  arrayRemove,
-  increment,
+  runTransaction,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  limit,
+  startAfter,
   onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ======= تكوين Firebase ======= */
-/* إذا كانت بياناتك مختلفة غيّرها هنا */
+/* ====== تكوين Firebase ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
   authDomain: "clan-forum.firebaseapp.com",
@@ -36,220 +36,225 @@ const firebaseConfig = {
   appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
 };
 
+/* ====== تهيئة Firebase ====== */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
 
-/* ======= عناصر الـ DOM ======= */
-const loginBtn = document.getElementById("googleLoginBtn");
+/* ====== عناصر DOM ====== */
 const loginContainer = document.getElementById("loginBtnContainer");
 const likeBtn = document.getElementById("likeBtn");
 const likeCountSpan = document.getElementById("likeCount");
 const commentBtn = document.getElementById("commentBtn");
 const commentsContainer = document.getElementById("commentsContainer");
 
-/* ======= مرجع الوثيقة في Firestore ======= */
-const postRef = doc(db, "posts", "main-post"); // collection: posts , doc id: main-post
+/* ====== مراجع Firestore ====== */
+const postRef = doc(db, "posts", "main-post");
+const commentsCol = collection(db, "posts", "main-post", "comments");
 
-/* ======= تهيئة الوثيقة إذا مش موجودة ======= */
+/* ====== Toast Notification بدل مربع أحمر ====== */
+function showToast(msg, type = "error") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    background: type === "error" ? "#e74c3c" : "#2ecc71",
+    color: "#fff",
+    padding: "10px 16px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+    zIndex: 9999,
+    opacity: "0",
+    transition: "opacity 0.3s ease"
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => (toast.style.opacity = "1"), 50);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+/* ====== تأكيد وجود المستند الرئيسي ====== */
 async function ensureDoc() {
   const snap = await getDoc(postRef);
   if (!snap.exists()) {
-    await setDoc(postRef, { likes: 0, likedBy: [], comments: [] });
+    await setDoc(postRef, { likes: 0, likedBy: [] });
   }
 }
 
-/* ======= عرض البيانات عند التغيير (Realtime) ======= */
+/* ====== الاستماع للبوست ====== */
 function listenPost() {
   onSnapshot(postRef, (snap) => {
     if (!snap.exists()) return;
     const data = snap.data();
-
-    // تحديث عدد الإعجابات
     likeCountSpan.textContent = data.likes ?? 0;
 
-    // تفعيل/تعطيل حالة الزر بناءً على ما إذا المستخدم ضاغط إعجاب أو لا
     const user = auth.currentUser;
-    if (user && Array.isArray(data.likedBy)) {
-      if (data.likedBy.includes(user.uid)) {
-        likeBtn.classList.add("liked");
-      } else {
-        likeBtn.classList.remove("liked");
-      }
+    if (user && Array.isArray(data.likedBy) && data.likedBy.includes(user.uid)) {
+      likeBtn.classList.add("liked");
     } else {
-      // لو مش مسجل، نزيل حالة liked
       likeBtn.classList.remove("liked");
     }
+  }, () => showToast("فشل استلام تحديثات اللايكات"));
+}
 
-    // عرض التعليقات (نراعي شكل العناصر لو كانت قديمة - مجرد نصوص - أو عناصر objects)
-    commentsContainer.innerHTML = "";
-    const comments = data.comments || [];
-    comments.forEach(item => {
+/* ====== Toggle Like ====== */
+if (likeBtn) {
+  likeBtn.addEventListener("click", async () => {
+    if (!auth.currentUser) {
+      try { await signInWithPopup(auth, provider); } 
+      catch { return showToast("يجب تسجيل الدخول أولاً."); }
+    }
+    const user = auth.currentUser;
+    if (!user) return;
+    likeBtn.disabled = true;
+
+    try {
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(postRef);
+        if (!snap.exists()) {
+          tx.set(postRef, { likes: 1, likedBy: [user.uid] });
+          return;
+        }
+        const data = snap.data();
+        const likedBy = Array.isArray(data.likedBy) ? [...data.likedBy] : [];
+        if (likedBy.includes(user.uid)) {
+          tx.update(postRef, {
+            likedBy: likedBy.filter(id => id !== user.uid),
+            likes: Math.max((data.likes || 1) - 1, 0)
+          });
+        } else {
+          likedBy.push(user.uid);
+          tx.update(postRef, {
+            likedBy,
+            likes: (data.likes || 0) + 1
+          });
+        }
+      });
+    } catch {
+      showToast("خطأ أثناء تحديث الإعجاب.");
+    } finally {
+      likeBtn.disabled = false;
+    }
+  });
+}
+
+/* ====== التعليقات مع Load More ====== */
+let lastVisible = null;
+const COMMENTS_LIMIT = 2;
+
+async function loadComments(initial = false) {
+  let q = query(commentsCol, orderBy("createdAt", "asc"), limit(COMMENTS_LIMIT));
+  if (lastVisible && !initial) {
+    q = query(commentsCol, orderBy("createdAt", "asc"), startAfter(lastVisible), limit(COMMENTS_LIMIT));
+  }
+
+  onSnapshot(q, (snapshot) => {
+    if (initial) commentsContainer.innerHTML = "";
+    snapshot.forEach(docSnap => {
+      lastVisible = docSnap;
+      const item = docSnap.data();
       const div = document.createElement("div");
       div.classList.add("comment");
-      if (typeof item === "string") {
-        // شكل قديم: مجرد نص
-        div.innerHTML = `<div class="comment-author">عضو</div><div class="comment-text">${escapeHtml(item)}</div>`;
-      } else if (typeof item === "object" && item.text) {
-        const author = item.authorName || "عضو";
-        const created = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleString() : "";
-        div.innerHTML = `<div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
-                         <div class="comment-text">${escapeHtml(item.text)}</div>`;
-      }
+      const author = item.authorName || "عضو";
+      let created = "";
+      if (item.createdAt?.toDate) created = item.createdAt.toDate().toLocaleString();
+
+      div.innerHTML = `
+        <div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
+        <div class="comment-text">${linkify(escapeHtml(item.text))}</div>
+      `;
       commentsContainer.appendChild(div);
     });
-  }, (err) => {
-    console.error("خطأ في الاستماع لبيانات المنشور:", err);
-  });
-}
 
-/* ======= تسجيل الدخول بزر جوجل ======= */
-if (loginBtn) {
-  loginBtn.addEventListener("click", async () => {
-    try {
-      await signInWithPopup(auth, provider);
-      // بعد تسجيل الدخول onAuthStateChanged سيخفي الزر تلقائياً
-    } catch (err) {
-      console.error("فشل تسجيل الدخول:", err);
-      alert("حصل خطأ أثناء محاولة تسجيل الدخول. افتح Console لمزيد من التفاصيل.");
+    if (snapshot.size === COMMENTS_LIMIT) {
+      const loadBtn = document.createElement("button");
+      loadBtn.textContent = "عرض المزيد";
+      loadBtn.className = "load-more-btn";
+      loadBtn.onclick = () => loadComments(false);
+      commentsContainer.appendChild(loadBtn);
     }
   });
 }
 
-/* ======= متابعة حالة الدخول ======= */
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // عرض اسم المستخدم في الـ navbar بدل الزر
-    loginContainer.innerHTML = `
-      <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
-        <i class="fas fa-user-circle"></i>
-        <span>${escapeHtml(user.displayName || "ملفي الشخصي")}</span>
-      </a>
-    `;
-  } else {
-    // إرجاع زر تسجيل الدخول
-    loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
-    // ربط المستمع الجديد بالزر (لأننا استبدلنا الـ innerHTML)
-    const newBtn = document.getElementById("googleLoginBtn");
-    if (newBtn) {
-      newBtn.addEventListener("click", async () => {
-        try { await signInWithPopup(auth, provider); } catch(e){ console.error(e); }
-      });
-    }
-  }
-});
-
-/* ======= وظيفة الإعجاب (toggle) ======= */
-likeBtn.addEventListener("click", async () => {
-  // نطلب تسجيل الدخول أولاً لو مش مسجل
-  if (!auth.currentUser) {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error("Login required:", err);
-      return;
-    }
-  }
-
-  const user = auth.currentUser;
-  if (!user) return;
-
-  // قراءه سريعة لحالة الوثيقة ونتصرف بناءً عليها
-  const snap = await getDoc(postRef);
-  if (!snap.exists()) {
-    await setDoc(postRef, { likes: 0, likedBy: [], comments: [] });
-  }
-  const data = (await getDoc(postRef)).data();
-  const likedBy = data.likedBy || [];
-  const already = likedBy.includes(user.uid);
-
-  if (already) {
-    // إزالة الإعجاب
-    await updateDoc(postRef, {
-      likedBy: arrayRemove(user.uid),
-      likes: increment(-1)
-    });
-  } else {
-    // إضافة إعجاب
-    await updateDoc(postRef, {
-      likedBy: arrayUnion(user.uid),
-      likes: increment(1)
-    });
-  }
-});
-
-/* ======= وظيفة التعليقات (يظهر حقل إدخال داخل الصفحة) ======= */
-let commentsVisible = false;
 commentBtn.addEventListener("click", async () => {
-  // نطلب تسجيل الدخول لو مش مسجل
   if (!auth.currentUser) {
+    try { await signInWithPopup(auth, provider); } 
+    catch { return showToast("يجب تسجيل الدخول للتعليق."); }
+  }
+  const inputArea = document.createElement("div");
+  inputArea.className = "comment-input-area";
+  inputArea.innerHTML = `
+    <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
+    <button id="addCommentBtn">إضافة تعليق</button>
+  `;
+  commentsContainer.insertAdjacentElement("afterbegin", inputArea);
+
+  document.getElementById("addCommentBtn").onclick = async () => {
+    const txt = document.getElementById("newCommentInput").value.trim();
+    if (!txt) return showToast("الرجاء كتابة تعليق!");
     try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error("Login required for commenting:", err);
-      return;
-    }
-  }
-
-  if (!commentsVisible) {
-    // إضافة منطقة الإدخال في أعلى قائمة التعليقات
-    const inputArea = document.createElement("div");
-    inputArea.classList.add("comment-input-area");
-    inputArea.innerHTML = `
-      <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
-      <button id="addCommentBtn">إضافة تعليق</button>
-    `;
-    // إدراج في أعلى الـ container
-    commentsContainer.insertAdjacentElement("afterbegin", inputArea);
-    commentsVisible = true;
-
-    const addBtn = document.getElementById("addCommentBtn");
-    const inputEl = document.getElementById("newCommentInput");
-
-    addBtn.addEventListener("click", async () => {
-      const txt = inputEl.value.trim();
-      if (!txt) {
-        alert("الرجاء كتابة تعليق!");
-        return;
-      }
-
       const user = auth.currentUser;
-      const authorName = user ? (user.displayName || "عضو") : "عضو";
-
-      // نضيف التعليق ككائن مع اسم المؤلف ووقت الخادم
-      await updateDoc(postRef, {
-        comments: arrayUnion({
-          authorName,
-          authorId: user ? user.uid : null,
-          text: txt,
-          createdAt: serverTimestamp()
-        })
+      await addDoc(commentsCol, {
+        authorName: user?.displayName || "عضو",
+        authorId: user?.uid || null,
+        text: txt,
+        createdAt: serverTimestamp()
       });
-      inputEl.value = "";
-      // لا نحتاج لإعادة تحميل لأن onSnapshot سيحدّث الواجهة تلقائياً
-    });
-  } else {
-    // إخفاء حقل الإدخال
-    const inputArea = commentsContainer.querySelector(".comment-input-area");
-    if (inputArea) inputArea.remove();
-    commentsVisible = false;
-  }
+      document.getElementById("newCommentInput").value = "";
+      showToast("تمت إضافة التعليق", "success");
+    } catch {
+      showToast("فشل إرسال التعليق");
+    }
+  };
 });
 
-/* ======= تهيئة واستماع ======= */
-(async function init() {
-  await ensureDoc();
-  listenPost();
-})();
+/* ====== Auth UI ====== */
+function bindAuthUI() {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const name = escapeHtml(user.displayName || "مستخدم");
+      const photo = user.photoURL
+        ? `<img src="${user.photoURL}" alt="${name}" style="width:28px;height:28px;border-radius:50%;margin-inline-end:8px;">`
+        : `<i class="fas fa-user-circle" style="margin-inline-end:8px;"></i>`;
+      loginContainer.innerHTML = `
+        <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
+          ${photo}<span>${name}</span>
+        </a>
+        <button id="signOutBtn" class="auth-btn">خروج</button>
+      `;
+      document.getElementById("signOutBtn").onclick = () => signOut(auth);
+    } else {
+      loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
+      document.getElementById("googleLoginBtn").onclick = () => signInWithPopup(auth, provider);
+    }
+  });
+}
 
-/* ======= دالة مساعدة لتجنّب XSS عند إدراج نص من المستخدمين ======= */
-function escapeHtml(unsafe) {
-  if (!unsafe && unsafe !== 0) return "";
-  return String(unsafe)
+/* ====== Helpers ====== */
+function escapeHtml(str) {
+  return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+}
+
+/* ====== init ====== */
+(async function init() {
+  await ensureDoc();
+  listenPost();
+  bindAuthUI();
+  loadComments(true);
+})();
