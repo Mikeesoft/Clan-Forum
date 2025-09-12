@@ -1,4 +1,4 @@
-// main.js (محسّن - تسجيل + لايك toggle + تعليقات subcollection + تحسينات)
+// main.js (نسخة نهائية - تسجيل + لايك toggle + تعليقات + شات متزامن)
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -48,10 +48,17 @@ const likeBtn = document.getElementById("likeBtn");
 const likeCountSpan = document.getElementById("likeCount");
 const commentBtn = document.getElementById("commentBtn");
 const commentsContainer = document.getElementById("commentsContainer");
+const chatBtn = document.getElementById("chatBtn");
+const chatWindow = document.getElementById("chatWindow");
+const closeChat = document.getElementById("closeChat");
+const sendMsg = document.getElementById("sendMsg");
+const chatInput = document.getElementById("chatInput");
+const chatMessages = document.getElementById("chatMessages");
 
 /* ====== مراجع Firestore ====== */
 const postRef = doc(db, "posts", "main-post");
 const commentsCol = collection(db, "posts", "main-post", "comments");
+const messagesCol = collection(db, "messages");
 
 /* ====== Toast Notification ====== */
 function showToast(msg, type = "error") {
@@ -193,7 +200,6 @@ commentBtn.addEventListener("click", async () => {
     }
   }
 
-  // ✅ لو فيه صندوق تعليق موجود بالفعل ما نكرروش
   if (document.querySelector(".comment-input-area")) return;
 
   const inputArea = document.createElement("div");
@@ -259,34 +265,15 @@ function linkify(text) {
   return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
 }
 
-/* ====== init ====== */
-(async function init() {
-  await ensureDoc();
-  listenPost();
-  bindAuthUI();
-  loadComments(true);
-})();
-
-
-const chatBtn = document.getElementById("chatBtn");
-const chatWindow = document.getElementById("chatWindow");
-const closeChat = document.getElementById("closeChat");
-const sendMsg = document.getElementById("sendMsg");
-const chatInput = document.getElementById("chatInput");
-const chatMessages = document.getElementById("chatMessages");
-
-// فتح/غلق النافذة (toggle)
+/* ====== Chat ====== */
 chatBtn.addEventListener("click", () => {
   chatWindow.style.display =
     chatWindow.style.display === "flex" ? "none" : "flex";
 });
-
-// غلق النافذة بزر ×
 closeChat.addEventListener("click", () => {
   chatWindow.style.display = "none";
 });
 
-// دالة إضافة رسالة
 function addMessage(text, type = "sent", avatar = "user.jpg") {
   const msg = document.createElement("div");
   msg.classList.add("msg", type);
@@ -301,10 +288,54 @@ function addMessage(text, type = "sent", avatar = "user.jpg") {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// إرسال رسالة
+async function sendMessage(text) {
+  if (!auth.currentUser) {
+    try { await signInWithPopup(auth, provider); }
+    catch { return showToast("سجّل دخولك أولاً"); }
+  }
+
+  const user = auth.currentUser;
+  await addDoc(messagesCol, {
+    text,
+    userId: user.uid,
+    userName: user.displayName || "عضو",
+    userPhoto: user.photoURL || "user.jpg",
+    createdAt: serverTimestamp()
+  });
+}
+
 sendMsg.addEventListener("click", () => {
   const txt = chatInput.value.trim();
   if (!txt) return;
-  addMessage(txt, "sent", "me.jpg"); // صورتك
+  sendMessage(txt);
   chatInput.value = "";
 });
+chatInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendMsg.click();
+  }
+});
+
+function listenMessages() {
+  const q = query(messagesCol, orderBy("createdAt", "asc"));
+  onSnapshot(q, (snapshot) => {
+    chatMessages.innerHTML = "";
+    snapshot.forEach((docSnap) => {
+      const msg = docSnap.data();
+      const currentUser = auth.currentUser?.uid;
+      const type = msg.userId === currentUser ? "sent" : "received";
+      const avatar = msg.userPhoto || "user.jpg";
+      addMessage(escapeHtml(msg.text), type, avatar);
+    });
+  });
+}
+
+/* ====== init ====== */
+(async function init() {
+  await ensureDoc();
+  listenPost();
+  bindAuthUI();
+  loadComments(true);
+  listenMessages();
+})();
