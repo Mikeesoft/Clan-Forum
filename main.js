@@ -258,3 +258,31 @@ function linkify(text) {
   bindAuthUI();
   loadComments(true);
 })();
+const chatBtn = document.getElementById("chatBtn");
+const chatWindow = document.getElementById("chatWindow");
+const closeChat = document.getElementById("closeChat");
+const sendMsg = document.getElementById("sendMsg");
+const chatInput = document.getElementById("chatInput");
+const chatMessages = document.getElementById("chatMessages");
+
+// فتح/غلق النافذة
+chatBtn.addEventListener("click", () => {
+  chatWindow.style.display = "flex";
+});
+closeChat.addEventListener("click", () => {
+  chatWindow.style.display = "none";
+});
+
+// إرسال رسالة
+sendMsg.addEventListener("click", () => {
+  const txt = chatInput.value.trim();
+  if (!txt) return;
+
+  const msg = document.createElement("div");
+  msg.classList.add("msg", "sent");
+  msg.textContent = txt;
+  chatMessages.appendChild(msg);
+
+  chatInput.value = "";
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});

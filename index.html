@@ -85,7 +85,25 @@
       <p>هنا هنكتب آخر التحديثات الخاصة بالموقع.</p>
     </section>
   </main>
+<!-- زر المحادثة العائم -->
+<button id="chatBtn" class="chat-fab">
+  <i class="fas fa-comment-dots"></i>
+</button>
 
+<!-- نافذة المحادثة -->
+<div id="chatWindow" class="chat-window">
+  <div class="chat-header">
+    <span>المحادثة</span>
+    <button id="closeChat"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg received">مرحبًا 👋</div>
+  </div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="اكتب رسالة...">
+    <button id="sendMsg"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
   <!-- الفوتر -->
   <footer class="main-footer">
     <p>© 2025 المنتدى - جميع الحقوق محفوظة</p>
