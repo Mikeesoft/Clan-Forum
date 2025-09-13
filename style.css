@@ -575,3 +575,56 @@ button {
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 6px 14px rgba(0,0,0,0.35);
 }
+/* القاعدة العامة (شاشات كبيرة وتابلت) */
+.profile-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* الصور والمستويات والنجوم */
+.profile-left {
+  flex: 1;
+}
+.profile-right {
+  flex: 2;
+}
+
+/* 🟢 لما الشاشة تقل عن 768px (موبايل) */
+@media (max-width: 768px) {
+  .profile-container {
+    flex-direction: column; /* يخلي العناصر تحت بعض */
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-left, .profile-right {
+    width: 100%; /* تاخد عرض الشاشة كله */
+  }
+
+  /* ضبط النجوم والمستويات */
+  .stars-box, .progress-box {
+    margin: 10px 0;
+  }
+}
+
+/* 🟢 لما الشاشة تقل عن 480px (موبايل صغير جدًا) */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px; /* تصغير الخط */
+  }
+
+  .profile-container {
+    padding: 10px;
+  }
+
+  .gift-box {
+    transform: scale(0.9); /* تصغير حجم صندوق الهدايا */
+  }
+
+  .progress-box {
+    font-size: 13px; /* تصغير النصوص جوه شريط التقدم */
+  }
+}
