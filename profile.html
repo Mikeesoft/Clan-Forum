@@ -5,42 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الملف الشخصي — المنتدى</title>
 
-  <!-- Font Awesome -->
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    /* (نفس ستايلات الصفحة - احتفظت بها كما عندك) */
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
       --card: rgba(255,255,255,0.03);
       --muted: #bfc9cb;
       --accent: #3498db;
       --gold: #f1c40f;
+      --glass: rgba(255,255,255,0.04);
     }
-    html,body{height:100%;margin:0;background:var(--bg);-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
-    .frame { width: 1100px; max-width: 98vw; height: 640px; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); box-shadow: 0 24px 80px rgba(0,0,0,0.65); position: relative; overflow: hidden; padding: 20px; box-sizing: border-box; backdrop-filter: blur(6px); display: flex; gap: 20px; }
-    .left { width: 380px; min-width: 300px; background: var(--card); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; box-sizing: border-box; }
-    .profile-top { display: flex; align-items: center; gap: 14px; }
-    .avatar-wrap { position: relative; width: 120px; height: 120px; flex: 0 0 120px; }
-    .avatar-wrap img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.06); box-shadow: 0 8px 20px rgba(0,0,0,0.5); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); }
-    .avatar-edit { position: absolute; right: 6px; bottom: 6px; background: var(--accent); color: #fff; width: 38px; height: 38px; border-radius: 50%; display:flex;align-items:center;justify-content:center; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.04); }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:'Cairo',system-ui,Arial; background:var(--bg); color:#e7eef0;-webkit-font-smoothing:antialiased}
+    /* Outer frame */
+    .frame {
+      width: 1100px;
+      max-width: 98vw;
+      min-height: 640px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+      box-shadow: 0 24px 80px rgba(0,0,0,0.65);
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    /* left / center / right columns */
+    .left { width: 380px; min-width: 280px; background:var(--card); border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.03) }
+    .center { flex:1; min-width:300px; background: transparent; display:flex; flex-direction:column; gap:12px; }
+    .right { width: 300px; min-width: 240px; background:transparent; display:flex; flex-direction:column; gap:12px; }
+
+    /* mini-card (top-left gift) */
+    .mini-card { position:absolute; top:20px; left:20px; display:flex; align-items:center; gap:12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.035); box-shadow:0 8px 22px rgba(0,0,0,0.5); z-index:50; min-width:220px }
+    .gift { width:54px; height:54px; border-radius:10px; background:linear-gradient(180deg,#ffd97a,#ffb84f); display:flex;align-items:center;justify-content:center; font-size:20px; color:#111; cursor:pointer; box-shadow:0 8px 18px rgba(0,0,0,0.45) }
+
+    .stars-count { display:flex; align-items:center; gap:8px; color:var(--gold); font-weight:700 }
+    .level-box { margin-left:auto; background:rgba(255,255,255,0.02); padding:6px 10px; border-radius:8px; color:var(--muted); font-weight:700; font-size:0.95rem; }
+
+    .small-progress { width:170px; height:12px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
+    #progressFill { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd57a,#ffb84f); transition: width 0.6s ease; }
+
+    /* profile left */
+    .profile-top { display:flex; gap:14px; align-items:center }
+    .avatar-wrap { position:relative; width:120px; height:120px; flex:0 0 120px }
+    .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:4px solid rgba(255,255,255,0.06); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
+    .avatar-edit { position:absolute; right:6px; bottom:6px; background:var(--accent); color:#fff; width:38px; height:38px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid rgba(255,255,255,0.04) }
+
+    .profile-info h2 { margin:0; font-size:1.2rem; color:#fff }
+    .profile-info p { margin:0; color:var(--muted); font-size:0.95rem }
+
     .divider { height:1px; background:rgba(255,255,255,0.02); margin:18px 0; border-radius:4px }
-    .mini-card { position: absolute; top: 20px; left: 20px; display:flex; align-items:center; gap:12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.035); box-shadow: 0 8px 22px rgba(0,0,0,0.5); z-index:50; min-width:220px; }
-    .gift { width:54px;height:54px;border-radius:10px; background:linear-gradient(180deg,#ffd97a,#ffb84f); display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#111; box-shadow: 0 8px 18px rgba(0,0,0,0.45); cursor:pointer; position:relative; }
-    .claim-alert { position: absolute; top: 22px; right: 22px; background: linear-gradient(180deg,#2ecc71,#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow: 0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999; }
-    .center { flex:1; display:flex; flex-direction:column; gap:16px; padding: 6px 0; }
-    .right { width: 300px; min-width: 260px; display:flex; flex-direction:column; gap:12px; }
-    .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted); display:flex;align-items:center;gap:8px; }
+
+    /* leagues preview */
+    .leagues-preview { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); border-radius:10px; padding:12px; border:1px solid rgba(255,255,255,0.02); min-height:180px; color:var(--muted); display:flex;align-items:center;justify-content:center }
+
+    /* right cards */
+    .card { background:var(--card); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.02) }
+
+    .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted); display:flex; align-items:center; gap:8px }
+
+    .claim-alert { position:absolute; top:22px; right:22px; background: linear-gradient(180deg,#2ecc71,#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
+
+    /* toast */
     .toast { position: fixed; right: 22px; top: 22px; background: #2ecc71; color: #fff; padding:10px 14px; border-radius:8px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); z-index: 9999; }
-    @media (max-width:980px){ .frame{flex-direction:column;height:auto;padding-bottom:40px} .left{width:100%} .right{width:100%} .center{order:2} .mini-card{left:14px;top:14px} }
+
+    /* responsive fixes to avoid overlap on tablet/mobile */
+    @media (max-width: 980px) {
+      .frame {
+        flex-direction: column;
+        align-items: stretch;
+        padding-bottom: 40px;
+      }
+      .left, .center, .right { width:100%; min-width:unset }
+      .profile-top { flex-direction: column; align-items:center; text-align:center }
+      .avatar-wrap { margin-bottom:10px }
+      .mini-card { position: relative; left: 0; top: 0; margin-bottom: 12px; justify-content: center }
+      .level-box { margin-left: 8px }
+      .claim-alert { right: 12px; top: 12px }
+    }
+
+    @media (max-width: 600px) {
+      .frame { padding: 12px; gap:12px }
+      .gift { width:46px; height:46px; font-size:18px }
+      #progressFill { width:0% } /* will be updated by JS */
+      .profile-info h2 { font-size:1.1rem }
+      .profile-info p { font-size:0.9rem }
+    }
   </style>
 </head>
 <body>
   <div class="frame" role="application" aria-label="Profile frame">
 
-    <div class="mini-card" title="الهدايا والنجوم">
+    <!-- top-left mini -->
+    <div class="mini-card" title="الهدايا والنجوم" aria-hidden="false">
       <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
-        <i class="fa-solid fa-gift" style="font-size:20px"></i>
+        <i class="fa-solid fa-gift"></i>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;">
         <div style="display:flex;align-items:center;gap:8px;">
@@ -48,12 +113,13 @@
           <div style="color:var(--muted);font-size:12px;margin-right:8px">نجومك</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="small-progress" aria-hidden><i id="progressFill" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,#ffd57a,#ffb84f);transition:width .6s ease;"></i></div>
+          <div class="small-progress" aria-hidden><span id="progressFill"></span></div>
           <div class="level-box">مستوى <span id="levelNum">0</span>/30</div>
         </div>
       </div>
     </div>
 
+    <!-- LEFT: profile summary -->
     <div class="left" aria-hidden="false">
       <div class="profile-top">
         <div class="avatar-wrap">
@@ -89,20 +155,21 @@
       </div>
     </div>
 
+    <!-- CENTER -->
     <div class="center">
       <div class="header-row">
         <div class="title">
-          <h1>LEAGUES</h1>
-          <p style="color:var(--muted)">is a rating system, based on the players' rank.</p>
+          <h1 style="margin:0">LEAGUES</h1>
+          <p style="margin:0;color:var(--muted)">is a rating system, based on the players' rank.</p>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
         </div>
       </div>
 
-      <div class="leagues-preview" id="leaguesPreview">
+      <div class="leagues-preview card" id="leaguesPreview">
         <div style="text-align:center">
-          <div style="font-size:38px;color:var(--muted);margin-bottom:12px">☆</div>
+          <div style="font-size:36px;color:var(--muted);margin-bottom:10px">☆</div>
           <div style="color:var(--muted)">اضغط علامة (?) في الأعلى لفتح شرح المستويات الكاملة</div>
         </div>
       </div>
@@ -112,10 +179,11 @@
       </div>
     </div>
 
+    <!-- RIGHT -->
     <div class="right">
       <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
 
-      <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+      <div class="card">
         <div style="font-weight:700;margin-bottom:8px">إحصائيات</div>
         <div style="display:flex;justify-content:space-between;color:var(--muted)">
           <div>النجوم</div><div id="statStars">0</div>
@@ -125,7 +193,7 @@
         </div>
       </div>
 
-      <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+      <div class="card">
         <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
         <div style="display:flex;gap:8px">
           <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:transparent;color:var(--muted)">
@@ -139,15 +207,12 @@
 
   </div>
 
-  <!-- Firebase + Logic -->
+  <!-- Firebase + Logic (module) -->
   <script type="module">
-    // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    // NOTE: removed storage imports (we won't use Firebase Storage)
 
-    // ====== استخدم نفس تكوين المشروع اللي عندك ======
     const firebaseConfig = {
       apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
       authDomain: "clan-forum.firebaseapp.com",
@@ -162,7 +227,7 @@
     const provider = new GoogleAuthProvider();
     const db = getFirestore(app);
 
-    // ====== عناصر DOM ======
+    // DOM
     const displayNameEl = document.getElementById('displayName');
     const emailTextEl = document.getElementById('emailText');
     const profileImageEl = document.getElementById('profileImage');
@@ -176,19 +241,15 @@
 
     const giftBtn = document.getElementById('giftBtn');
     const claimNotification = document.getElementById('claimNotification');
-    const modalBg = document.getElementById('modalBg');
     const helpBtn = document.getElementById('helpBtn');
-    const closeModal = document.getElementById('closeModal');
-
-    const todayMinutesEl = document.getElementById('todayMinutes');
-    const dailyBar = document.getElementById('dailyBar');
-
+    const signOutBtn = document.getElementById('signOutBtn');
     const applyPromo = document.getElementById('applyPromo');
     const promoInput = document.getElementById('promoInput');
+    const claimHistoryBtn = document.getElementById('claimHistoryBtn');
+    const dailyBar = document.getElementById('dailyBar');
+    const todayMinutesEl = document.getElementById('todayMinutes');
 
-    const signOutBtn = document.getElementById('signOutBtn');
-
-    // ====== Utility helpers ======
+    // helpers
     function showToast(msg, color = '#2ecc71') {
       const t = document.createElement('div');
       t.className = 'toast';
@@ -198,27 +259,20 @@
       setTimeout(()=> t.style.opacity = '1', 20);
       setTimeout(()=> { t.style.opacity = '0'; setTimeout(()=> t.remove(), 400); }, 3500);
     }
-
     function todayDateStr() {
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const day = String(d.getDate()).padStart(2,'0');
-      return `${y}-${m}-${day}`;
+      const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
+    function userDocRef(uid){ return doc(db,'users', uid); }
 
-    function userDocRef(uid) {
-      return doc(db, 'users', uid);
-    }
-
+    // state
     let currentUser = null;
     let sessionSeconds = 0;
     let sessionTimer = null;
-    let activityUpdateInterval = 30;
+    const activityUpdateInterval = 30;
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5*60;
 
-    // ====== Auth state handling ======
+    // auth
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try {
@@ -236,23 +290,16 @@
       displayNameEl.textContent = currentUser.displayName || 'مستخدم';
       emailTextEl.textContent = currentUser.email || '';
 
-      // load photo either from auth profile or from stored Firestore doc
       if (currentUser.photoURL) profileImageEl.src = currentUser.photoURL;
 
       const uref = userDocRef(currentUser.uid);
       const snap = await getDoc(uref);
       if (!snap.exists()) {
         await setDoc(uref, {
-          stars: 0,
-          level: 0,
-          progress: 0,
-          lastGiftDate: null,
-          dailySeconds: 0,
-          lastActiveDate: todayDateStr(),
+          stars: 0, level: 0, progress: 0, lastGiftDate: null, dailySeconds: 0, lastActiveDate: todayDateStr()
         });
       } else {
         const data = snap.data();
-        // if Firestore has photoURL (maybe base64), use it (higher priority)
         if (data?.photoURL) profileImageEl.src = data.photoURL;
         updateUIFromData(data);
       }
@@ -260,11 +307,11 @@
       startSessionTimer();
     });
 
+    // UI updater
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const level = data?.level || 0;
       const progress = data?.progress ?? 0;
-
       starsNumEl.textContent = stars;
       levelNumEl.textContent = Math.min(level,30);
       statStars.textContent = stars;
@@ -281,49 +328,37 @@
       }
     }
 
-    // ====== Upload avatar logic WITHOUT Firebase Storage ======
-    // Convert image to DataURL (base64) and save into Firestore user doc
+    // Upload avatar WITHOUT Firebase Storage: convert to DataURL and save to Firestore doc
     if (fileInput) {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file || !currentUser) return;
-
-        // optional: enforce small size (e.g., <= 200KB) to avoid doc size issues
-        const MAX_BYTES = 200 * 1024;
+        const MAX_BYTES = 300 * 1024; // 300KB limit recommendation
         if (file.size > MAX_BYTES) {
-          showToast('صورة كبيرة جدًا — حاول ضغطها إلى أقل من 200KB', '#f39c12');
+          showToast('صورة كبيرة جدًا — حاول ضغطها إلى أقل من 300KB', '#f39c12');
           return;
         }
-
         const reader = new FileReader();
         reader.onload = async (ev) => {
-          const base64 = ev.target.result; // data:image/...;base64,...
-
+          const base64 = ev.target.result;
           try {
-            // show immediately
             profileImageEl.src = base64;
-
-            // save into Firestore user doc (merge)
             await setDoc(userDocRef(currentUser.uid), { photoURL: base64 }, { merge: true });
-
-            // optionally update auth profile photoURL (not required)
             try { await updateProfile(currentUser, { photoURL: base64 }); } catch (err) { /* ignore */ }
-
             showToast('تم تحديث الصورة');
           } catch (err) {
-            console.error('upload avatar', err);
-            showToast('فشل رفع الصورة', '#e74c3c');
+            console.error('save photo', err);
+            showToast('فشل حفظ الصورة', '#e74c3c');
           }
         };
         reader.readAsDataURL(file);
       });
 
-      // clicking the camera label opens file picker
       const camLabel = document.querySelector('.avatar-edit');
       if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
     }
 
-    // ====== Gift (daily claim) logic ======
+    // Gift (daily claim)
     if (giftBtn) {
       giftBtn.addEventListener('click', async () => {
         if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
@@ -332,32 +367,19 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              tx.set(uref, {
-                stars: 5,
-                level: 0,
-                progress: 0,
-                lastGiftDate: todayDateStr(),
-                dailySeconds: 0,
-                lastActiveDate: todayDateStr()
-              });
+              tx.set(uref, { stars:5, level:0, progress:0, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
               return;
             }
             const data = snap.data();
             const last = data.lastGiftDate || null;
-            if (last === todayDateStr()) {
-              throw new Error('claimed');
-            }
+            if (last === todayDateStr()) throw new Error('claimed');
             const newStars = (data.stars || 0) + 5;
             tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr() });
           });
           claimAnimation();
         } catch (e) {
-          if (e?.message === 'claimed') {
-            showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
-          } else {
-            console.error('claim err', e);
-            showToast('فشل استلام الهدية', '#e74c3c');
-          }
+          if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
+          else { console.error('claim err', e); showToast('فشل استلام الهدية', '#e74c3c'); }
         }
       });
     }
@@ -372,6 +394,7 @@
       refreshUserDoc();
     }
 
+    // Session timer awarding stars
     function startSessionTimer() {
       if (sessionTimer) return;
       sessionSeconds = 0;
@@ -383,7 +406,7 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              tx.set(uref, { stars: 0, level: 0, progress: 0, dailySeconds: sessionSeconds, lastActiveDate: todayDateStr() });
+              tx.set(uref, { stars:0, level:0, progress:0, dailySeconds: sessionSeconds, lastActiveDate: todayDateStr() });
               return;
             }
             const data = snap.data();
@@ -409,6 +432,7 @@
     function computeLevelFromStars(stars) { const starsPerLevel = 50; const lvl = Math.floor(stars / starsPerLevel); return Math.min(lvl, 30); }
     function computeProgressWithinLevel(stars) { const starsPerLevel = 50; return Math.min((stars % starsPerLevel) / starsPerLevel * 100, 100); }
 
+    // refresh
     async function refreshUserDoc() {
       if (!currentUser) return;
       const snap = await getDoc(userDocRef(currentUser.uid));
@@ -417,13 +441,20 @@
       if (data?.photoURL) profileImageEl.src = data.photoURL;
       updateUIFromData(data);
     }
-
     setInterval(()=> refreshUserDoc(), 6000);
 
-    if (helpBtn) helpBtn.addEventListener('click', () => { /* modal open */ });
+    // promo
+    if (applyPromo) applyPromo.addEventListener('click', async () => {
+      const code = promoInput.value.trim();
+      if (!code) return showToast('ادخل كود صالح', '#f39c12');
+      if (!currentUser) return showToast('سجّل الدخول', '#e67e22');
+      try { await updateDoc(userDocRef(currentUser.uid), { promoCode: code, promoActivatedAt: serverTimestamp() }); showToast('تم تفعيل الكود'); }
+      catch (e) { console.error('promo err', e); showToast('فشل تفعيل الكود', '#e74c3c'); }
+    });
+
+    // signout
     if (signOutBtn) signOutBtn.addEventListener('click', async () => { try { await signOut(auth); showToast('تم تسجيل الخروج', '#3498db'); location.href = 'index.html'; } catch (e){ console.error(e); } });
 
-    const claimHistoryBtn = document.getElementById('claimHistoryBtn');
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
@@ -432,10 +463,11 @@
       showToast('آخر استلام: ' + last, '#3498db');
     });
 
-    window.addEventListener('load', () => { setTimeout(()=> refreshUserDoc(), 1200); });
+    // initial load refresh
+    window.addEventListener('load', () => setTimeout(()=> refreshUserDoc(), 1200));
   </script>
 
-  <!-- مكتبة الكونفيتي (خارج الموديول) -->
+  <!-- confetti library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
     window.launchConfetti = function() {
