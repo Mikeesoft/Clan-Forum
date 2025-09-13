@@ -1,14 +1,10 @@
 <!doctype html>
+
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>الملف الشخصي — المنتدى</title>
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <style>
+  <title>الملف الشخصي — المنتدى</title>  <!-- Font Awesome -->  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  <style>
     /* ===== Variables & base ===== */
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
@@ -216,175 +212,167 @@
       .center{order:2}
       .mini-card{left:14px;top:14px}
     }
-  </style>
-</head>
-<body>
+  </style></head>
+<body>  <div class="frame" role="application" aria-label="Profile frame"><!-- mini gift+stars card (top-left) -->
+<div class="mini-card" title="الهدايا والنجوم">
+  <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
+    <i class="fa-solid fa-gift" style="font-size:20px"></i>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:3px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="stars-count"><i class="fa-solid fa-star"></i><span id="starsNum">0</span></div>
+      <div style="color:var(--muted);font-size:12px;margin-right:8px">نجومك</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="small-progress" aria-hidden><i id="progressFill"></i></div>
+      <div class="level-box">مستوى <span id="levelNum">0</span>/30</div>
+    </div>
+  </div>
+</div>
 
-  <div class="frame" role="application" aria-label="Profile frame">
+<!-- LEFT: profile summary -->
+<div class="left" aria-hidden="false">
+  <div class="profile-top">
+    <div class="avatar-wrap">
+      <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar">
+      <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
+      <input id="fileInput" type="file" accept="image/*" style="display:none" />
+    </div>
+    <div class="profile-info" style="flex:1">
+      <h2 id="displayName">اسم المستخدم</h2>
+      <p id="emailText">user@example.com</p>
+      <div style="margin-top:12px;color:var(--muted);font-size:13px">مرحباً بك في ملفك الشخصي — تابع تقدمك واحصل على المكافآت اليومية!</div>
+    </div>
+  </div>
 
-    <!-- mini gift+stars card (top-left) -->
-    <div class="mini-card" title="الهدايا والنجوم">
-      <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
-        <i class="fa-solid fa-gift" style="font-size:20px"></i>
+  <div class="divider"></div>
+
+  <div style="display:flex;gap:12px;align-items:center">
+    <div style="flex:1">
+      <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم</div>
+      <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
+        <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:3px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="stars-count"><i class="fa-solid fa-star"></i><span id="starsNum">0</span></div>
-          <div style="color:var(--muted);font-size:12px;margin-right:8px">نجومك</div>
-        </div>
+    </div>
+    <div style="width:70px;text-align:center;color:var(--muted)"><strong id="todayMinutes">0</strong> دق</div>
+  </div>
+
+  <div style="margin-top:18px;color:var(--muted);font-size:13px">
+    <div style="font-weight:700;margin-bottom:8px">ماذا تفعل؟</div>
+    <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.6">
+      <li>افتح الموقع وابقَ نَشِطًا لتحصل على نجوم (كل 5 دقائق = 1 نجمة).</li>
+      <li>اضغط صندوق الهدايا لاستلام الهدية اليومية (+5 نجوم) مرة كل يوم.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- CENTER: leagues preview -->
+<div class="center">
+  <div class="header-row">
+    <div class="title">
+      <h1>LEAGUES</h1>
+      <p>is a rating system, based on the players' rank.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
+    </div>
+  </div>
+
+  <div class="leagues-preview" id="leaguesPreview">
+    <!-- رمزي: هنا وضعنا لوحة عرض سريعة، عند فتح المودال سيعرض الواجهة الكاملة -->
+    <div style="text-align:center">
+      <div style="font-size:38px;color:var(--muted);margin-bottom:12px">☆</div>
+      <div style="color:var(--muted)">اضغط علامة (?) في الأعلى لفتح شرح المستويات الكاملة</div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;gap:8px">
+    <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> تاريخ الاستلام</button>
+  </div>
+</div>
+
+<!-- RIGHT: help & small notifications -->
+<div class="right">
+  <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
+
+  <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+    <div style="font-weight:700;margin-bottom:8px">إحصائيات</div>
+    <div style="display:flex;justify-content:space-between;color:var(--muted)">
+      <div>النجوم</div><div id="statStars">0</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;color:var(--muted);margin-top:6px">
+      <div>المستوى</div><div id="statLevel">0</div>
+    </div>
+  </div>
+
+  <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+    <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
+    <div style="display:flex;gap:8px">
+      <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:transparent;color:var(--muted)">
+      <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
+    </div>
+  </div>
+
+  <div style="height:10px"></div>
+  <div id="claimNotification" class="claim-alert">تم استلام 5 نجوم!</div>
+</div>
+
+<!-- modal help (leagues UI replica) -->
+<div id="modalBg" class="modal-bg" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal" id="modal">
+    <button id="closeModal" class="close"><i class="fa-solid fa-xmark"></i></button>
+
+    <!-- Paste here the LEAGUES UI code (simplified preview) -->
+    <!-- I kept it compact and readable -->
+    <div style="display:flex;align-items:flex-start;gap:16px">
+      <div style="width:64px;height:64px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center"> </div>
+      <div>
+        <h2 style="margin:0">LEAGUES</h2>
+        <p style="margin:6px 0;color:var(--muted)">is a rating system, based on the players' rank.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <!-- small cards replicate your detailed design -->
+      <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="small-progress" aria-hidden><i id="progressFill"></i></div>
-          <div class="level-box">مستوى <span id="levelNum">0</span>/30</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LEFT: profile summary -->
-    <div class="left" aria-hidden="false">
-      <div class="profile-top">
-        <div class="avatar-wrap">
-          <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar">
-          <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
-          <input id="fileInput" type="file" accept="image/*" style="display:none" />
-        </div>
-        <div class="profile-info" style="flex:1">
-          <h2 id="displayName">اسم المستخدم</h2>
-          <p id="emailText">user@example.com</p>
-          <div style="margin-top:12px;color:var(--muted);font-size:13px">مرحباً بك في ملفك الشخصي — تابع تقدمك واحصل على المكافآت اليومية!</div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div style="display:flex;gap:12px;align-items:center">
-        <div style="flex:1">
-          <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم</div>
-          <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
-            <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
-          </div>
-        </div>
-        <div style="width:70px;text-align:center;color:var(--muted)"><strong id="todayMinutes">0</strong> دق</div>
-      </div>
-
-      <div style="margin-top:18px;color:var(--muted);font-size:13px">
-        <div style="font-weight:700;margin-bottom:8px">ماذا تفعل؟</div>
-        <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.6">
-          <li>افتح الموقع وابقَ نَشِطًا لتحصل على نجوم (كل 5 دقائق = 1 نجمة).</li>
-          <li>اضغط صندوق الهدايا لاستلام الهدية اليومية (+5 نجوم) مرة كل يوم.</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- CENTER: leagues preview -->
-    <div class="center">
-      <div class="header-row">
-        <div class="title">
-          <h1>LEAGUES</h1>
-          <p>is a rating system, based on the players' rank.</p>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
-        </div>
-      </div>
-
-      <div class="leagues-preview" id="leaguesPreview">
-        <!-- رمزي: هنا وضعنا لوحة عرض سريعة، عند فتح المودال سيعرض الواجهة الكاملة -->
-        <div style="text-align:center">
-          <div style="font-size:38px;color:var(--muted);margin-bottom:12px">☆</div>
-          <div style="color:var(--muted)">اضغط علامة (?) في الأعلى لفتح شرح المستويات الكاملة</div>
-        </div>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> تاريخ الاستلام</button>
-      </div>
-    </div>
-
-    <!-- RIGHT: help & small notifications -->
-    <div class="right">
-      <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
-
-      <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
-        <div style="font-weight:700;margin-bottom:8px">إحصائيات</div>
-        <div style="display:flex;justify-content:space-between;color:var(--muted)">
-          <div>النجوم</div><div id="statStars">0</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;color:var(--muted);margin-top:6px">
-          <div>المستوى</div><div id="statLevel">0</div>
-        </div>
-      </div>
-
-      <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
-        <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
-        <div style="display:flex;gap:8px">
-          <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:transparent;color:var(--muted)">
-          <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
-        </div>
-      </div>
-
-      <div style="height:10px"></div>
-      <div id="claimNotification" class="claim-alert">تم استلام 5 نجوم!</div>
-    </div>
-
-    <!-- modal help (leagues UI replica) -->
-    <div id="modalBg" class="modal-bg" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="modal" id="modal">
-        <button id="closeModal" class="close"><i class="fa-solid fa-xmark"></i></button>
-
-        <!-- Paste here the LEAGUES UI code (simplified preview) -->
-        <!-- I kept it compact and readable -->
-        <div style="display:flex;align-items:flex-start;gap:16px">
-          <div style="width:64px;height:64px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center"> </div>
+          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#2b3336,#1a2325);display:flex;align-items:center;justify-content:center">⚙</div>
           <div>
-            <h2 style="margin:0">LEAGUES</h2>
-            <p style="margin:6px 0;color:var(--muted)">is a rating system, based on the players' rank.</p>
+            <strong>Steel League</strong><div style="color:var(--muted);font-size:12px">Major Grade I</div>
           </div>
         </div>
-
-        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-          <!-- small cards replicate your detailed design -->
-          <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#2b3336,#1a2325);display:flex;align-items:center;justify-content:center">⚙</div>
-              <div>
-                <strong>Steel League</strong><div style="color:var(--muted);font-size:12px">Major Grade I</div>
-              </div>
-            </div>
-            <div style="margin-top:8px;color:var(--muted)">⭐110 • Rewards bundle</div>
-          </div>
-
-          <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#3a2b20,#241914);display:flex;align-items:center;justify-content:center">★</div>
-              <div>
-                <strong>Bronze League</strong><div style="color:var(--muted);font-size:12px">Primary Major Grade I</div>
-              </div>
-            </div>
-            <div style="margin-top:8px;color:var(--muted)">⭐360 • Rewards</div>
-          </div>
-
-          <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#3f4448,#22272a);display:flex;align-items:center;justify-content:center">◇</div>
-              <div>
-                <strong>Silver League</strong><div style="color:var(--muted);font-size:12px">Commander Grade I</div>
-              </div>
-            </div>
-            <div style="margin-top:8px;color:var(--muted)">⭐1,000 • Rewards</div>
-          </div>
-        </div>
-
-        <div style="margin-top:16px;color:var(--muted)">
-          <small>عرض موجز للـ leagues. كل مستوى يحتاج عدد نجوم معين ويفتح جوائز مختلفة.</small>
-        </div>
-
+        <div style="margin-top:8px;color:var(--muted)">⭐110 • Rewards bundle</div>
       </div>
+
+      <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#3a2b20,#241914);display:flex;align-items:center;justify-content:center">★</div>
+          <div>
+            <strong>Bronze League</strong><div style="color:var(--muted);font-size:12px">Primary Major Grade I</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:var(--muted)">⭐360 • Rewards</div>
+      </div>
+
+      <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#3f4448,#22272a);display:flex;align-items:center;justify-content:center">◇</div>
+          <div>
+            <strong>Silver League</strong><div style="color:var(--muted);font-size:12px">Commander Grade I</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;color:var(--muted)">⭐1,000 • Rewards</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;color:var(--muted)">
+      <small>عرض موجز للـ leagues. كل مستوى يحتاج عدد نجوم معين ويفتح جوائز مختلفة.</small>
     </div>
 
   </div>
+</div>
 
-  <!-- Firebase + Logic -->
-  <script type="module">
+  </div>  <!-- Firebase + Logic -->  <script type="module">
     // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -558,50 +546,54 @@
     document.querySelector('.avatar-edit').addEventListener('click', () => fileInput.click());
 
     // ====== Gift (daily claim) logic ======
-    giftBtn.addEventListener('click', async () => {
-      if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
-      const uref = userDocRef(currentUser.uid);
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(uref);
-          if (!snap.exists()) {
-            tx.set(uref, {
-              stars: 5,
-              level: 0,
-              progress: 0,
-              lastGiftDate: todayDateStr(),
-              dailySeconds: 0,
-              lastActiveDate: todayDateStr()
-            });
-            // mark as claimed
-            claimAnimation();
-            return;
+    if (giftBtn) {
+      giftBtn.addEventListener('click', async () => {
+        if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
+        const uref = userDocRef(currentUser.uid);
+        try {
+          await runTransaction(db, async (tx) => {
+            const snap = await tx.get(uref);
+            if (!snap.exists()) {
+              tx.set(uref, {
+                stars: 5,
+                level: 0,
+                progress: 0,
+                lastGiftDate: todayDateStr(),
+                dailySeconds: 0,
+                lastActiveDate: todayDateStr()
+              });
+              return;
+            }
+            const data = snap.data();
+            const last = data.lastGiftDate || null;
+            if (last === todayDateStr()) {
+              throw new Error('claimed');
+            }
+            const newStars = (data.stars || 0) + 5;
+            tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr() });
+          });
+          // only after successful transaction
+          claimAnimation();
+        } catch (e) {
+          if (e?.message === 'claimed') {
+            showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
+          } else {
+            console.error('claim err', e);
+            showToast('فشل استلام الهدية', '#e74c3c');
           }
-          const data = snap.data();
-          const last = data.lastGiftDate || null;
-          if (last === todayDateStr()) {
-            throw new Error('claimed');
-          }
-          const newStars = (data.stars || 0) + 5;
-          // optionally increase level/progress logic
-          tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr() });
-        });
-        claimAnimation();
-      } catch (e) {
-        if (e?.message === 'claimed') {
-          showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
-        } else {
-          console.error('claim err', e);
-          showToast('فشل استلام الهدية', '#e74c3c');
         }
-      }
-    });
+      });
+    }
 
     // visual claim animation & toast & small right-side popup
     function claimAnimation() {
       claimNotification.style.display = 'block';
       setTimeout(()=> claimNotification.style.display = 'none', 2500);
       showToast('تم استلام 5 نجوم! 🎉');
+      // launch confetti if lib is loaded
+      if (typeof window.launchConfetti === 'function') {
+        try { window.launchConfetti(); } catch (e) { console.warn('confetti failed', e); }
+      }
       // refresh UI from server
       refreshUserDoc();
     }
@@ -694,18 +686,18 @@
     setInterval(()=> refreshUserDoc(), 6000);
 
     // ====== Help modal toggles ======
-    helpBtn.addEventListener('click', () => {
+    if (helpBtn) helpBtn.addEventListener('click', () => {
       modalBg.style.display = 'flex';
       modalBg.setAttribute('aria-hidden','false');
     });
-    closeModal.addEventListener('click', () => {
+    if (closeModal) closeModal.addEventListener('click', () => {
       modalBg.style.display = 'none';
       modalBg.setAttribute('aria-hidden','true');
     });
-    modalBg.addEventListener('click', (e) => { if (e.target === modalBg) { modalBg.style.display='none'; modalBg.setAttribute('aria-hidden','true'); } });
+    if (modalBg) modalBg.addEventListener('click', (e) => { if (e.target === modalBg) { modalBg.style.display='none'; modalBg.setAttribute('aria-hidden','true'); } });
 
     // ====== Promo handling (simple: save to user doc) ======
-    applyPromo.addEventListener('click', async () => {
+    if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
       if (!code) return showToast('ادخل كود صالح', '#f39c12');
       if (!currentUser) return showToast('سجّل الدخول', '#e67e22');
@@ -719,12 +711,13 @@
     });
 
     // ====== Sign out ======
-    signOutBtn.addEventListener('click', async () => {
+    if (signOutBtn) signOutBtn.addEventListener('click', async () => {
       try { await signOut(auth); showToast('تم تسجيل الخروج', '#3498db'); location.href = 'index.html'; } catch (e){ console.error(e); }
     });
 
     // ====== show existing claim history (for demo) ======
-    document.getElementById('claimHistoryBtn').addEventListener('click', async () => {
+    const claimHistoryBtn = document.getElementById('claimHistoryBtn');
+    if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
       const data = snap.exists() ? snap.data() : {};
@@ -736,46 +729,24 @@
     window.addEventListener('load', () => {
       setTimeout(()=> refreshUserDoc(), 1200);
     });
-<!-- مكتبة الكونفيتي -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  </script>  <!-- مكتبة الكونفيتي (خارج الموديول) -->  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>  <script>
+    // دالة إطلاق الكونفيتي متاحة عالمياً
+    window.launchConfetti = function() {
+      var duration = 2 * 1000; // 2s
+      var end = Date.now() + duration;
 
-<script>
-  // دالة إطلاق الكونفيتي
-  function launchConfetti() {
-    var duration = 2 * 1000; // المدة (2 ثواني)
-    var end = Date.now() + duration;
+      (function frame() {
+        try {
+          confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+          confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+        } catch (e) {
+          console.warn('confetti lib error', e);
+        }
 
-    (function frame() {
-      // confetti من اليمين
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 }
-      });
-      // confetti من اليسار
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 }
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    }());
-  }
-
-  // ربط الكونفيتي بزر استلام الهدية
-  const giftBtn = document.getElementById("GiftBtn");
-  if (giftBtn) {
-    giftBtn.addEventListener("click", () => {
-      // لما يستلم المستخدم الهدية
-      launchConfetti();
-    });
-  }
-</script>
-  </script>
-</body>
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+    };
+  </script></body>
 </html>
