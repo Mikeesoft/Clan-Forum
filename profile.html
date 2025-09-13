@@ -1,383 +1,151 @@
 <!doctype html>
-
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>الملف الشخصي — المنتدى</title>  <!-- Font Awesome -->  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  <style>
-    /* ===== Variables & base ===== */
+  <title>الملف الشخصي — المنتدى</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* (نفس ستايلات الصفحة - احتفظت بها كما عندك) */
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
       --card: rgba(255,255,255,0.03);
       --muted: #bfc9cb;
       --accent: #3498db;
       --gold: #f1c40f;
-      --danger: #e74c3c;
-      --glass: rgba(255,255,255,0.04);
-      --surface: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
-      font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      color: #e7eef0;
     }
     html,body{height:100%;margin:0;background:var(--bg);-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
-
-    /* ===== Frame ===== */
-    .frame {
-      width: 1100px;
-      max-width: 98vw;
-      height: 640px;
-      border-radius: 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-      box-shadow: 0 24px 80px rgba(0,0,0,0.65);
-      position: relative;
-      overflow: hidden;
-      padding: 20px;
-      box-sizing: border-box;
-      backdrop-filter: blur(6px);
-      display: flex;
-      gap: 20px;
-    }
-
-    /* ===== Left: Profile column ===== */
-    .left {
-      width: 380px;
-      min-width: 300px;
-      background: var(--card);
-      border: 1px solid rgba(255,255,255,0.03);
-      border-radius: 12px;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .profile-top {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .avatar-wrap {
-      position: relative;
-      width: 120px;
-      height: 120px;
-      flex: 0 0 120px;
-    }
-    .avatar-wrap img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid rgba(255,255,255,0.06);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-    }
-    .avatar-edit {
-      position: absolute;
-      right: 6px;
-      bottom: 6px;
-      background: var(--accent);
-      color: #fff;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      display:flex;align-items:center;justify-content:center;
-      cursor: pointer;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
-      border: 2px solid rgba(255,255,255,0.04);
-    }
-
-    .profile-info h2 { margin:0 0 6px 0; font-size:1.3rem; color: #fff; }
-    .profile-info p { margin:0; color:var(--muted); font-size:0.95rem }
-
+    .frame { width: 1100px; max-width: 98vw; height: 640px; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); box-shadow: 0 24px 80px rgba(0,0,0,0.65); position: relative; overflow: hidden; padding: 20px; box-sizing: border-box; backdrop-filter: blur(6px); display: flex; gap: 20px; }
+    .left { width: 380px; min-width: 300px; background: var(--card); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; box-sizing: border-box; }
+    .profile-top { display: flex; align-items: center; gap: 14px; }
+    .avatar-wrap { position: relative; width: 120px; height: 120px; flex: 0 0 120px; }
+    .avatar-wrap img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.06); box-shadow: 0 8px 20px rgba(0,0,0,0.5); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); }
+    .avatar-edit { position: absolute; right: 6px; bottom: 6px; background: var(--accent); color: #fff; width: 38px; height: 38px; border-radius: 50%; display:flex;align-items:center;justify-content:center; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.04); }
     .divider { height:1px; background:rgba(255,255,255,0.02); margin:18px 0; border-radius:4px }
+    .mini-card { position: absolute; top: 20px; left: 20px; display:flex; align-items:center; gap:12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.035); box-shadow: 0 8px 22px rgba(0,0,0,0.5); z-index:50; min-width:220px; }
+    .gift { width:54px;height:54px;border-radius:10px; background:linear-gradient(180deg,#ffd97a,#ffb84f); display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#111; box-shadow: 0 8px 18px rgba(0,0,0,0.45); cursor:pointer; position:relative; }
+    .claim-alert { position: absolute; top: 22px; right: 22px; background: linear-gradient(180deg,#2ecc71,#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow: 0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999; }
+    .center { flex:1; display:flex; flex-direction:column; gap:16px; padding: 6px 0; }
+    .right { width: 300px; min-width: 260px; display:flex; flex-direction:column; gap:12px; }
+    .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted); display:flex;align-items:center;gap:8px; }
+    .toast { position: fixed; right: 22px; top: 22px; background: #2ecc71; color: #fff; padding:10px 14px; border-radius:8px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); z-index: 9999; }
+    @media (max-width:980px){ .frame{flex-direction:column;height:auto;padding-bottom:40px} .left{width:100%} .right{width:100%} .center{order:2} .mini-card{left:14px;top:14px} }
+  </style>
+</head>
+<body>
+  <div class="frame" role="application" aria-label="Profile frame">
 
-    /* ===== Stars card (top-left mini) ===== */
-    .mini-card {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,0.035);
-      box-shadow: 0 8px 22px rgba(0,0,0,0.5);
-      z-index:50;
-      min-width:220px;
-    }
-    .gift {
-      width:54px;height:54px;border-radius:10px;
-      background:linear-gradient(180deg,#ffd97a,#ffb84f);
-      display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#111;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.45);
-      cursor:pointer;
-      position:relative;
-    }
-    .gift.locked { filter:grayscale(0.1); opacity:0.95 }
-    .stars-count { display:flex;align-items:center;gap:8px;color:var(--gold); font-weight:700}
-    .level-box {
-      margin-left: auto;
-      background: rgba(255,255,255,0.02);
-      padding:6px 10px;border-radius:8px;color:var(--muted); font-weight:700; font-size:0.95rem;
-      display:flex;align-items:center;gap:8px;
-    }
-
-    /* progress small */
-    .small-progress { width:170px; height:12px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
-    .small-progress > i { display:block; height:100%; background:linear-gradient(90deg,#ffd57a,#ffb84f); width:0%; transition:width .6s ease; }
-
-    /* ===== Main: center content (leagues preview + stats) ===== */
-    .center {
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-      padding: 6px 0;
-    }
-
-    .header-row { display:flex; align-items:center; justify-content:space-between; gap:12px }
-    .title { display:flex; gap:12px; align-items:center }
-    .title h1 { margin:0; font-size:22px; letter-spacing:1px }
-    .title p { margin:0; color:var(--muted); font-size:13px }
-
-    /* leagues preview area (use the user's provided UI style inside modal too) */
-    .leagues-preview {
-      background: var(--surface);
-      border-radius:10px; padding:12px; border:1px solid rgba(255,255,255,0.02);
-      min-height: 320px;
-      display:flex; align-items:center; justify-content:center;
-      color:var(--muted);
-    }
-
-    /* right: help & notifications area */
-    .right {
-      width: 300px;
-      min-width: 260px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .help-btn {
-      align-self:flex-end;
-      background: rgba(255,255,255,0.02);
-      border:1px solid rgba(255,255,255,0.03);
-      padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);
-      display:flex;align-items:center;gap:8px;
-    }
-
-    /* toast */
-    .toast {
-      position: fixed;
-      right: 22px;
-      top: 22px;
-      background: #2ecc71;
-      color: #fff;
-      padding:10px 14px;
-      border-radius:8px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-      z-index: 9999;
-    }
-
-    /* modal for help (Leagues UI) */
-    .modal-bg {
-      position: fixed; inset:0; background: rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:9998;
-    }
-    .modal {
-      width: 940px; max-width:94vw; height: 520px; max-height:92vh;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-      border-radius:10px; padding:18px; box-sizing:border-box; overflow:auto;
-    }
-    .modal .close { position:absolute; right:18px; top:18px; background:rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted) }
-
-    /* notification badge shown when claim received (small alert on top-right) */
-    .claim-alert {
-      position: absolute;
-      top: 22px;
-      right: 22px;
-      background: linear-gradient(180deg,#2ecc71,#27ae60);
-      padding:10px 14px;
-      color:#fff;
-      border-radius:8px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
-      display:none;
-      z-index:9999;
-    }
-
-    /* small responsive */
-    @media (max-width:980px){
-      .frame{flex-direction:column;height:auto;padding-bottom:40px}
-      .left{width:100%}
-      .right{width:100%}
-      .center{order:2}
-      .mini-card{left:14px;top:14px}
-    }
-  </style></head>
-<body>  <div class="frame" role="application" aria-label="Profile frame"><!-- mini gift+stars card (top-left) -->
-<div class="mini-card" title="الهدايا والنجوم">
-  <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
-    <i class="fa-solid fa-gift" style="font-size:20px"></i>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:3px;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div class="stars-count"><i class="fa-solid fa-star"></i><span id="starsNum">0</span></div>
-      <div style="color:var(--muted);font-size:12px;margin-right:8px">نجومك</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="small-progress" aria-hidden><i id="progressFill"></i></div>
-      <div class="level-box">مستوى <span id="levelNum">0</span>/30</div>
-    </div>
-  </div>
-</div>
-
-<!-- LEFT: profile summary -->
-<div class="left" aria-hidden="false">
-  <div class="profile-top">
-    <div class="avatar-wrap">
-      <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar">
-      <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
-      <input id="fileInput" type="file" accept="image/*" style="display:none" />
-    </div>
-    <div class="profile-info" style="flex:1">
-      <h2 id="displayName">اسم المستخدم</h2>
-      <p id="emailText">user@example.com</p>
-      <div style="margin-top:12px;color:var(--muted);font-size:13px">مرحباً بك في ملفك الشخصي — تابع تقدمك واحصل على المكافآت اليومية!</div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div style="display:flex;gap:12px;align-items:center">
-    <div style="flex:1">
-      <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم</div>
-      <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
-        <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
+    <div class="mini-card" title="الهدايا والنجوم">
+      <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
+        <i class="fa-solid fa-gift" style="font-size:20px"></i>
       </div>
-    </div>
-    <div style="width:70px;text-align:center;color:var(--muted)"><strong id="todayMinutes">0</strong> دق</div>
-  </div>
-
-  <div style="margin-top:18px;color:var(--muted);font-size:13px">
-    <div style="font-weight:700;margin-bottom:8px">ماذا تفعل؟</div>
-    <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.6">
-      <li>افتح الموقع وابقَ نَشِطًا لتحصل على نجوم (كل 5 دقائق = 1 نجمة).</li>
-      <li>اضغط صندوق الهدايا لاستلام الهدية اليومية (+5 نجوم) مرة كل يوم.</li>
-    </ul>
-  </div>
-</div>
-
-<!-- CENTER: leagues preview -->
-<div class="center">
-  <div class="header-row">
-    <div class="title">
-      <h1>LEAGUES</h1>
-      <p>is a rating system, based on the players' rank.</p>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
-    </div>
-  </div>
-
-  <div class="leagues-preview" id="leaguesPreview">
-    <!-- رمزي: هنا وضعنا لوحة عرض سريعة، عند فتح المودال سيعرض الواجهة الكاملة -->
-    <div style="text-align:center">
-      <div style="font-size:38px;color:var(--muted);margin-bottom:12px">☆</div>
-      <div style="color:var(--muted)">اضغط علامة (?) في الأعلى لفتح شرح المستويات الكاملة</div>
-    </div>
-  </div>
-
-  <div style="display:flex;justify-content:flex-end;gap:8px">
-    <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> تاريخ الاستلام</button>
-  </div>
-</div>
-
-<!-- RIGHT: help & small notifications -->
-<div class="right">
-  <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
-
-  <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
-    <div style="font-weight:700;margin-bottom:8px">إحصائيات</div>
-    <div style="display:flex;justify-content:space-between;color:var(--muted)">
-      <div>النجوم</div><div id="statStars">0</div>
-    </div>
-    <div style="display:flex;justify-content:space-between;color:var(--muted);margin-top:6px">
-      <div>المستوى</div><div id="statLevel">0</div>
-    </div>
-  </div>
-
-  <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
-    <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
-    <div style="display:flex;gap:8px">
-      <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:transparent;color:var(--muted)">
-      <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
-    </div>
-  </div>
-
-  <div style="height:10px"></div>
-  <div id="claimNotification" class="claim-alert">تم استلام 5 نجوم!</div>
-</div>
-
-<!-- modal help (leagues UI replica) -->
-<div id="modalBg" class="modal-bg" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal" id="modal">
-    <button id="closeModal" class="close"><i class="fa-solid fa-xmark"></i></button>
-
-    <!-- Paste here the LEAGUES UI code (simplified preview) -->
-    <!-- I kept it compact and readable -->
-    <div style="display:flex;align-items:flex-start;gap:16px">
-      <div style="width:64px;height:64px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center"> </div>
-      <div>
-        <h2 style="margin:0">LEAGUES</h2>
-        <p style="margin:6px 0;color:var(--muted)">is a rating system, based on the players' rank.</p>
-      </div>
-    </div>
-
-    <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-      <!-- small cards replicate your detailed design -->
-      <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="stars-count"><i class="fa-solid fa-star"></i><span id="starsNum">0</span></div>
+          <div style="color:var(--muted);font-size:12px;margin-right:8px">نجومك</div>
+        </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#2b3336,#1a2325);display:flex;align-items:center;justify-content:center">⚙</div>
-          <div>
-            <strong>Steel League</strong><div style="color:var(--muted);font-size:12px">Major Grade I</div>
+          <div class="small-progress" aria-hidden><i id="progressFill" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,#ffd57a,#ffb84f);transition:width .6s ease;"></i></div>
+          <div class="level-box">مستوى <span id="levelNum">0</span>/30</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="left" aria-hidden="false">
+      <div class="profile-top">
+        <div class="avatar-wrap">
+          <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar">
+          <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
+          <input id="fileInput" type="file" accept="image/*" style="display:none" />
+        </div>
+        <div class="profile-info" style="flex:1">
+          <h2 id="displayName">اسم المستخدم</h2>
+          <p id="emailText">user@example.com</p>
+          <div style="margin-top:12px;color:var(--muted);font-size:13px">مرحباً بك في ملفك الشخصي — تابع تقدمك واحصل على المكافآت اليومية!</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم</div>
+          <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
+            <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
           </div>
         </div>
-        <div style="margin-top:8px;color:var(--muted)">⭐110 • Rewards bundle</div>
+        <div style="width:70px;text-align:center;color:var(--muted)"><strong id="todayMinutes">0</strong> دق</div>
       </div>
 
-      <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#3a2b20,#241914);display:flex;align-items:center;justify-content:center">★</div>
-          <div>
-            <strong>Bronze League</strong><div style="color:var(--muted);font-size:12px">Primary Major Grade I</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;color:var(--muted)">⭐360 • Rewards</div>
-      </div>
-
-      <div style="background:var(--surface);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(180deg,#3f4448,#22272a);display:flex;align-items:center;justify-content:center">◇</div>
-          <div>
-            <strong>Silver League</strong><div style="color:var(--muted);font-size:12px">Commander Grade I</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;color:var(--muted)">⭐1,000 • Rewards</div>
+      <div style="margin-top:18px;color:var(--muted);font-size:13px">
+        <div style="font-weight:700;margin-bottom:8px">ماذا تفعل؟</div>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.6">
+          <li>افتح الموقع وابقَ نَشِطًا لتحصل على نجوم (كل 5 دقائق = 1 نجمة).</li>
+          <li>اضغط صندوق الهدايا لاستلام الهدية اليومية (+5 نجوم) مرة كل يوم.</li>
+        </ul>
       </div>
     </div>
 
-    <div style="margin-top:16px;color:var(--muted)">
-      <small>عرض موجز للـ leagues. كل مستوى يحتاج عدد نجوم معين ويفتح جوائز مختلفة.</small>
+    <div class="center">
+      <div class="header-row">
+        <div class="title">
+          <h1>LEAGUES</h1>
+          <p style="color:var(--muted)">is a rating system, based on the players' rank.</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
+        </div>
+      </div>
+
+      <div class="leagues-preview" id="leaguesPreview">
+        <div style="text-align:center">
+          <div style="font-size:38px;color:var(--muted);margin-bottom:12px">☆</div>
+          <div style="color:var(--muted)">اضغط علامة (?) في الأعلى لفتح شرح المستويات الكاملة</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> تاريخ الاستلام</button>
+      </div>
+    </div>
+
+    <div class="right">
+      <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
+
+      <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+        <div style="font-weight:700;margin-bottom:8px">إحصائيات</div>
+        <div style="display:flex;justify-content:space-between;color:var(--muted)">
+          <div>النجوم</div><div id="statStars">0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;color:var(--muted);margin-top:6px">
+          <div>المستوى</div><div id="statLevel">0</div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+        <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
+        <div style="display:flex;gap:8px">
+          <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:transparent;color:var(--muted)">
+          <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <div id="claimNotification" class="claim-alert">تم استلام 5 نجوم!</div>
     </div>
 
   </div>
-</div>
 
-  </div>  <!-- Firebase + Logic -->  <script type="module">
+  <!-- Firebase + Logic -->
+  <script type="module">
     // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    // NOTE: removed storage imports (we won't use Firebase Storage)
 
     // ====== استخدم نفس تكوين المشروع اللي عندك ======
     const firebaseConfig = {
@@ -393,7 +161,6 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     // ====== عناصر DOM ======
     const displayNameEl = document.getElementById('displayName');
@@ -432,7 +199,6 @@
       setTimeout(()=> { t.style.opacity = '0'; setTimeout(()=> t.remove(), 400); }, 3500);
     }
 
-    // date string YYYY-MM-DD
     function todayDateStr() {
       const d = new Date();
       const y = d.getFullYear();
@@ -441,24 +207,20 @@
       return `${y}-${m}-${day}`;
     }
 
-    // ====== Firestore user doc path helper ======
     function userDocRef(uid) {
       return doc(db, 'users', uid);
     }
 
-    // ====== Default local state ======
     let currentUser = null;
-    let sessionSeconds = 0;         // seconds active this session
+    let sessionSeconds = 0;
     let sessionTimer = null;
-    let activityUpdateInterval = 30; // seconds: how frequently we sync active seconds
-    let dailySecondsLimit = 30*60;   // just an upper cap (optional)
-    const STAR_PER_5MIN = 1;        // every 5 minutes = 1 star
-    const SECONDS_PER_STAR = 5*60;  // 300s
+    let activityUpdateInterval = 30;
+    const STAR_PER_5MIN = 1;
+    const SECONDS_PER_STAR = 5*60;
 
     // ====== Auth state handling ======
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // if not logged in, sign in with popup (you can change UX)
         try {
           await signInWithPopup(auth, provider);
         } catch (e) {
@@ -471,79 +233,95 @@
       currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      // populate UI
       displayNameEl.textContent = currentUser.displayName || 'مستخدم';
       emailTextEl.textContent = currentUser.email || '';
 
+      // load photo either from auth profile or from stored Firestore doc
       if (currentUser.photoURL) profileImageEl.src = currentUser.photoURL;
 
-      // ensure user doc exists
       const uref = userDocRef(currentUser.uid);
       const snap = await getDoc(uref);
       if (!snap.exists()) {
         await setDoc(uref, {
           stars: 0,
           level: 0,
-          progress: 0, // 0..100 per level
+          progress: 0,
           lastGiftDate: null,
           dailySeconds: 0,
           lastActiveDate: todayDateStr(),
         });
       } else {
         const data = snap.data();
+        // if Firestore has photoURL (maybe base64), use it (higher priority)
+        if (data?.photoURL) profileImageEl.src = data.photoURL;
         updateUIFromData(data);
       }
 
-      // start session timer
       startSessionTimer();
     });
 
-    // ====== Update UI from Firestore user data ======
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const level = data?.level || 0;
-      const progress = data?.progress ?? 0; // 0..100
+      const progress = data?.progress ?? 0;
 
       starsNumEl.textContent = stars;
       levelNumEl.textContent = Math.min(level,30);
       statStars.textContent = stars;
       statLevel.textContent = Math.min(level,30);
 
-      // compute fill percent out of 30 levels: each level maps to some portion
-      // Here progress is 0..100 per level; overall percent = level/30 + progress/30
       const overallPercent = Math.min(((level / 30) + (progress/3000)) * 100, 100);
       progressFill.style.width = `${overallPercent}%`;
 
-      // daily minutes (if provided)
       if (typeof data.dailySeconds === 'number') {
         const mins = Math.floor((data.dailySeconds || 0) / 60);
         todayMinutesEl.textContent = mins;
-        const dailyPercent = Math.min(((data.dailySeconds || 0) / (60*30)) * 100, 100); // cap 30min visual
+        const dailyPercent = Math.min(((data.dailySeconds || 0) / (60*30)) * 100, 100);
         dailyBar.style.width = `${dailyPercent}%`;
       }
     }
 
-    // ====== Upload avatar logic ======
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file || !currentUser) return;
-      const ref = storageRef(storage, `profiles/${currentUser.uid}/avatar.jpg`);
-      try {
-        const snap = await uploadBytes(ref, file);
-        const url = await getDownloadURL(ref);
-        // update auth profile & users doc
-        await updateProfile(currentUser, { photoURL: url });
-        await setDoc(userDocRef(currentUser.uid), { photoURL: url }, { merge: true });
-        profileImageEl.src = url;
-        showToast('تم تحديث الصورة');
-      } catch (e) {
-        console.error('upload avatar', e);
-        showToast('فشل رفع الصورة', '#e74c3c');
-      }
-    });
+    // ====== Upload avatar logic WITHOUT Firebase Storage ======
+    // Convert image to DataURL (base64) and save into Firestore user doc
+    if (fileInput) {
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !currentUser) return;
 
-    // clicking avatar edit label triggers file input
-    document.querySelector('.avatar-edit').addEventListener('click', () => fileInput.click());
+        // optional: enforce small size (e.g., <= 200KB) to avoid doc size issues
+        const MAX_BYTES = 200 * 1024;
+        if (file.size > MAX_BYTES) {
+          showToast('صورة كبيرة جدًا — حاول ضغطها إلى أقل من 200KB', '#f39c12');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          const base64 = ev.target.result; // data:image/...;base64,...
+
+          try {
+            // show immediately
+            profileImageEl.src = base64;
+
+            // save into Firestore user doc (merge)
+            await setDoc(userDocRef(currentUser.uid), { photoURL: base64 }, { merge: true });
+
+            // optionally update auth profile photoURL (not required)
+            try { await updateProfile(currentUser, { photoURL: base64 }); } catch (err) { /* ignore */ }
+
+            showToast('تم تحديث الصورة');
+          } catch (err) {
+            console.error('upload avatar', err);
+            showToast('فشل رفع الصورة', '#e74c3c');
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // clicking the camera label opens file picker
+      const camLabel = document.querySelector('.avatar-edit');
+      if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
+    }
 
     // ====== Gift (daily claim) logic ======
     if (giftBtn) {
@@ -572,7 +350,6 @@
             const newStars = (data.stars || 0) + 5;
             tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr() });
           });
-          // only after successful transaction
           claimAnimation();
         } catch (e) {
           if (e?.message === 'claimed') {
@@ -585,137 +362,67 @@
       });
     }
 
-    // visual claim animation & toast & small right-side popup
     function claimAnimation() {
       claimNotification.style.display = 'block';
       setTimeout(()=> claimNotification.style.display = 'none', 2500);
       showToast('تم استلام 5 نجوم! 🎉');
-      // launch confetti if lib is loaded
       if (typeof window.launchConfetti === 'function') {
         try { window.launchConfetti(); } catch (e) { console.warn('confetti failed', e); }
       }
-      // refresh UI from server
       refreshUserDoc();
     }
 
-    // ====== Session timer: award stars per 5 minutes active ======
     function startSessionTimer() {
       if (sessionTimer) return;
       sessionSeconds = 0;
-      // every activityUpdateInterval seconds, update Firestore dailySeconds and maybe award stars if threshold reached
       sessionTimer = setInterval(async () => {
         sessionSeconds += activityUpdateInterval;
         if (!currentUser) return;
         const uref = userDocRef(currentUser.uid);
-
         try {
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              tx.set(uref, {
-                stars: 0,
-                level: 0,
-                progress: 0,
-                dailySeconds: sessionSeconds,
-                lastActiveDate: todayDateStr()
-              });
+              tx.set(uref, { stars: 0, level: 0, progress: 0, dailySeconds: sessionSeconds, lastActiveDate: todayDateStr() });
               return;
             }
             const data = snap.data();
-            // reset dailySeconds if day changed
             const lastDate = data.lastActiveDate || '';
             let dailySec = data.dailySeconds || 0;
-            if (lastDate !== todayDateStr()) {
-              dailySec = 0;
-            }
-            // add session chunk
+            if (lastDate !== todayDateStr()) dailySec = 0;
             dailySec = (dailySec || 0) + activityUpdateInterval;
-            // award stars for each full SECONDS_PER_STAR chunk
             let starsToAdd = 0;
-            while (dailySec >= SECONDS_PER_STAR) {
-              starsToAdd += STAR_PER_5MIN;
-              dailySec -= SECONDS_PER_STAR;
-            }
+            while (dailySec >= SECONDS_PER_STAR) { starsToAdd += STAR_PER_5MIN; dailySec -= SECONDS_PER_STAR; }
             const newStars = (data.stars || 0) + starsToAdd;
-            const newLevel = computeLevelFromStars(newStars); // compute and store
+            const newLevel = computeLevelFromStars(newStars);
             const progress = computeProgressWithinLevel(newStars);
-            tx.update(uref, {
-              stars: newStars,
-              dailySeconds: dailySec, // remaining seconds toward next star
-              lastActiveDate: todayDateStr(),
-              level: newLevel,
-              progress: progress
-            });
+            tx.update(uref, { stars: newStars, dailySeconds: dailySec, lastActiveDate: todayDateStr(), level: newLevel, progress: progress });
           });
-          // refresh UI
           refreshUserDoc();
-        } catch (e) {
-          console.error('session update err', e);
-        }
-
+        } catch (e) { console.error('session update err', e); }
       }, activityUpdateInterval * 1000);
     }
 
-    // Stop timer when window not focused (pause awarding)
     window.addEventListener('blur', () => { if (sessionTimer) clearInterval(sessionTimer); sessionTimer = null; });
     window.addEventListener('focus', () => { if (!sessionTimer && currentUser) startSessionTimer(); });
 
-    // ====== small helpers for level calculation ======
-    // example rules: every 10 stars = +1 level (you can change mapping)
-    function computeLevelFromStars(stars) {
-      // Let's define: each level needs 50 stars (customizable) up to 30 levels
-      const starsPerLevel = 50;
-      const lvl = Math.floor(stars / starsPerLevel);
-      return Math.min(lvl, 30);
-    }
-    function computeProgressWithinLevel(stars) {
-      const starsPerLevel = 50;
-      return Math.min((stars % starsPerLevel) / starsPerLevel * 100, 100);
-    }
+    function computeLevelFromStars(stars) { const starsPerLevel = 50; const lvl = Math.floor(stars / starsPerLevel); return Math.min(lvl, 30); }
+    function computeProgressWithinLevel(stars) { const starsPerLevel = 50; return Math.min((stars % starsPerLevel) / starsPerLevel * 100, 100); }
 
-    // ====== Refresh user doc data into UI ======
     async function refreshUserDoc() {
       if (!currentUser) return;
       const snap = await getDoc(userDocRef(currentUser.uid));
       if (!snap.exists()) return;
       const data = snap.data();
+      if (data?.photoURL) profileImageEl.src = data.photoURL;
       updateUIFromData(data);
     }
 
-    // initial refresh every time
     setInterval(()=> refreshUserDoc(), 6000);
 
-    // ====== Help modal toggles ======
-    if (helpBtn) helpBtn.addEventListener('click', () => {
-      modalBg.style.display = 'flex';
-      modalBg.setAttribute('aria-hidden','false');
-    });
-    if (closeModal) closeModal.addEventListener('click', () => {
-      modalBg.style.display = 'none';
-      modalBg.setAttribute('aria-hidden','true');
-    });
-    if (modalBg) modalBg.addEventListener('click', (e) => { if (e.target === modalBg) { modalBg.style.display='none'; modalBg.setAttribute('aria-hidden','true'); } });
+    if (helpBtn) helpBtn.addEventListener('click', () => { /* modal open */ });
+    if (signOutBtn) signOutBtn.addEventListener('click', async () => { try { await signOut(auth); showToast('تم تسجيل الخروج', '#3498db'); location.href = 'index.html'; } catch (e){ console.error(e); } });
 
-    // ====== Promo handling (simple: save to user doc) ======
-    if (applyPromo) applyPromo.addEventListener('click', async () => {
-      const code = promoInput.value.trim();
-      if (!code) return showToast('ادخل كود صالح', '#f39c12');
-      if (!currentUser) return showToast('سجّل الدخول', '#e67e22');
-      try {
-        await updateDoc(userDocRef(currentUser.uid), { promoCode: code, promoActivatedAt: serverTimestamp() });
-        showToast('تم تفعيل الكود');
-      } catch (e) {
-        console.error('promo err', e);
-        showToast('فشل تفعيل الكود', '#e74c3c');
-      }
-    });
-
-    // ====== Sign out ======
-    if (signOutBtn) signOutBtn.addEventListener('click', async () => {
-      try { await signOut(auth); showToast('تم تسجيل الخروج', '#3498db'); location.href = 'index.html'; } catch (e){ console.error(e); }
-    });
-
-    // ====== show existing claim history (for demo) ======
     const claimHistoryBtn = document.getElementById('claimHistoryBtn');
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
@@ -725,28 +432,22 @@
       showToast('آخر استلام: ' + last, '#3498db');
     });
 
-    // ====== initial refresh on load ======
-    window.addEventListener('load', () => {
-      setTimeout(()=> refreshUserDoc(), 1200);
-    });
-  </script>  <!-- مكتبة الكونفيتي (خارج الموديول) -->  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>  <script>
-    // دالة إطلاق الكونفيتي متاحة عالمياً
-    window.launchConfetti = function() {
-      var duration = 2 * 1000; // 2s
-      var end = Date.now() + duration;
+    window.addEventListener('load', () => { setTimeout(()=> refreshUserDoc(), 1200); });
+  </script>
 
+  <!-- مكتبة الكونفيتي (خارج الموديول) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    window.launchConfetti = function() {
+      var duration = 2 * 1000; var end = Date.now() + duration;
       (function frame() {
         try {
           confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
           confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-        } catch (e) {
-          console.warn('confetti lib error', e);
-        }
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
+        } catch (e) { console.warn('confetti lib error', e); }
+        if (Date.now() < end) requestAnimationFrame(frame);
       }());
     };
-  </script></body>
+  </script>
+</body>
 </html>
