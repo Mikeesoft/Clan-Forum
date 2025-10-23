@@ -358,7 +358,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction, 
-        collection, query, where, getDocs 
+        // لم تعد هذه الدوال مستخدمة في هذا الكود بسبب العودة لنظام الثابت
+        // collection, query, where, getDocs 
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
@@ -704,68 +705,40 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code (النهائي الديناميكي)
+    // promo code (الثابت المُعدّل)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
+      const CODE_TO_APPLY = 'WELCOME1000'; // 👈 الكود الترحيبي الثابت
+      const STARS_TO_ADD = 1000;          // 👈 1000 نجمة ترحيبية
+
       if (!code) return showToast('الرجاء إدخال Promo Code صالح.', '#f39c12');
       if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
+      if (code.toUpperCase() !== CODE_TO_APPLY) return showToast('Promo Code غير صحيح.', '#e74c3c');
 
       const uref = userDocRef(currentUser.uid);
       applyPromo.disabled = true;
 
       try {
-        // 1. البحث عن الكود في قاعدة البيانات (يتطلب فهرس لـ codeId)
-        const promoCodesCol = collection(db, 'promo_codes');
-        const q = query(promoCodesCol, where("codeId", "==", code.toUpperCase()));
-        const snapshot = await getDocs(q);
-
-        if (snapshot.empty) {
-          return showToast('Promo Code غير صحيح أو غير موجود.', '#e74c3c');
-        }
-
-        const promoDoc = snapshot.docs[0];
-        const promoData = promoDoc.data();
-        const STARS_TO_ADD = promoData.rewardValue || 0;
-        const MAX_USES = promoData.maxUses || Infinity;
-        
-        if (STARS_TO_ADD <= 0) {
-           return showToast('هذا الكود ليس له مكافأة محددة.', '#f39c12');
-        }
-
-        // 2. تطبيق Transaction على مستندين
         await runTransaction(db, async (tx) => {
-          // جلب مستند المستخدم ومستند الكود داخل Transaction
-          const userSnap = await tx.get(uref);
-          const promoSnap = await tx.get(promoDoc.ref);
+          const snap = await tx.get(uref);
+          const data = snap.exists() ? snap.data() : {};
           
-          const userData = userSnap.exists() ? userSnap.data() : {};
-          const currentPromoData = promoSnap.data();
-
-          // التحقق من الاستخدام السابق من قِبَل المستخدم
-          if (userData.activatedPromoCode === code.toUpperCase()) {
+          // التحقق من استخدام الكود سابقاً
+          if (data.activatedPromoCode === CODE_TO_APPLY) {
             throw new Error('CodeAlreadyUsed');
           }
           
-          // التحقق من الاستخدام الإجمالي
-          if ((currentPromoData.timesUsed || 0) >= MAX_USES) {
-             throw new Error('CodeMaxUsesReached');
-          }
-          
-          // تحديث مستند الكود (زيادة عدد الاستخدام)
-          const newTimesUsed = (currentPromoData.timesUsed || 0) + 1;
-          tx.update(promoDoc.ref, { timesUsed: newTimesUsed });
-
-          // تحديث مستند المستخدم (إضافة النجوم وتحديد الكود المستخدم)
-          const currentStars = userData.stars || 0;
+          const currentStars = data.stars || 0;
           const newStars = currentStars + STARS_TO_ADD;
           const newLevel = computeLevelFromStars(newStars);
-          const newPrestigeRank = computePrestigeRank(newStars);
+          const newPrestigeRank = computePrestigeRank(newStars); 
           
+          // تحديث مستند المستخدم
           tx.update(uref, { 
             stars: newStars, 
             level: newLevel,
             prestigeRank: newPrestigeRank,
-            activatedPromoCode: code.toUpperCase(), 
+            activatedPromoCode: CODE_TO_APPLY, // حفظ الكود لمنع التكرار
             promoActivatedAt: serverTimestamp() 
           });
         });
@@ -778,8 +751,6 @@
       catch (e) { 
         if (e.message === 'CodeAlreadyUsed') {
             showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
-        } else if (e.message === 'CodeMaxUsesReached') {
-            showToast('تم استهلاك هذا الكود بالكامل.', '#e74c3c');
         } else {
             console.error('Promo error:', e); 
             showToast('فشل تفعيل الـ Promo Code.', '#e74c3c'); 
