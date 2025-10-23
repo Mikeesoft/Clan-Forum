@@ -4,11 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>المنتدى</title>
-  <!-- استيراد الخطوط -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <!-- استيراد أيقونات Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <!-- ملف التنسيقات -->
   <link rel="stylesheet" href="style.css">
   <style>
     /* إخفاء الأقسام غير الرئيسية افتراضيًا */
@@ -17,7 +14,6 @@
   </style>
 </head>
 <body>
-  <!-- الهيدر -->
   <header class="main-header">
     <nav class="navbar">
       <div class="nav-right">
@@ -33,9 +29,7 @@
     </nav>
   </header>
 
-  <!-- المحتوى -->
   <main class="container">
-    <!-- الرئيسية -->
     <section id="home" class="page-section active">
       <div class="admin-message-section">
         <div class="message-card">
@@ -54,46 +48,39 @@
               <span>تعليق</span>
             </button>
           </div>
-          <!-- التعليقات -->
           <div id="commentsContainer" class="comments-section"></div>
         </div>
       </div>
     </section>
 
-    <!-- الأعضاء -->
     <section id="members" class="page-section">
       <h2>الأعضاء</h2>
       <p>هنا هنعرض قائمة الأعضاء المسجلين.</p>
     </section>
 
-    <!-- المجموعات -->
     <section id="groups" class="page-section">
       <h2>المجموعات</h2>
       <p>هنا هنعرض المجموعات المتاحة.</p>
     </section>
 
-    <!-- الإشعارات -->
     <section id="notifications" class="page-section">
       <h2>الإشعارات</h2>
       <p>هنا هتظهر إشعاراتك.</p>
     </section>
 
-    <!-- التحديثات -->
     <section id="updates" class="page-section">
       <h2>التحديثات</h2>
       <p>هنا هنكتب آخر التحديثات الخاصة بالموقع.</p>
     </section>
   </main>
 
-  <!-- زر العائم -->
   <button id="chatBtn" class="chat-fab">
     <i class="fas fa-globe"></i>
   </button>
 
-  <!-- نافذة المحادثة -->
   <div id="chatWindow" class="chat-window">
     <div class="chat-header">
-      <span>المحادثة</span>
+      <span><i class="fas fa-comments"></i> المحادثة العامة</span>
       <button id="closeChat" class="close-btn">&times;</button>
     </div>
     <div id="chatMessages" class="chat-messages"></div>
@@ -103,15 +90,13 @@
     </div>
   </div>
 
-  <!-- الفوتر -->
   <footer class="main-footer">
     <p>© 2025 المنتدى - جميع الحقوق محفوظة</p>
   </footer>
 
-  <!-- ربط ملف الجافاسكربت -->
   <script type="module" src="main.js"></script>
   <script>
-    // التحكم في عرض الأقسام
+    // التحكم في عرض الأقسام (Basic Navigation)
     const navLinks = document.querySelectorAll('.nav-icon');
     const sections = document.querySelectorAll('.page-section');
 
@@ -126,7 +111,10 @@
         // تفعيل القسم المطلوب
         link.classList.add('active');
         const sectionId = link.getAttribute('data-section');
-        document.getElementById(sectionId).classList.add('active');
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
       });
     });
   </script>

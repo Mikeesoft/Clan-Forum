@@ -1,4 +1,4 @@
-// main.js (مُحدّث — يشمل Chat مخزن في Firestore + تحسينات UI)
+// main.js (النسخة النهائية والمُدمجة)
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -14,7 +14,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   runTransaction,
   collection,
   addDoc,
@@ -24,12 +23,12 @@ import {
   startAfter,
   onSnapshot,
   serverTimestamp,
-  where
+  getDocs // 👈 تم إضافة getDocs لـ loadComments
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ====== تكوين Firebase ====== */
+/* ====== تكوين Firebase (ضع هنا بيانات مشروعك الحقيقية) ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
+  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ استبدل هذا بـ API Key الحقيقي
   authDomain: "clan-forum.firebaseapp.com",
   projectId: "clan-forum",
   storageBucket: "clan-forum.firebasestorage.app",
@@ -60,33 +59,25 @@ const chatMessages = document.getElementById("chatMessages");
 /* ====== مراجع Firestore ====== */
 const postRef = doc(db, "posts", "main-post");
 const commentsCol = collection(db, "posts", "main-post", "comments");
-
 // Chat: مجموعة الرسائل العامة
 const chatMessagesCol = collection(db, "chats", "global", "messages");
 
 /* ====== Toast Notification ====== */
 function showToast(msg, type = "error") {
   const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
+  toast.className = `toast ${type}`; // إضافة فئة النوع للتنسيق في CSS
   toast.textContent = msg;
-  Object.assign(toast.style, {
-    position: "fixed",
-    bottom: "20px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    background: type === "error" ? "#e74c3c" : "#2ecc71",
-    color: "#fff",
-    padding: "10px 16px",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-    zIndex: 9999,
-    opacity: "0",
-    transition: "opacity 0.3s ease"
-  });
+
+  // لإضافة الحركة، نستخدم فئة 'entering'
+  toast.style.opacity = "0";
+  toast.style.position = "fixed"; // تم نقل بعض الستايلات التي كانت في JS لـ CSS
+
   document.body.appendChild(toast);
-  setTimeout(() => (toast.style.opacity = "1"), 50);
+  setTimeout(() => toast.classList.add("entering"), 50);
+
   setTimeout(() => {
-    toast.style.opacity = "0";
+    toast.classList.remove("entering");
+    toast.classList.add("exiting");
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
@@ -107,6 +98,7 @@ function listenPost() {
     likeCountSpan.textContent = data.likes ?? 0;
 
     const user = auth.currentUser;
+    // التحقق من حالة الإعجاب للمستخدم الحالي
     if (user && Array.isArray(data.likedBy) && data.likedBy.includes(user.uid)) {
       likeBtn.classList.add("liked");
     } else {
@@ -136,11 +128,13 @@ if (likeBtn) {
         const data = snap.data();
         const likedBy = Array.isArray(data.likedBy) ? [...data.likedBy] : [];
         if (likedBy.includes(user.uid)) {
+          // إلغاء الإعجاب
           tx.update(postRef, {
             likedBy: likedBy.filter(id => id !== user.uid),
             likes: Math.max((data.likes || 1) - 1, 0)
           });
         } else {
+          // إضافة الإعجاب
           likedBy.push(user.uid);
           tx.update(postRef, {
             likedBy,
@@ -148,7 +142,9 @@ if (likeBtn) {
           });
         }
       });
-    } catch {
+      // لا نحتاج لـ showToast لأن الـ onSnapshot سيحدث الواجهة
+    } catch (e) {
+      console.error(e);
       showToast("خطأ أثناء تحديث الإعجاب.");
     } finally {
       likeBtn.disabled = false;
@@ -156,18 +152,29 @@ if (likeBtn) {
   });
 }
 
-/* ====== التعليقات مع Load More ====== */
+/* ====== التعليقات مع Load More (مُعدّلة لاستخدام getDocs) ====== */
 let lastVisible = null;
-const COMMENTS_LIMIT = 2;
+const COMMENTS_LIMIT = 3;
 
 async function loadComments(initial = false) {
+  // 1. نبحث عن زر "عرض المزيد" ونزيله إذا كان موجوداً قبل بدء عملية التحميل
+  const existingLoadBtn = commentsContainer.querySelector(".load-more-btn");
+  if (existingLoadBtn) {
+    existingLoadBtn.remove();
+  }
+
   let q = query(commentsCol, orderBy("createdAt", "asc"), limit(COMMENTS_LIMIT));
   if (lastVisible && !initial) {
     q = query(commentsCol, orderBy("createdAt", "asc"), startAfter(lastVisible), limit(COMMENTS_LIMIT));
   }
 
-  onSnapshot(q, (snapshot) => {
+  try {
+    // ⚠️ نستخدم getDocs لجلب البيانات لمرة واحدة (Load More)
+    const snapshot = await getDocs(q);
+
+    // إذا كانت أول عملية تحميل، نفرغ الحاوية
     if (initial) commentsContainer.innerHTML = "";
+
     snapshot.forEach(docSnap => {
       lastVisible = docSnap;
       const item = docSnap.data();
@@ -181,17 +188,28 @@ async function loadComments(initial = false) {
         <div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
         <div class="comment-text">${linkify(escapeHtml(item.text))}</div>
       `;
+      // نضع التعليق قبل زر الـ Load More (إذا كان موجوداً)
       commentsContainer.appendChild(div);
     });
 
+    // 2. إذا كان عدد النتائج مساوياً للحد الأقصى، نضيف زر "عرض المزيد"
     if (snapshot.size === COMMENTS_LIMIT) {
       const loadBtn = document.createElement("button");
-      loadBtn.textContent = "عرض المزيد";
+      loadBtn.textContent = "عرض المزيد من التعليقات";
       loadBtn.className = "load-more-btn";
       loadBtn.onclick = () => loadComments(false);
       commentsContainer.appendChild(loadBtn);
     }
-  });
+    
+    // إذا كانت النتائج صفر وليست أول عملية تحميل، نعلم المستخدم
+    if (snapshot.size === 0 && !initial) {
+        showToast("لا توجد تعليقات إضافية.", "warning");
+    }
+
+  } catch (error) {
+     console.error("Error loading comments:", error);
+     showToast("فشل في تحميل التعليقات", "error");
+  }
 }
 
 /* ====== منع تكرار صندوق التعليق ====== */
@@ -204,6 +222,7 @@ commentBtn.addEventListener("click", async () => {
     }
   }
 
+  // إذا كان صندوق الإدخال موجوداً بالفعل، لا نفعل شيئاً
   if (document.querySelector(".comment-input-area")) return;
 
   const inputArea = document.createElement("div");
@@ -212,6 +231,7 @@ commentBtn.addEventListener("click", async () => {
     <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
     <button id="addCommentBtn">إضافة تعليق</button>
   `;
+  // نضع صندوق التعليق في بداية الحاوية
   commentsContainer.insertAdjacentElement("afterbegin", inputArea);
 
   document.getElementById("addCommentBtn").onclick = async () => {
@@ -226,6 +246,12 @@ commentBtn.addEventListener("click", async () => {
         createdAt: serverTimestamp()
       });
       document.getElementById("newCommentInput").value = "";
+      // نزيل صندوق الإدخال بعد الإرسال الناجح
+      inputArea.remove();
+      // نعيد تحميل التعليقات من البداية لرؤية التعليق الجديد
+      lastVisible = null;
+      loadComments(true); 
+      
       showToast("تمت إضافة التعليق", "success");
     } catch {
       showToast("فشل إرسال التعليق");
@@ -233,25 +259,36 @@ commentBtn.addEventListener("click", async () => {
   };
 });
 
-/* ====== Auth UI ====== */
+/* ====== Auth UI (تسجيل الدخول/الخروج) ====== */
 function bindAuthUI() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      // المستخدم مسجل دخوله
       const name = escapeHtml(user.displayName || "مستخدم");
       const photo = user.photoURL
-        ? `<img src="${user.photoURL}" alt="${name}" style="width:28px;height:28px;border-radius:50%;margin-inline-end:8px;">`
-        : `<i class="fas fa-user-circle" style="margin-inline-end:8px;"></i>`;
+        ? `<img src="${user.photoURL}" alt="${name}" loading="lazy">` // إضافة loading="lazy" لتحسين الأداء
+        : `<i class="fas fa-user-circle" style="margin-inline-end:8px; font-size: 28px;"></i>`;
       loginContainer.innerHTML = `
         <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
-          ${photo}<span>${name}</span>
+          ${photo}<span>${name.split(' ')[0]}</span>
         </a>
         <button id="signOutBtn" class="auth-btn">خروج</button>
       `;
-      document.getElementById("signOutBtn").onclick = () => signOut(auth);
+      document.getElementById("signOutBtn").onclick = () => {
+         signOut(auth);
+         showToast("تم تسجيل الخروج بنجاح", "success");
+      }
     } else {
+      // المستخدم غير مسجل دخوله
       loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
-      document.getElementById("googleLoginBtn").onclick = () => signInWithPopup(auth, provider);
+      document.getElementById("googleLoginBtn").onclick = () => {
+        signInWithPopup(auth, provider).then(() => {
+            showToast("تم تسجيل الدخول بنجاح", "success");
+        });
+      };
     }
+    // تحديث حالة زر الإعجاب عند تغيير المستخدم
+    listenPost(); 
   });
 }
 
@@ -277,6 +314,7 @@ function formatTime(ts) {
   try {
     if (!ts) return "";
     const d = ts.toDate();
+    // تنسيق محلي جميل
     return d.toLocaleString("ar-EG", {
       hour: "2-digit",
       minute: "2-digit",
@@ -291,7 +329,8 @@ function formatTime(ts) {
 function renderMessage(docData, currentUid) {
   const authorId = docData.authorId || null;
   const isMe = currentUid && authorId === currentUid;
-  const avatar = docData.avatar || (isMe ? "me.jpg" : "user.jpg");
+  // يمكن تغيير الأفاتار الافتراضي إذا لم يكن هناك photoURL
+  const avatar = docData.avatar || (isMe ? "https://via.placeholder.com/36/3498db/ffffff?text=Me" : "https://via.placeholder.com/36/7f8c8d/ffffff?text=U");
   const name = docData.authorName || "عضو";
   const time = formatTime(docData.createdAt);
   const textHtml = linkify(escapeHtml(docData.text || ""));
@@ -305,9 +344,9 @@ function renderMessage(docData, currentUid) {
         <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span><span class="msg-time">${escapeHtml(time)}</span></div>
         <div class="msg-text">${textHtml}</div>
       </div>
-      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}"></div>
+      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" loading="lazy"></div>
     ` : `
-      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}"></div>
+      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" loading="lazy"></div>
       <div class="bubble">
         <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span><span class="msg-time">${escapeHtml(time)}</span></div>
         <div class="msg-text">${textHtml}</div>
@@ -318,7 +357,10 @@ function renderMessage(docData, currentUid) {
 }
 
 function scrollChatToBottom() {
-  chatMessages.scrollTop = chatMessages.scrollHeight + 200;
+  // استخدام setTimeout لضمان اكتمال تحديث DOM قبل التمرير
+  setTimeout(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }, 100);
 }
 
 async function bindChatRealtime() {
@@ -327,7 +369,9 @@ async function bindChatRealtime() {
 
   const q = query(chatMessagesCol, orderBy("createdAt", "asc"));
   unsubscribeChat = onSnapshot(q, (snapshot) => {
-    // empty container and re-render all (بسيط وواضح)
+    // إفراغ الحاوية وإعادة عرض الكل (بسيط وواضح)
+    const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop < chatMessages.clientHeight + 50;
+
     chatMessages.innerHTML = "";
     const user = auth.currentUser;
     snapshot.forEach(docSnap => {
@@ -335,7 +379,12 @@ async function bindChatRealtime() {
       const el = renderMessage(data, user?.uid);
       chatMessages.appendChild(el);
     });
-    scrollChatToBottom();
+
+    // التمرير للأسفل فقط إذا كان المستخدم قريباً من الأسفل
+    if (shouldScroll) {
+        scrollChatToBottom();
+    }
+
   }, (err) => {
     console.error("chat snapshot error", err);
     showToast("فشل جلب محادثات الشات");
@@ -365,12 +414,17 @@ async function sendChatMessage(text) {
 
   try {
     sendMsg.disabled = true;
+    chatInput.disabled = true;
     await addDoc(chatMessagesCol, payload);
-    sendMsg.disabled = false;
+    // مسح حقل الإدخال مباشرةً بعد الإرسال الناجح
+    chatInput.value = ""; 
   } catch (e) {
     console.error("send msg error", e);
-    sendMsg.disabled = false;
     showToast("فشل إرسال الرسالة");
+  } finally {
+    sendMsg.disabled = false;
+    chatInput.disabled = false;
+    chatInput.focus();
   }
 }
 
@@ -378,18 +432,22 @@ async function sendChatMessage(text) {
 
 // فتح/غلق النافذة (toggle)
 chatBtn.addEventListener("click", () => {
-  chatWindow.style.display =
-    chatWindow.style.display === "flex" ? "none" : "flex";
-  // لو فتحنا الشات، نربط الـ realtime listener
-  if (chatWindow.style.display === "flex") {
+  const isVisible = chatWindow.style.display === "flex";
+  chatWindow.style.display = isVisible ? "none" : "flex";
+
+  if (!isVisible) {
+    // لو فتحنا الشات
     bindChatRealtime();
+    chatInput.focus();
+  } else {
+    // لو أغلقنا الشات
+    if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
   }
 });
 
 // غلق النافذة بزر ×
 closeChat.addEventListener("click", () => {
   chatWindow.style.display = "none";
-  // نفصل الاستماع عشان نقلل القراءة لما مش مفتوح
   if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
 });
 
@@ -398,25 +456,24 @@ sendMsg.addEventListener("click", async () => {
   const txt = chatInput.value.trim();
   if (!txt) return;
   await sendChatMessage(txt);
-  chatInput.value = "";
 });
 
-// إرسال رسالة بالـ Enter (مع منع السطر الجديد)
+// إرسال رسالة بالـ Enter
 chatInput.addEventListener("keydown", async (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     const txt = chatInput.value.trim();
     if (!txt) return;
     await sendChatMessage(txt);
-    chatInput.value = "";
   }
 });
 
 /* ====== init ====== */
 (async function init() {
   await ensureDoc();
-  listenPost();
+  // listenPost(); // تم نقلها داخل onAuthStateChanged
   bindAuthUI();
-  loadComments(true);
-  // لا نبدأ الاستماع للشات لحد ما يفتح المستخدم الشات (لتقليل القراءة)
+  // تحميل أول مجموعة من التعليقات
+  loadComments(true); 
+  
 })();
