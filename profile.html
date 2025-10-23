@@ -18,8 +18,6 @@
       --danger: #e74c3c;
       --success: #2ecc71;
       --max-frame-width: 1200px;
-      /* 🟢 التعديل: إضافة متغير للـ Base64 الخاص بأيقونة التوثيق */
-      --verified-image-url: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAACXBIWXMAAAsTAAALEwEAmpwYAAACqElEQVR4nO2byW7DMAxG88N0/P/f+H7k+hFwW1v4kKRK2k1gCBI2m5RkrD2z9m5rA5yP+O/42/gB+I/D36f8APzH4+8Z/oVlQx+NlF/q+18m7T4pQf3kR7x0f/L2u1f/5E/N31f6/5n08mP69X9Bv3nS3x+p/X3c/W0gK8jL8fH+R6W+P2m/Nukj/4f0+32hBvjL/dJvg8d+g2n7o4f3B/nK/Yl+f5/6C9R+f+7+20BSkBfjp/o1r//22+33oKrgL/dLvv3m/oKugr/cbyAqyKuwX3qCqyJvxX7pCqyM/BL7hA6qirw0+0s9VBV4S/aXeqgK9JP41r+1Cj2wP+G3/y70Qv8Jv/XvRS9Qv9Bv8XtV8I36h37tG71c/cK/7r9e2/UL/5n/WpP1+oX/zHf96/F6he8/f97t9Qrf3/79/f+E729/v/v/iN5/cT4/0XvP77vT7xW+P/353f8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J39/+fnf/K3z/+vv+/xG+v/378/8J/xN/24d9f6gAAAAASUVORK5CYII=");
     }
     *{box-sizing:border-box}
     html,body{
@@ -218,19 +216,26 @@
     }
     .danger-btn:hover { background: #c0392b !important; }
 
-    /* 🟢 التعديل: تنسيق أيقونة التوثيق الجديدة (الصورة) */
+    /* 🟢 تنسيق أيقونة التوثيق (المُحسَّن - شكل فيسبوك/إنستغرام) */
     .verified-badge {
-        height: 24px; 
-        width: 24px; 
-        background-image: var(--verified-image-url);
-        background-size: contain; 
-        background-repeat: no-repeat;
-        background-position: center;
-        
-        display: inline-block; 
+        color: #fff; /* لون العلامة الداخلية أبيض */
+        background-color: var(--accent); /* خلفية زرقاء - #3498db */
+        border-radius: 50%;
+        font-size: 0.7em; /* تصغير حجم الأيقونة لتناسب الدائرة */
+        padding: 2px; /* مسافة داخلية لجعلها دائرة مرئية */
+        height: 18px;
+        width: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         margin-inline-start: 8px;
         vertical-align: middle;
-        /* تمت إزالة الـ animation و الـ box-shadow الخاصين بالعلامة القديمة */
+        animation: pulse-verify 1.5s infinite alternate;
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); /* إضافة لمعان خفيف */
+    }
+    @keyframes pulse-verify {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.05); opacity: 1; }
     }
 
     /* 🟢 تنسيق أدوات الإدارة الجديدة */
@@ -542,19 +547,19 @@
       const stars = data?.stars || 0;
       const level = data?.level || 0;
       const prestigeRank = data?.prestigeRank || 0; 
-      const isAdmin = data?.isAdmin === true; 
+      const isAdmin = data?.isAdmin === true; // 🟢 جلب حالة الأدمن
 
       // 🟢 منطق الأدمن: إظهار زر الإعدادات
       if (adminTools) {
-          adminTools.style.display = isAdmin ? 'flex' : 'none'; 
+          adminTools.style.display = isAdmin ? 'flex' : 'none'; // استخدم 'flex'
       }
       
-      // 🟢 التعديل: منطق التوثيق: استخدام الوسم <span> مع الفئة verified-badge
+      // 🟢 منطق التوثيق:
       const name = currentUser.displayName || 'مستخدم';
       let nameHTML = name;
       if (isAdmin) {
-          // إضافة أيقونة التوثيق الجديدة التي تعتمد على خلفية الصورة (CSS)
-          nameHTML += `<span class="verified-badge" title="مسؤول موثق"></span>`;
+          // إضافة أيقونة التوثيق
+          nameHTML += `<i class="fas fa-check-circle verified-badge" title="مسؤول موثق"></i>`;
       }
       displayNameContainer.innerHTML = nameHTML; // تحديث الحاوية
       
