@@ -324,8 +324,7 @@
             <div class="level-box">
                 <span style="font-size:0.9em; margin-inline-end: 4px;">المستوى</span>
                 <strong id="levelNum">0</strong>
-                <span style="color:var(--muted)">/100</span>
-            </div>
+                <span style="color:var(--muted)">/100</span> </div>
           </div>
         </div>
 
@@ -432,7 +431,7 @@
     const db = getFirestore(app);
 
     // DOM refs
-    const displayNameContainer = document.getElementById('displayNameContainer'); // 🟢 الحاوية الجديدة
+    const displayNameContainer = document.getElementById('displayNameContainer'); // 🟢 حاوية الاسم
     const emailTextEl = document.getElementById('emailText');
     const profileImageEl = document.getElementById('profileImage');
     const fileInput = document.getElementById('fileInput');
@@ -503,11 +502,9 @@
 
     // دالة لحساب الرتبة الفخرية
     function computePrestigeRank(stars) {
-        // نجوم تتجاوز المستوى الأقصى (100 * 50 = 5000 نجمة)
         const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
         if (starsAboveMax < 0) return 0;
 
-        // حساب عدد الرتب الفخرية المكتسبة
         const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE) + 1;
         
         return Math.min(rank, PRESTIGE_SYMBOLS.length - 1);
@@ -517,19 +514,16 @@
         const level = computeLevelFromStars(stars);
         let progressPercent;
         
-        // حساب التقدم عندما يكون المستوى 100 أو أكثر
-        if (stars >= MAX_LEVEL * STARS_PER_LEVEL) { // إذا تجاوزنا 5000 نجمة (المستوى 100)
+        if (stars >= MAX_LEVEL * STARS_PER_LEVEL) { 
             const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
-            // التقدم يعتمد على عدد النجوم المكتسبة داخل الرتبة الفخرية الحالية (كل 500 نجمة)
             const starsInCurrentPrestige = starsAboveMax % STARS_FOR_PRESTIGE;
             progressPercent = (starsInCurrentPrestige / STARS_FOR_PRESTIGE) * 100;
             
         } else {
-            // المستوى العادي (أقل من 100)
             const starsInCurrentLevel = stars % STARS_PER_LEVEL;
             const progressInLevel = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
             
-            const currentLevelRatio = level / MAX_LEVEL; // (0 - 99) / 100
+            const currentLevelRatio = level / MAX_LEVEL;
             const progressInLevelRatio = progressInLevel / 100 / MAX_LEVEL;
             
             progressPercent = (currentLevelRatio + progressInLevelRatio) * 100;
@@ -548,7 +542,7 @@
 
       // 🟢 منطق الأدمن: إظهار زر الإعدادات
       if (adminTools) {
-          adminTools.style.display = isAdmin ? 'block' : 'none';
+          adminTools.style.display = isAdmin ? 'flex' : 'none'; // استخدم 'flex' لأننا نريدها أن تظهر كعنصر كتلي
       }
       
       // 🟢 منطق التوثيق:
@@ -608,7 +602,6 @@
       currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      // displayNameContainer.textContent = currentUser.displayName || 'مستخدم'; // تم نقل هذا التحديث لـ updateUIFromData
       emailTextEl.textContent = currentUser.email || '';
 
       if (currentUser.photoURL) profileImageEl.src = currentUser.photoURL;
@@ -618,7 +611,8 @@
       
       let initialData;
       if (!snap.exists()) {
-        initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null }; // 🟢 إضافة isAdmin
+        // 🟢 إضافة isAdmin: false عند أول تسجيل
+        initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null }; 
         await setDoc(uref, initialData);
       } else {
         initialData = snap.data();
