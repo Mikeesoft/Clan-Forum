@@ -43,7 +43,7 @@
 
     .frame {
       width:100%;
-      max-width:980px; /* تصغير العرض لتركيز المحتوى */
+      max-width:980px; 
       border-radius:16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
       box-shadow: 0 24px 80px rgba(0,0,0,0.65);
@@ -67,13 +67,13 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        flex-wrap: wrap; /* للسماح بالعناصر بالنزول */
+        flex-wrap: wrap; 
     }
     .profile-identity {
         display: flex;
         gap: 20px;
         align-items: center;
-        flex: 1 1 50%; /* يسمح بمرونة الهوية */
+        flex: 1 1 50%; 
         min-width: 300px;
     }
     .avatar-wrap { position:relative; width:100px; height:100px; flex:0 0 100px }
@@ -93,7 +93,7 @@
         color: var(--gold);
     }
     .overall-progress-area {
-        flex: 1 1 40%; /* شريط التقدم يأخذ مساحة مرنة */
+        flex: 1 1 40%; 
         min-width: 250px;
         align-self: flex-end;
         margin-top: 15px;
@@ -105,7 +105,7 @@
     /* 🟢 2. شبكة المحتوى (CONTENT GRID) */
     .content-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* 2 عمود على الشاشات الكبيرة */
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
         gap: 20px;
     }
     .section-card {
@@ -269,8 +269,7 @@
             <div class="level-box">
                 <span style="font-size:0.9em; margin-inline-end: 4px;">المستوى</span>
                 <strong id="levelNum">0</strong>
-                <span style="color:var(--muted)">/30</span>
-            </div>
+                <span style="color:var(--muted)">/100</span> </div>
           </div>
         </div>
 
@@ -405,8 +404,12 @@
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5 * 60;
     const STARS_PER_LEVEL = 50;
-    const MAX_LEVEL = 30;
+    const MAX_LEVEL = 100; // تم التعديل إلى 100
+    const STARS_FOR_PRESTIGE = 500; // 500 نجمة لكل رتبة فخرية جديدة بعد المستوى 100
     const DAILY_MINS_GOAL = 30;
+
+    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ']; // الرتب من 0 إلى 5 (0 = عادي)
+
 
     // helpers
     function showToast(msg, color = '#2ecc71') {
@@ -440,18 +443,42 @@
         return Math.min(lvl, MAX_LEVEL); 
     }
 
-    function computeProgressWithinLevel(stars) { 
-        const starsInCurrentLevel = stars % STARS_PER_LEVEL;
-        const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
-        
-        const currentLevelRatio = Math.min(computeLevelFromStars(stars), MAX_LEVEL) / MAX_LEVEL;
-        const progressInLevelRatio = progressPercent / 100 / MAX_LEVEL;
+    // دالة لحساب الرتبة الفخرية
+    function computePrestigeRank(stars) {
+        // نجوم تتجاوز المستوى الأقصى (100 * 50 = 5000 نجمة)
+        const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
+        if (starsAboveMax < 0) return 0;
 
-        const overallProgressPercent = (currentLevelRatio + progressInLevelRatio) * 100;
+        // حساب عدد الرتب الفخرية المكتسبة
+        const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE) + 1;
         
-        progressFill.style.width = `${Math.min(overallProgressPercent, 100)}%`;
+        return Math.min(rank, PRESTIGE_SYMBOLS.length - 1);
+    }
+
+    function computeProgressWithinLevel(stars) { 
+        // لحساب شريط التقدم الكلي (Overall Progress Bar)
         
-        return progressPercent; 
+        const level = computeLevelFromStars(stars);
+        let progressPercent;
+        
+        if (level >= MAX_LEVEL) {
+            // التقدم لرتبة فخرية جديدة
+            const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
+            progressPercent = Math.min((starsAboveMax / STARS_FOR_PRESTIGE) * 100, 100);
+            
+        } else {
+            // التقدم ضمن مستوى عادي
+            const starsInCurrentLevel = stars % STARS_PER_LEVEL;
+            const progressInLevel = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
+            
+            // نحسب النسبة الكلية لملء الشريط بالكامل (حتى 100)
+            const currentLevelRatio = level / MAX_LEVEL;
+            const progressInLevelRatio = progressInLevel / 100 / MAX_LEVEL;
+            
+            progressPercent = (currentLevelRatio + progressInLevelRatio) * 100;
+        }
+
+        progressFill.style.width = `${Math.min(progressPercent, 100)}%`;
     }
 
 
@@ -459,11 +486,24 @@
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const level = data?.level || 0;
+      const prestigeRank = data?.prestigeRank || 0; // جلب الرتبة الفخرية
       
       starsNumEl.textContent = stars;
-      levelNumEl.textContent = Math.min(level, MAX_LEVEL);
       statStars.textContent = stars;
-      statLevel.textContent = Math.min(level, MAX_LEVEL);
+
+      let levelDisplay = Math.min(level, MAX_LEVEL); 
+      let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
+
+      if (level >= MAX_LEVEL) {
+        // عرض الرمز + رقم الرتبة الفخرية (مثل Σ Level 100)
+        levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol}</span>`;
+        statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${levelDisplay}</span>`;
+        
+      } else {
+        // المستوى العادي (أقل من 100)
+        levelNumEl.textContent = levelDisplay;
+        statLevel.textContent = levelDisplay;
+      }
 
       computeProgressWithinLevel(stars); 
 
@@ -506,7 +546,7 @@
       
       let initialData;
       if (!snap.exists()) {
-        initialData = { stars:0, level:0, progress:0, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null };
+        initialData = { stars:0, level:0, prestigeRank:0, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null };
         await setDoc(uref, initialData);
       } else {
         initialData = snap.data();
@@ -557,7 +597,7 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              tx.set(uref, { stars:5, level:0, progress:0, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
+              tx.set(uref, { stars:5, level:0, prestigeRank:0, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
               return;
             }
             const data = snap.data();
@@ -566,8 +606,14 @@
             
             const newStars = (data.stars || 0) + 5;
             const newLevel = computeLevelFromStars(newStars);
+            const newPrestigeRank = computePrestigeRank(newStars); // 👈 تحديث الرتبة الفخرية
 
-            tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr(), level: newLevel });
+            tx.update(uref, { 
+                stars: newStars, 
+                lastGiftDate: todayDateStr(), 
+                level: newLevel,
+                prestigeRank: newPrestigeRank // 👈 تحديث الحقل الجديد
+            });
           });
           claimAnimation();
         } catch (e) {
@@ -617,12 +663,14 @@
             const currentStars = data.stars || 0;
             const newStars = currentStars + starsToAdd;
             const newLevel = computeLevelFromStars(newStars);
+            const newPrestigeRank = computePrestigeRank(newStars); // 👈 تحديث الرتبة الفخرية
             
             tx.update(uref, { 
                 stars: newStars, 
                 dailySeconds: dailySec, 
                 lastActiveDate: todayDateStr(), 
-                level: newLevel
+                level: newLevel,
+                prestigeRank: newPrestigeRank // 👈 تحديث الحقل الجديد
             });
             
             if (starsToAdd > 0) refreshUserDoc();
@@ -667,7 +715,6 @@
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
           
-          // التحقق من استخدام الكود سابقاً
           if (data.activatedPromoCode === CODE_TO_APPLY) {
             throw new Error('CodeAlreadyUsed');
           }
@@ -675,20 +722,20 @@
           const currentStars = data.stars || 0;
           const newStars = currentStars + STARS_TO_ADD;
           const newLevel = computeLevelFromStars(newStars);
+          const newPrestigeRank = computePrestigeRank(newStars); // 👈 تحديث الرتبة الفخرية
           
-          // تحديث النجوم وحفظ الكود الذي تم تفعيله
           tx.update(uref, { 
             stars: newStars, 
             level: newLevel,
-            activatedPromoCode: CODE_TO_APPLY, // حفظ الكود لمنع التكرار
+            prestigeRank: newPrestigeRank, // 👈 تحديث الحقل الجديد
+            activatedPromoCode: CODE_TO_APPLY, 
             promoActivatedAt: serverTimestamp() 
           });
         });
         
-        // عند النجاح
         showToast(`تمت إضافة ${STARS_TO_ADD} نجمة! Promo Code مفعل.`, '#3498db');
         refreshUserDoc();
-        promoInput.value = ''; // مسح حقل الإدخال
+        promoInput.value = ''; 
       }
       catch (e) { 
         if (e.message === 'CodeAlreadyUsed') {
@@ -713,7 +760,7 @@
         } 
     });
 
-    // claim history (display last claim date) (المُعدّل)
+    // claim history (display last claim date) 
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
@@ -726,7 +773,7 @@
     
     // Help button
     if (helpBtn) helpBtn.addEventListener('click', () => {
-        showToast('شرح المستويات: كل 50 نجمة ترفع مستواك. الحد الأقصى 30 مستوى.', '#3498db');
+        showToast('شرح المستويات: المستوى الأقصى هو 100. كل 500 نجمة إضافية تمنحك رتبة فخرية (Prestige Rank).', '#3498db');
     });
 
     // initial load refresh
