@@ -358,7 +358,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction, 
-        collection, query, where, getDocs // 👈 تم التأكد من وجود هذه الاستيرادات
+        collection, query, where, getDocs 
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
@@ -714,7 +714,7 @@
       applyPromo.disabled = true;
 
       try {
-        // 1. البحث عن الكود في قاعدة البيانات
+        // 1. البحث عن الكود في قاعدة البيانات (يتطلب فهرس لـ codeId)
         const promoCodesCol = collection(db, 'promo_codes');
         const q = query(promoCodesCol, where("codeId", "==", code.toUpperCase()));
         const snapshot = await getDocs(q);
@@ -741,7 +741,7 @@
           const userData = userSnap.exists() ? userSnap.data() : {};
           const currentPromoData = promoSnap.data();
 
-          // التحقق من الاستخدام السابق من قِبَل المستخدم (إذا كان قد استخدم كود ترويجي سابقاً)
+          // التحقق من الاستخدام السابق من قِبَل المستخدم
           if (userData.activatedPromoCode === code.toUpperCase()) {
             throw new Error('CodeAlreadyUsed');
           }
