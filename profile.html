@@ -308,7 +308,7 @@
 
                 <div class="divider"></div>
                 <div class="promo-area">
-                    <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;" >
+                    <input id="promoInput" placeholder="ادخل Promo Code" style="flex:1;" >
                     <button id="applyPromo" class="help-btn apply-btn" title="استخدام الكود"><i class="fa-solid fa-check"></i></button>
                 </div>
             </div>
@@ -390,7 +390,7 @@
     const giftBtn = document.getElementById('giftBtn');
     const claimNotification = document.getElementById('claimNotification');
     
-    // الأزرار الجديدة
+    // الأزرار
     const helpBtn = document.getElementById('helpBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const applyPromo = document.getElementById('applyPromo');
@@ -649,18 +649,56 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code
+    // promo code (المُعدّل)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
-      if (!code) return showToast('ادخل كود صالح', '#f39c12');
-      if (!currentUser) return showToast('سجّل الدخول', '#e67e22');
-      try { 
-        await updateDoc(userDocRef(currentUser.uid), { promoCode: code, promoActivatedAt: serverTimestamp() }); 
-        showToast('تم تفعيل الكود بنجاح!'); 
+      const CODE_TO_APPLY = 'WELCOME1000'; 
+      const STARS_TO_ADD = 1000;
+
+      if (!code) return showToast('الرجاء إدخال كود صالح.', '#f39c12');
+      if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
+      if (code.toUpperCase() !== CODE_TO_APPLY) return showToast('Promo Code غير صحيح.', '#e74c3c');
+
+      const uref = userDocRef(currentUser.uid);
+      applyPromo.disabled = true; 
+
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(uref);
+          const data = snap.exists() ? snap.data() : {};
+          
+          // التحقق من استخدام الكود سابقاً
+          if (data.activatedPromoCode === CODE_TO_APPLY) {
+            throw new Error('CodeAlreadyUsed');
+          }
+          
+          const currentStars = data.stars || 0;
+          const newStars = currentStars + STARS_TO_ADD;
+          const newLevel = computeLevelFromStars(newStars);
+          
+          // تحديث النجوم وحفظ الكود الذي تم تفعيله
+          tx.update(uref, { 
+            stars: newStars, 
+            level: newLevel,
+            activatedPromoCode: CODE_TO_APPLY, // حفظ الكود لمنع التكرار
+            promoActivatedAt: serverTimestamp() 
+          });
+        });
+        
+        // عند النجاح
+        showToast(`تمت إضافة ${STARS_TO_ADD} نجمة! Promo Code مفعل.`, '#3498db');
+        refreshUserDoc();
+        promoInput.value = ''; // مسح حقل الإدخال
       }
       catch (e) { 
-        console.error('promo err', e); 
-        showToast('فشل تفعيل الكود', '#e74c3c'); 
+        if (e.message === 'CodeAlreadyUsed') {
+            showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
+        } else {
+            console.error('Promo error:', e); 
+            showToast('فشل تفعيل الـ Promo Code.', '#e74c3c'); 
+        }
+      } finally {
+        applyPromo.disabled = false;
       }
     });
 
@@ -675,13 +713,15 @@
         } 
     });
 
-    // claim history (display last claim date)
+    // claim history (display last claim date) (المُعدّل)
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
       const data = snap.exists() ? snap.data() : {};
-      const last = data.lastGiftDate || 'لم يتم الاستلام بعد';
-      showToast('آخر استلام للهدية كان بتاريخ: ' + last, '#3498db');
+      const lastGift = data.lastGiftDate || 'لم يتم الاستلام بعد';
+      const promoUsed = data.activatedPromoCode || 'لم يتم استخدام Promo Code.';
+      
+      showToast(`آخر استلام هدية: ${lastGift}. Promo Code مُفعَّل: ${promoUsed}`, '#3498db');
     });
     
     // Help button
