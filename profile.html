@@ -216,13 +216,22 @@
     }
     .danger-btn:hover { background: #c0392b !important; }
 
-    /* 🟢 تنسيق أيقونة التوثيق */
+    /* 🟢 تنسيق أيقونة التوثيق (المُحسَّن - شكل فيسبوك/إنستغرام) */
     .verified-badge {
-        color: var(--accent); /* لون أزرق جذاب */
-        font-size: 1.1rem;
+        color: #fff; /* لون العلامة الداخلية أبيض */
+        background-color: var(--accent); /* خلفية زرقاء - #3498db */
+        border-radius: 50%;
+        font-size: 0.7em; /* تصغير حجم الأيقونة لتناسب الدائرة */
+        padding: 2px; /* مسافة داخلية لجعلها دائرة مرئية */
+        height: 18px;
+        width: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         margin-inline-start: 8px;
         vertical-align: middle;
         animation: pulse-verify 1.5s infinite alternate;
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); /* إضافة لمعان خفيف */
     }
     @keyframes pulse-verify {
         0% { transform: scale(1); opacity: 0.8; }
@@ -542,7 +551,7 @@
 
       // 🟢 منطق الأدمن: إظهار زر الإعدادات
       if (adminTools) {
-          adminTools.style.display = isAdmin ? 'flex' : 'none'; // استخدم 'flex' لأننا نريدها أن تظهر كعنصر كتلي
+          adminTools.style.display = isAdmin ? 'flex' : 'none'; // استخدم 'flex'
       }
       
       // 🟢 منطق التوثيق:
