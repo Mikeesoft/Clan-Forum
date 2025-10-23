@@ -404,7 +404,7 @@
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5 * 60;
     const STARS_PER_LEVEL = 50;
-    const MAX_LEVEL = 100; // تم التعديل إلى 100
+    const MAX_LEVEL = 100; // المستوى الأقصى العادي
     const STARS_FOR_PRESTIGE = 500; // 500 نجمة لكل رتبة فخرية جديدة بعد المستوى 100
     const DAILY_MINS_GOAL = 30;
 
@@ -439,8 +439,9 @@
 
     // Levels Calculation
     function computeLevelFromStars(stars) { 
+        // 🟢 الإصلاح 2: لا تحد المستوى بـ 100، بل احسبه فعلياً.
         const lvl = Math.floor(stars / STARS_PER_LEVEL); 
-        return Math.min(lvl, MAX_LEVEL); 
+        return lvl; 
     }
 
     // دالة لحساب الرتبة الفخرية
@@ -456,23 +457,22 @@
     }
 
     function computeProgressWithinLevel(stars) { 
-        // لحساب شريط التقدم الكلي (Overall Progress Bar)
-        
         const level = computeLevelFromStars(stars);
         let progressPercent;
         
-        if (level >= MAX_LEVEL) {
-            // التقدم لرتبة فخرية جديدة
+        // 🟢 الإصلاح 3: حساب التقدم عندما يكون المستوى 100 أو أكثر
+        if (stars >= MAX_LEVEL * STARS_PER_LEVEL) { // إذا تجاوزنا 5000 نجمة (المستوى 100)
             const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
-            progressPercent = Math.min((starsAboveMax / STARS_FOR_PRESTIGE) * 100, 100);
+            // التقدم يعتمد على عدد النجوم المكتسبة داخل الرتبة الفخرية الحالية (كل 500 نجمة)
+            const starsInCurrentPrestige = starsAboveMax % STARS_FOR_PRESTIGE;
+            progressPercent = (starsInCurrentPrestige / STARS_FOR_PRESTIGE) * 100;
             
         } else {
-            // التقدم ضمن مستوى عادي
+            // المستوى العادي (أقل من 100)
             const starsInCurrentLevel = stars % STARS_PER_LEVEL;
             const progressInLevel = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
             
-            // نحسب النسبة الكلية لملء الشريط بالكامل (حتى 100)
-            const currentLevelRatio = level / MAX_LEVEL;
+            const currentLevelRatio = level / MAX_LEVEL; // (0 - 99) / 100
             const progressInLevelRatio = progressInLevel / 100 / MAX_LEVEL;
             
             progressPercent = (currentLevelRatio + progressInLevelRatio) * 100;
@@ -486,17 +486,22 @@
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const level = data?.level || 0;
-      const prestigeRank = data?.prestigeRank || 0; // جلب الرتبة الفخرية
+      const prestigeRank = data?.prestigeRank || 0; 
       
-      starsNumEl.textContent = stars;
-      statStars.textContent = stars;
+      // 🟢 الإصلاح 1: تنسيق عرض النجوم في شريط التقدم الكلي (100,000)
+      const formattedStars = stars.toLocaleString('en-US'); 
+      starsNumEl.textContent = formattedStars;
+      statStars.textContent = formattedStars;
 
-      let levelDisplay = Math.min(level, MAX_LEVEL); 
+      let levelDisplay = level; // المستوى الفعلي المحسوب
       let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
 
       if (level >= MAX_LEVEL) {
-        // عرض الرمز + رقم الرتبة الفخرية (مثل Σ Level 100)
+        // إذا كان المستوى 100 أو أكثر
+        
+        // عرض الرمز + المستوى الفعلي (100+)
         levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol}</span>`;
+        // عرض المستوى الفعلي في الإحصائيات الجانبية (مثل Σ 2000)
         statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${levelDisplay}</span>`;
         
       } else {
@@ -733,7 +738,7 @@
           });
         });
         
-        showToast(`تمت إضافة ${STARS_TO_ADD} نجمة! Promo Code مفعل.`, '#3498db');
+        showToast(`تمت إضافة ${STARS_TOـADD} نجمة! Promo Code مفعل.`, '#3498db');
         refreshUserDoc();
         promoInput.value = ''; 
       }
@@ -760,7 +765,7 @@
         } 
     });
 
-    // claim history (display last claim date) 
+    // claim history (display last claim date) (المُعدّل)
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
