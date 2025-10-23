@@ -15,6 +15,8 @@
       --muted: #bfc9cb;
       --accent: #3498db;
       --gold: #f1c40f;
+      --danger: #e74c3c;
+      --success: #2ecc71;
       --glass: rgba(255,255,255,0.04);
       --max-frame-width: 1200px;
     }
@@ -58,7 +60,7 @@
     .center { flex:1; min-width:260px; display:flex; flex-direction:column; gap:12px; }
     .right { width:320px; min-width:220px; display:flex; flex-direction:column; gap:12px; }
 
-    /* mini gift (fixed but sized to avoid overlap) */
+    /* mini gift & progress bar */
     .mini-card {
       position:absolute;
       top:18px;
@@ -80,12 +82,11 @@
       display:flex;align-items:center;justify-content:center;font-size:18px;color:#111; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,0.36);
       transition: transform 0.1s ease;
     }
-    .mini-card .gift:hover { transform: scale(1.05); }
-    .stars-count { display:flex;align-items:center;gap:8px;color:var(--gold);font-weight:700 }
-    .level-box { margin-left:auto;background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:8px;color:var(--muted);font-weight:700;font-size:0.95rem }
-
-    /* progress */
-    .small-progress { width:170px; height:12px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
+    .mini-card .gift:active { transform: scale(0.95); }
+    .stars-count { display:flex;align-items:center;gap:8px;color:var(--gold);font-weight:700; font-size: 1.1em; }
+    .level-box { margin-left:auto;background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:8px;color:var(--muted);font-weight:700;font-size:0.9rem }
+    
+    .small-progress { width:170px; height:10px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
     #progressFill { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd57a,#ffb84f); transition: width 0.6s ease; }
 
     /* profile left */
@@ -95,22 +96,38 @@
     .avatar-edit { position:absolute; right:6px; bottom:6px; background:var(--accent); color:#fff; width:36px; height:36px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid rgba(255,255,255,0.04); transition:background 0.2s }
     .avatar-edit:hover { background:#2980b9 }
 
-    .profile-info h2 { margin:0; font-size:1.2rem; color:#fff }
-    .profile-info p { margin:0; color:var(--muted); font-size:0.95rem }
+    .profile-info h2 { margin:0; font-size:1.4rem; color:#fff }
+    .profile-info p { margin:2px 0 0; color:var(--muted); font-size:0.9rem }
 
     .divider { height:1px; background:rgba(255,255,255,0.02); margin:18px 0; border-radius:4px }
 
     .leagues-preview { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); border-radius:10px; padding:18px; border:1px solid rgba(255,255,255,0.02); min-height:220px; color:var(--muted); display:flex;align-items:center;justify-content:center }
 
-    .card { background:var(--card); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.02) }
+    /* Card enhancements */
+    .card { 
+        background:var(--card); 
+        padding:15px; 
+        border-radius:10px; 
+        border:1px solid rgba(255,255,255,0.02);
+        min-height: 120px; 
+        display: flex;
+        flex-direction: column;
+    }
+    .card-title { font-weight:700;margin-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.05); padding-bottom: 8px; }
+    .stat-row { 
+        display:flex;
+        justify-content:space-between;
+        color:var(--muted);
+        margin-top:8px;
+        font-size: 1.05em;
+    }
+    .stat-row strong { color: #fff; font-weight: 700; }
 
     .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted); display:flex; align-items:center; gap:8px; transition:background 0.2s }
     .help-btn:hover { background: rgba(255,255,255,0.05); color:#fff; }
-    .help-btn i { transition:transform 0.2s }
-    .help-btn:hover i { transform:rotate(5deg) }
-
+    
     .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,#2ecc71,#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
-
+    
     /* Promo Input Style */
     #promoInput { 
       flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);
@@ -118,24 +135,6 @@
     }
     #promoInput::placeholder { color: var(--muted); }
     #applyPromo { background:var(--accent) !important; color:#fff !important; border:none !important; }
-    
-    /* small screens / tablet: avoid overlap and column stacking */
-    @media (max-width: 980px) {
-      .frame { flex-direction:column; padding-bottom:36px; min-height:initial }
-      .left, .center, .right { width:100%; min-width:unset }
-      .profile-top { flex-direction:column; align-items:center; text-align:center }
-      .avatar-wrap { margin-bottom:8px }
-      /* make mini-card inline at top of the frame (not fixed) to avoid covering */
-      .mini-card { position:relative; left:0; top:0; margin-bottom:12px; justify-content:center; min-width:unset }
-      .mini-card .level-box { margin-left:8px }
-      .claim-alert { right:12px; top:12px }
-    }
-
-    @media (max-width:600px){
-      .frame{padding:12px;gap:12px}
-      .avatar-wrap{width:90px;height:90px}
-      .mini-card .gift{width:44px;height:44px}
-    }
 
     /* Toast Notifications - Dark Theme (المحسّنة) */
     .toast {
@@ -144,7 +143,7 @@
       right: 25px;
       padding: 12px 18px;
       color: #fff;
-      background: #1c272a; /* خلفية داكنة للـ Toast */
+      background: #1c272a; 
       border-radius: 8px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.7);
       z-index: 10000;
@@ -154,13 +153,31 @@
       font-weight: 600;
       min-width: 200px;
       text-align: right;
-      border-right: 4px solid #fff; /* اللون يتغير من JS */
+      border-right: 4px solid #fff; 
     }
     .toast.show {
         opacity: 1;
         transform: translateX(0);
     }
-    @media (max-width: 600px) {
+
+    /* Media Queries */
+    @media (max-width: 980px) {
+      .frame { flex-direction:column; padding-bottom:36px; min-height:initial }
+      .left, .center, .right { width:100%; min-width:unset }
+      .profile-top { flex-direction:column; align-items:center; text-align:center }
+      .avatar-wrap { margin-bottom:8px }
+      .mini-card { position:relative; left:0; top:0; margin-bottom:12px; justify-content:center; min-width:unset }
+      .mini-card .level-box { margin-left:8px }
+      .claim-alert { right:12px; top:12px }
+      .card { min-height: initial; } 
+      .leagues-preview { min-height: 150px; }
+      .small-progress { width: auto; }
+    }
+
+    @media (max-width:600px){
+      .frame{padding:12px;gap:12px}
+      .avatar-wrap{width:90px;height:90px}
+      .mini-card .gift{width:44px;height:44px}
       .toast {
         right: 12px;
         left: 12px;
@@ -252,21 +269,25 @@
         <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
 
         <div class="card">
-          <div style="font-weight:700;margin-bottom:8px">إحصائيات الملف</div>
-          <div style="display:flex;justify-content:space-between;color:var(--muted)">
-            <div>النجوم الحالية</div><div id="statStars">0</div>
+          <div class="card-title">إحصائيات الملف</div>
+          <div class="stat-row">
+            <div>النجوم الحالية</div>
+            <strong id="statStars">0</strong>
           </div>
-          <div style="display:flex;justify-content:space-between;color:var(--muted);margin-top:6px">
-            <div>المستوى الحالي</div><div id="statLevel">0</div>
+          <div class="stat-row">
+            <div>المستوى الحالي</div>
+            <strong id="statLevel">0</strong>
           </div>
+          <div style="flex-grow: 1;"></div> 
         </div>
 
         <div class="card">
-          <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
+          <div class="card-title">Promo Code</div>
           <div style="display:flex;gap:8px">
             <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;" >
             <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
           </div>
+          <div style="flex-grow: 1;"></div> 
         </div>
 
         <div style="height:10px"></div>
@@ -331,11 +352,11 @@
     function showToast(msg, color = '#2ecc71') {
       const t = document.createElement('div');
       t.className = 'toast';
-      // استخدام لون الحدود (border-right)
+      
       t.style.borderColor = color; 
       t.textContent = msg;
       document.body.appendChild(t);
-      // استخدام فئة "show" للحركة
+      
       setTimeout(()=> t.classList.add('show'), 20);
       setTimeout(()=> { 
         t.classList.remove('show'); 
@@ -360,12 +381,9 @@
     }
 
     function computeProgressWithinLevel(stars) { 
-        // النجوم المتبقية في المستوى الحالي
         const starsInCurrentLevel = stars % STARS_PER_LEVEL;
-        // النسبة المئوية للتقدم (من 0 إلى 100)
         const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
         
-        // التقدم الكلي يحسب المستوى + التقدم داخل المستوى (لملء الشريط الكلي)
         const currentLevelRatio = Math.min(computeLevelFromStars(stars), MAX_LEVEL) / MAX_LEVEL;
         const progressInLevelRatio = progressPercent / 100 / MAX_LEVEL;
 
@@ -387,10 +405,8 @@
       statStars.textContent = stars;
       statLevel.textContent = Math.min(level, MAX_LEVEL);
 
-      // تحديث شريط التقدم الكلي داخل دالة الحساب
       computeProgressWithinLevel(stars); 
 
-      // تحديث شريط التقدم اليومي
       if (typeof data.dailySeconds === 'number') {
         const mins = Math.floor((data.dailySeconds || 0) / 60);
         todayMinutesEl.textContent = mins;
@@ -406,14 +422,12 @@
     // auth
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // إذا لم يكن مسجل دخوله، يحاول تسجيل الدخول
         try { 
           await signInWithPopup(auth, provider); 
         }
         catch (e) { 
           console.error('auth popup cancelled', e); 
           showToast('يرجى تسجيل الدخول للمتابعة', '#e67e22'); 
-          // تحويله لصفحة الهوم إذا لم ينجح
           setTimeout(() => location.href = 'index.html', 2000);
           return; 
         }
@@ -422,7 +436,6 @@
       currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      // تحديث معلومات المستخدم الأساسية
       displayNameEl.textContent = currentUser.displayName || 'مستخدم';
       emailTextEl.textContent = currentUser.email || '';
 
@@ -437,7 +450,6 @@
         await setDoc(uref, initialData);
       } else {
         initialData = snap.data();
-        // إذا كانت الصورة في Firestore أحدث من تلك الموجودة في Firebase Auth
         if (initialData?.photoURL) profileImageEl.src = initialData.photoURL; 
       }
       
@@ -461,9 +473,7 @@
           const base64 = ev.target.result;
           try {
             profileImageEl.src = base64;
-            // حفظ في Firestore
             await setDoc(userDocRef(currentUser.uid), { photoURL: base64 }, { merge: true });
-            // تحديث في Firebase Auth (يساعد في عرضها في أماكن أخرى)
             try { await updateProfile(currentUser, { photoURL: base64 }); } catch (err) { /* ignore auth update errors */ }
             showToast('تم تحديث الصورة');
           } catch (err) {
@@ -487,7 +497,6 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              // إذا لم يكن هناك مستند، قم بإنشائه واعطِ الهدية
               tx.set(uref, { stars:5, level:0, progress:0, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
               return;
             }
@@ -497,9 +506,8 @@
             
             const newStars = (data.stars || 0) + 5;
             const newLevel = computeLevelFromStars(newStars);
-            const progress = computeProgressWithinLevel(newStars);
 
-            tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr(), level: newLevel, progress: progress });
+            tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr(), level: newLevel });
           });
           claimAnimation();
         } catch (e) {
@@ -516,7 +524,7 @@
       if (typeof window.launchConfetti === 'function') {
         try { window.launchConfetti(); } catch (e) { console.warn('confetti failed', e); }
       }
-      refreshUserDoc(); // تحديث فوري لواجهة المستخدم
+      refreshUserDoc();
     }
 
     // Session timer awarding stars
@@ -536,41 +544,36 @@
             const lastDate = data.lastActiveDate || '';
             let dailySec = data.dailySeconds || 0;
             
-            // إعادة تعيين النشاط اليومي إذا كان اليوم جديداً
             if (lastDate !== todayDateStr()) dailySec = 0;
             
             dailySec = (dailySec || 0) + ACTIVITY_UPDATE_INTERVAL;
             
             let starsToAdd = 0;
-            // حساب النجوم المكتسبة
             while (dailySec >= SECONDS_PER_STAR) { 
                 starsToAdd += STAR_PER_5MIN; 
                 dailySec -= SECONDS_PER_STAR; 
             }
             
-            // حساب الإجمالي والمستوى والتقدم
             const currentStars = data.stars || 0;
             const newStars = currentStars + starsToAdd;
             const newLevel = computeLevelFromStars(newStars);
             
-            // تحديث المستند
             tx.update(uref, { 
                 stars: newStars, 
                 dailySeconds: dailySec, 
                 lastActiveDate: todayDateStr(), 
                 level: newLevel
             });
-            // إذا كان هناك تحديث للمستوى/التقدم، نحتاج لـ refresh
+            
             if (starsToAdd > 0) refreshUserDoc();
 
           });
-          // تحديث الشريط اليومي بصورة متكررة حتى بدون نجوم
+          
           refreshUserDoc();
         } catch (e) { console.error('session update err', e); }
       }, ACTIVITY_UPDATE_INTERVAL * 1000);
     }
 
-    // وقف الـ Timer عند الخروج من النافذة/التبويب وتشغيله عند العودة (لتقليل القراءة غير الضرورية)
     window.addEventListener('blur', () => { if (sessionTimer) clearInterval(sessionTimer); sessionTimer = null; });
     window.addEventListener('focus', () => { if (!sessionTimer && currentUser) startSessionTimer(); });
 
@@ -592,7 +595,6 @@
       if (!code) return showToast('ادخل كود صالح', '#f39c12');
       if (!currentUser) return showToast('سجّل الدخول', '#e67e22');
       try { 
-        // ⚠️ يجب هنا إضافة منطق للتحقق من الكود! حالياً يقوم فقط بحفظه.
         await updateDoc(userDocRef(currentUser.uid), { promoCode: code, promoActivatedAt: serverTimestamp() }); 
         showToast('تم تفعيل الكود بنجاح!'); 
       }
@@ -607,7 +609,6 @@
         try { 
             await signOut(auth); 
             showToast('تم تسجيل الخروج', '#3498db'); 
-            // بعد الخروج نعود لصفحة الرئيسية
             setTimeout(() => location.href = 'index.html', 1000);
         } catch (e){ 
             console.error(e); 
