@@ -11,13 +11,12 @@
   <style>
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
-      --card: rgba(255,255,255,0.03);
+      --card-bg: rgba(255,255,255,0.03);
       --muted: #bfc9cb;
       --accent: #3498db;
       --gold: #f1c40f;
       --danger: #e74c3c;
       --success: #2ecc71;
-      --glass: rgba(255,255,255,0.04);
       --max-frame-width: 1200px;
     }
     *{box-sizing:border-box}
@@ -28,9 +27,11 @@
       background:var(--bg);
       color:#e7eef0;
       -webkit-font-smoothing:antialiased;
+      direction: rtl;
+      text-align: right;
     }
 
-    /* container centered but full width usable */
+    /* General Layout */
     .page-wrap {
       width:100%;
       min-height:100vh;
@@ -42,257 +43,313 @@
 
     .frame {
       width:100%;
-      max-width:var(--max-frame-width);
-      min-height:640px;
-      border-radius:12px;
+      max-width:980px; /* تصغير العرض لتركيز المحتوى */
+      border-radius:16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
       box-shadow: 0 24px 80px rgba(0,0,0,0.65);
       position:relative;
       overflow:hidden;
-      padding:20px;
+      padding:25px;
       display:flex;
+      flex-direction: column;
       gap:20px;
-      align-items:flex-start;
     }
 
-    /* columns */
-    .left { width:360px; min-width:240px; background:var(--card); border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.03); box-shadow: inset 0 1px 0 rgba(255,255,255,0.01) }
-    .center { flex:1; min-width:260px; display:flex; flex-direction:column; gap:12px; }
-    .right { width:320px; min-width:220px; display:flex; flex-direction:column; gap:12px; }
+    .divider { height:1px; background:rgba(255,255,255,0.08); margin:15px 0; border-radius:4px }
 
-    /* mini gift & progress bar */
-    .mini-card {
-      position:absolute;
-      top:18px;
-      left:18px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-      padding:8px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,0.035);
-      box-shadow:0 8px 22px rgba(0,0,0,0.5);
-      z-index:60;
-      min-width:190px;
-      align-items:center;
+    /* 🟢 1. البطاقة الرئيسية (HERO CARD) */
+    .profile-hero-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 25px 30px;
+        border: 1px solid rgba(255,255,255,0.03);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap; /* للسماح بالعناصر بالنزول */
     }
-    .mini-card .gift {
-      width:46px; height:46px; border-radius:10px; background:linear-gradient(180deg,#ffd97a,#ffb84f);
-      display:flex;align-items:center;justify-content:center;font-size:18px;color:#111; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,0.36);
-      transition: transform 0.1s ease;
+    .profile-identity {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex: 1 1 50%; /* يسمح بمرونة الهوية */
+        min-width: 300px;
     }
-    .mini-card .gift:active { transform: scale(0.95); }
-    .stars-count { display:flex;align-items:center;gap:8px;color:var(--gold);font-weight:700; font-size: 1.1em; }
-    .level-box { margin-left:auto;background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:8px;color:var(--muted);font-weight:700;font-size:0.9rem }
-    
-    .small-progress { width:170px; height:10px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
-    #progressFill { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd57a,#ffb84f); transition: width 0.6s ease; }
-
-    /* profile left */
-    .profile-top { display:flex; gap:14px; align-items:center }
-    .avatar-wrap { position:relative; width:110px; height:110px; flex:0 0 110px }
-    .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:4px solid rgba(255,255,255,0.06); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
-    .avatar-edit { position:absolute; right:6px; bottom:6px; background:var(--accent); color:#fff; width:36px; height:36px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid rgba(255,255,255,0.04); transition:background 0.2s }
+    .avatar-wrap { position:relative; width:100px; height:100px; flex:0 0 100px }
+    .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--accent); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
+    .avatar-edit { position:absolute; right:0; bottom:0; background:var(--accent); color:#fff; width:30px; height:30px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid #000; font-size: 0.9em; transition:background 0.2s }
     .avatar-edit:hover { background:#2980b9 }
 
-    .profile-info h2 { margin:0; font-size:1.4rem; color:#fff }
-    .profile-info p { margin:2px 0 0; color:var(--muted); font-size:0.9rem }
+    .profile-info h2 { margin:0; font-size:1.8rem; color:#fff }
+    .profile-info p { margin:2px 0 8px; color:var(--muted); font-size:1rem }
+    .level-box { 
+        display:inline-flex; 
+        align-items: center; 
+        padding: 4px 10px; 
+        background: rgba(255,255,255,0.05); 
+        border-radius: 6px; 
+        font-weight: 700; 
+        color: var(--gold);
+    }
+    .overall-progress-area {
+        flex: 1 1 40%; /* شريط التقدم يأخذ مساحة مرنة */
+        min-width: 250px;
+        align-self: flex-end;
+        margin-top: 15px;
+    }
+    .progress-label { font-size: 0.9em; color: var(--muted); margin-bottom: 8px; }
+    .small-progress { width:100%; height:10px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
+    #progressFill { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd57a,#ffb84f); transition: width 0.6s ease; }
 
-    .divider { height:1px; background:rgba(255,255,255,0.02); margin:18px 0; border-radius:4px }
-
-    .leagues-preview { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); border-radius:10px; padding:18px; border:1px solid rgba(255,255,255,0.02); min-height:220px; color:var(--muted); display:flex;align-items:center;justify-content:center }
-
-    /* Card enhancements */
-    .card { 
-        background:var(--card); 
-        padding:15px; 
-        border-radius:10px; 
-        border:1px solid rgba(255,255,255,0.02);
-        min-height: 120px; 
+    /* 🟢 2. شبكة المحتوى (CONTENT GRID) */
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* 2 عمود على الشاشات الكبيرة */
+        gap: 20px;
+    }
+    .section-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.03);
+        padding: 20px;
         display: flex;
         flex-direction: column;
+        height: 100%;
+        min-height: 400px;
     }
-    .card-title { font-weight:700;margin-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.05); padding-bottom: 8px; }
+    .card-title { font-weight:700; font-size: 1.25rem; margin-bottom:15px; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .card-content { flex-grow: 1; display: flex; flex-direction: column; }
+    
+    /* المكافأة والهدايا */
+    .reward-box {
+        padding: 15px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.05));
+        border: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .gift-btn {
+        background: var(--gold);
+        color: #111;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: transform 0.15s ease;
+    }
+    .gift-btn:active { transform: translateY(1px); }
+    .reward-desc { font-size: 0.9em; color: var(--muted); margin: 8px 0 0; }
+    
+    /* الإحصائيات (Stat Rows) */
+    .stat-group { padding: 5px 0; }
     .stat-row { 
         display:flex;
         justify-content:space-between;
         color:var(--muted);
-        margin-top:8px;
+        margin-top:10px;
         font-size: 1.05em;
     }
-    .stat-row strong { color: #fff; font-weight: 700; }
+    .stat-row strong { color: #fff; font-weight: 700; font-size: 1.1em; }
 
-    .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted); display:flex; align-items:center; gap:8px; transition:background 0.2s }
-    .help-btn:hover { background: rgba(255,255,255,0.05); color:#fff; }
-    
-    .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,#2ecc71,#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
-    
-    /* Promo Input Style */
+    /* البرومو كود */
+    .promo-area { display: flex; gap: 8px; margin-top: auto; padding-top: 15px; }
     #promoInput { 
-      flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);
-      background:rgba(0,0,0,0.1);color:#fff;outline:none;font-family:inherit;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background:rgba(0,0,0,0.1);
+        color:#fff;
+        outline:none;
+        font-family:inherit;
     }
-    #promoInput::placeholder { color: var(--muted); }
-    #applyPromo { background:var(--accent) !important; color:#fff !important; border:none !important; }
+    .apply-btn {
+        background: var(--accent) !important; 
+        color:#fff !important; 
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+    }
+    
+    /* شريط النشاط اليومي */
+    .daily-progress-area { margin-bottom: 15px; }
+    .progress-bar-wrap { display: flex; align-items: center; gap: 15px; }
+    .progress-bar-wrap > div:first-child { flex-grow: 1; }
+    .minutes-count { font-weight: 700; color: var(--muted); width: 80px; text-align: center; }
+    .minutes-count strong { color: #fff; font-size: 1.1em; }
+    
+    /* الأزرار المساعدة */
+    .help-buttons-group { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+        margin-top: auto; 
+        padding-top: 15px; 
+        border-top: 1px dashed rgba(255,255,255,0.08);
+    }
+    .help-btn { 
+        background: rgba(255,255,255,0.02); 
+        border:1px solid rgba(255,255,255,0.03); 
+        padding:8px 10px; 
+        border-radius:8px; 
+        cursor:pointer; 
+        color:var(--muted); 
+        display:flex; 
+        align-items:center; 
+        gap:8px; 
+        transition:background 0.2s 
+    }
+    .help-btn:hover { background: rgba(255,255,255,0.05); color:#fff; }
 
-    /* Toast Notifications - Dark Theme (المحسّنة) */
+    .full-width-btn { width: 100%; justify-content: center; padding: 10px 15px; }
+    .danger-btn { 
+        background: var(--danger) !important; 
+        color: #fff !important; 
+        border-color: var(--danger) !important;
+        box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+    }
+    .danger-btn:hover { background: #c0392b !important; }
+
+    /* Toast & Alerts */
+    .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,var(--success),#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
     .toast {
-      position: fixed;
-      bottom: 25px;
-      right: 25px;
-      padding: 12px 18px;
-      color: #fff;
-      background: #1c272a; 
-      border-radius: 8px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.7);
-      z-index: 10000;
-      opacity: 0;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      transform: translateX(100%);
-      font-weight: 600;
-      min-width: 200px;
-      text-align: right;
+      position: fixed; bottom: 25px; right: 25px; padding: 12px 18px; color: #fff;
+      background: #1c272a; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+      z-index: 10000; opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: translateX(100%); font-weight: 600; min-width: 200px; text-align: right;
       border-right: 4px solid #fff; 
     }
-    .toast.show {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    .toast.show { opacity: 1; transform: translateX(0); }
 
     /* Media Queries */
     @media (max-width: 980px) {
-      .frame { flex-direction:column; padding-bottom:36px; min-height:initial }
-      .left, .center, .right { width:100%; min-width:unset }
-      .profile-top { flex-direction:column; align-items:center; text-align:center }
-      .avatar-wrap { margin-bottom:8px }
-      .mini-card { position:relative; left:0; top:0; margin-bottom:12px; justify-content:center; min-width:unset }
-      .mini-card .level-box { margin-left:8px }
-      .claim-alert { right:12px; top:12px }
-      .card { min-height: initial; } 
-      .leagues-preview { min-height: 150px; }
-      .small-progress { width: auto; }
+        .frame { max-width: 100%; }
+        .profile-hero-card { flex-direction: column; align-items: center; text-align: center; }
+        .profile-identity { flex-direction: column; align-items: center; text-align: center; min-width: unset; }
+        .profile-info h2 { margin-top: 10px; }
+        .profile-info p { margin-bottom: 10px; }
+        .overall-progress-area { align-self: center; width: 100%; margin-top: 20px; }
+        .content-grid { grid-template-columns: 1fr; } 
+        .section-card { min-height: initial; }
     }
-
-    @media (max-width:600px){
-      .frame{padding:12px;gap:12px}
-      .avatar-wrap{width:90px;height:90px}
-      .mini-card .gift{width:44px;height:44px}
-      .toast {
-        right: 12px;
-        left: 12px;
-        bottom: 15px;
-        min-width: unset;
-      }
+    @media (max-width: 480px) {
+        .frame { padding: 15px; gap: 15px; }
+        .profile-hero-card { padding: 15px; }
+        .avatar-wrap { width: 80px; height: 80px; flex: 0 0 80px; }
+        .avatar-wrap img { border-width: 2px; }
+        .avatar-edit { width: 26px; height: 26px; font-size: 0.8em; }
+        .profile-info h2 { font-size: 1.4rem; }
+        .profile-info p { font-size: 0.9rem; }
+        .content-grid { gap: 15px; }
+        .content-grid > div { min-width: unset; }
+        .minutes-count { width: 60px; }
     }
   </style>
 </head>
 <body>
   <div class="page-wrap">
-    <div class="frame" role="application" aria-label="Profile frame">
+    <div class="frame" role="application" aria-label="Profile dashboard">
 
-      <div class="mini-card" title="الهدايا والنجوم" aria-hidden="false">
-        <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
-          <i class="fa-solid fa-gift"></i>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="stars-count"><i class="fa-solid fa-star"></i><span id="starsNum">0</span></div>
-            <div style="color:var(--muted);font-size:12px;margin-right:8px">نجومك</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="small-progress" aria-hidden><span id="progressFill"></span></div>
-            <div class="level-box">مستوى <span id="levelNum">0</span>/30</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="left" aria-hidden="false">
-        <div class="profile-top">
+      <section id="hero-card" class="profile-hero-card">
+        <div class="profile-identity">
           <div class="avatar-wrap">
             <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar" loading="lazy">
             <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
             <input id="fileInput" type="file" accept="image/*" style="display:none" />
           </div>
-          <div class="profile-info" style="flex:1">
+          <div class="profile-info">
             <h2 id="displayName">اسم المستخدم</h2>
             <p id="emailText">user@example.com</p>
-            <div style="margin-top:10px;color:var(--muted);font-size:13px">مرحباً بك في ملفك الشخصي — تابع تقدمك واحصل على المكافآت اليومية!</div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div style="display:flex;gap:12px;align-items:center">
-          <div style="flex:1">
-            <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم (هدف 30 دقيقة)</div>
-            <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
-              <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
+            <div class="level-box">
+                <span style="font-size:0.9em; margin-inline-end: 4px;">المستوى</span>
+                <strong id="levelNum">0</strong>
+                <span style="color:var(--muted)">/30</span>
             </div>
           </div>
-          <div style="width:70px;text-align:center;color:var(--muted)"><strong id="todayMinutes">0</strong> دق</div>
         </div>
 
-        <div style="margin-top:14px;color:var(--muted);font-size:13px">
-          <div style="font-weight:700;margin-bottom:8px">ماذا تفعل؟</div>
-          <ul style="margin:0;padding-right:18px;color:var(--muted);line-height:1.6; list-style:disc;">
-            <li>افتح الموقع وابقَ نَشِطًا لتحصل على نجوم (كل 5 دقائق = 1 نجمة).</li>
-            <li>اضغط صندوق الهدايا لاستلام الهدية اليومية (+5 نجوم) مرة كل يوم.</li>
-          </ul>
+        <div class="overall-progress-area">
+          <div class="progress-label">تقدم المستوى الكلي (<span id="starsNum">0</span> نجمة)</div>
+          <div class="small-progress" aria-hidden><span id="progressFill"></span></div>
+        </div>
+      </section>
+
+      <div class="content-grid">
+        
+        <div id="rewards-card" class="section-card">
+            <div class="card-title"><i class="fa-solid fa-star"></i> المكافآت والنجوم</div>
+            
+            <div class="card-content">
+                
+                <div class="reward-box" style="--reward-color: #f1c40f;">
+                    <button id="giftBtn" class="gift-btn" title="استلام الهدية اليومية">
+                        <i class="fa-solid fa-gift"></i> استلام الهدية اليومية
+                    </button>
+                    <p class="reward-desc">احصل على 5 نجوم مجانية مرة كل 24 ساعة.</p>
+                </div>
+
+                <div class="divider"></div>
+                <div class="stat-group">
+                    <div class="stat-row">
+                        <div>النجوم الحالية</div>
+                        <strong id="statStars">0</strong>
+                    </div>
+                    <div class="stat-row">
+                        <div>المستوى الحالي</div>
+                        <strong id="statLevel">0</strong>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+                <div class="promo-area">
+                    <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;" >
+                    <button id="applyPromo" class="help-btn apply-btn" title="استخدام الكود"><i class="fa-solid fa-check"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="activity-card" class="section-card">
+            <div class="card-title"><i class="fa-solid fa-chart-line"></i> النشاط والمهام</div>
+            
+            <div class="card-content">
+                <div class="daily-progress-area">
+                    <div style="font-weight:700;margin-bottom:8px;color:#fff">
+                        النشاط اليومي (هدف 30 دقيقة)
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
+                          <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
+                        </div>
+                        <div class="minutes-count"><strong id="todayMinutes">0</strong> دقيقة</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+                <div class="activity-rules">
+                    <p style="font-weight:700; color:#fff;">مكافآت النشاط:</p>
+                    <ul style="margin:0;padding-right:18px;color:var(--muted);line-height:1.6; list-style:disc; font-size:0.95em;">
+                        <li>كل 5 دقائق من التصفح النشط تكسبك 1 نجمة.</li>
+                        <li>المستوى يزيد كل 50 نجمة.</li>
+                    </ul>
+                </div>
+                
+                <div class="divider"></div>
+                <div class="help-buttons-group">
+                    <button id="claimHistoryBtn" class="help-btn full-width-btn"><i class="fa-regular fa-clock"></i> آخر استلام هدية</button>
+                    <button id="helpBtn" class="help-btn full-width-btn"><i class="fa-regular fa-circle-question"></i> شرح المستويات</button>
+                    <button id="signOutBtn" class="help-btn full-width-btn danger-btn"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+                </div>
+            </div>
         </div>
       </div>
-
-      <div class="center">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <h1 style="margin:0">المستويات (LEAGUES)</h1>
-            <p style="margin:4px 0 0;color:var(--muted)">نظام تصنيف يعتمد على رتبة ونشاط اللاعبين.</p>
-          </div>
-          <div>
-            <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
-          </div>
-        </div>
-
-        <div class="leagues-preview card" id="leaguesPreview">
-          <div style="text-align:center">
-            <div style="font-size:36px;color:var(--muted);margin-bottom:10px">☆</div>
-            <div style="color:var(--muted)">اضغط علامة (?) في الأعلى لفتح شرح المستويات الكاملة</div>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:8px">
-          <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> آخر هدية</button>
-        </div>
-      </div>
-
-      <div class="right">
-        <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
-
-        <div class="card">
-          <div class="card-title">إحصائيات الملف</div>
-          <div class="stat-row">
-            <div>النجوم الحالية</div>
-            <strong id="statStars">0</strong>
-          </div>
-          <div class="stat-row">
-            <div>المستوى الحالي</div>
-            <strong id="statLevel">0</strong>
-          </div>
-          <div style="flex-grow: 1;"></div> 
-        </div>
-
-        <div class="card">
-          <div class="card-title">Promo Code</div>
-          <div style="display:flex;gap:8px">
-            <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;" >
-            <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
-          </div>
-          <div style="flex-grow: 1;"></div> 
-        </div>
-
-        <div style="height:10px"></div>
-        <div id="claimNotification" class="claim-alert">تم استلام 5 نجوم!</div>
-      </div>
+      
+      <div id="claimNotification" class="claim-alert">تم استلام 5 نجوم!</div>
 
     </div>
   </div>
@@ -332,11 +389,14 @@
 
     const giftBtn = document.getElementById('giftBtn');
     const claimNotification = document.getElementById('claimNotification');
+    
+    // الأزرار الجديدة
     const helpBtn = document.getElementById('helpBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const applyPromo = document.getElementById('applyPromo');
     const promoInput = document.getElementById('promoInput');
     const claimHistoryBtn = document.getElementById('claimHistoryBtn');
+    
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
 
@@ -622,6 +682,11 @@
       const data = snap.exists() ? snap.data() : {};
       const last = data.lastGiftDate || 'لم يتم الاستلام بعد';
       showToast('آخر استلام للهدية كان بتاريخ: ' + last, '#3498db');
+    });
+    
+    // Help button
+    if (helpBtn) helpBtn.addEventListener('click', () => {
+        showToast('شرح المستويات: كل 50 نجمة ترفع مستواك. الحد الأقصى 30 مستوى.', '#3498db');
     });
 
     // initial load refresh
