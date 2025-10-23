@@ -357,7 +357,9 @@
     // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction, 
+        collection, query, where, getDocs // 👈 تم التأكد من وجود هذه الاستيرادات
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
     const firebaseConfig = {
@@ -439,7 +441,7 @@
 
     // Levels Calculation
     function computeLevelFromStars(stars) { 
-        // 🟢 الإصلاح 2: لا تحد المستوى بـ 100، بل احسبه فعلياً.
+        // الإصلاح: لا تحد المستوى بـ 100، بل احسبه فعلياً.
         const lvl = Math.floor(stars / STARS_PER_LEVEL); 
         return lvl; 
     }
@@ -460,7 +462,7 @@
         const level = computeLevelFromStars(stars);
         let progressPercent;
         
-        // 🟢 الإصلاح 3: حساب التقدم عندما يكون المستوى 100 أو أكثر
+        // حساب التقدم عندما يكون المستوى 100 أو أكثر
         if (stars >= MAX_LEVEL * STARS_PER_LEVEL) { // إذا تجاوزنا 5000 نجمة (المستوى 100)
             const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
             // التقدم يعتمد على عدد النجوم المكتسبة داخل الرتبة الفخرية الحالية (كل 500 نجمة)
@@ -488,7 +490,7 @@
       const level = data?.level || 0;
       const prestigeRank = data?.prestigeRank || 0; 
       
-      // 🟢 الإصلاح 1: تنسيق عرض النجوم في شريط التقدم الكلي (100,000)
+      // الإصلاح: تنسيق عرض النجوم في شريط التقدم الكلي (100,000)
       const formattedStars = stars.toLocaleString('en-US'); 
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
@@ -611,13 +613,13 @@
             
             const newStars = (data.stars || 0) + 5;
             const newLevel = computeLevelFromStars(newStars);
-            const newPrestigeRank = computePrestigeRank(newStars); // 👈 تحديث الرتبة الفخرية
+            const newPrestigeRank = computePrestigeRank(newStars); 
 
             tx.update(uref, { 
                 stars: newStars, 
                 lastGiftDate: todayDateStr(), 
                 level: newLevel,
-                prestigeRank: newPrestigeRank // 👈 تحديث الحقل الجديد
+                prestigeRank: newPrestigeRank 
             });
           });
           claimAnimation();
@@ -668,14 +670,14 @@
             const currentStars = data.stars || 0;
             const newStars = currentStars + starsToAdd;
             const newLevel = computeLevelFromStars(newStars);
-            const newPrestigeRank = computePrestigeRank(newStars); // 👈 تحديث الرتبة الفخرية
+            const newPrestigeRank = computePrestigeRank(newStars); 
             
             tx.update(uref, { 
                 stars: newStars, 
                 dailySeconds: dailySec, 
                 lastActiveDate: todayDateStr(), 
                 level: newLevel,
-                prestigeRank: newPrestigeRank // 👈 تحديث الحقل الجديد
+                prestigeRank: newPrestigeRank 
             });
             
             if (starsToAdd > 0) refreshUserDoc();
@@ -702,49 +704,82 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code (المُعدّل)
+    // promo code (النهائي الديناميكي)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
-      const CODE_TO_APPLY = 'WELCOME1000'; 
-      const STARS_TO_ADD = 1000;
-
-      if (!code) return showToast('الرجاء إدخال كود صالح.', '#f39c12');
+      if (!code) return showToast('الرجاء إدخال Promo Code صالح.', '#f39c12');
       if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
-      if (code.toUpperCase() !== CODE_TO_APPLY) return showToast('Promo Code غير صحيح.', '#e74c3c');
 
       const uref = userDocRef(currentUser.uid);
-      applyPromo.disabled = true; 
+      applyPromo.disabled = true;
 
       try {
+        // 1. البحث عن الكود في قاعدة البيانات
+        const promoCodesCol = collection(db, 'promo_codes');
+        const q = query(promoCodesCol, where("codeId", "==", code.toUpperCase()));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          return showToast('Promo Code غير صحيح أو غير موجود.', '#e74c3c');
+        }
+
+        const promoDoc = snapshot.docs[0];
+        const promoData = promoDoc.data();
+        const STARS_TO_ADD = promoData.rewardValue || 0;
+        const MAX_USES = promoData.maxUses || Infinity;
+        
+        if (STARS_TO_ADD <= 0) {
+           return showToast('هذا الكود ليس له مكافأة محددة.', '#f39c12');
+        }
+
+        // 2. تطبيق Transaction على مستندين
         await runTransaction(db, async (tx) => {
-          const snap = await tx.get(uref);
-          const data = snap.exists() ? snap.data() : {};
+          // جلب مستند المستخدم ومستند الكود داخل Transaction
+          const userSnap = await tx.get(uref);
+          const promoSnap = await tx.get(promoDoc.ref);
           
-          if (data.activatedPromoCode === CODE_TO_APPLY) {
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          const currentPromoData = promoSnap.data();
+
+          // التحقق من الاستخدام السابق من قِبَل المستخدم (إذا كان قد استخدم كود ترويجي سابقاً)
+          if (userData.activatedPromoCode === code.toUpperCase()) {
             throw new Error('CodeAlreadyUsed');
           }
           
-          const currentStars = data.stars || 0;
+          // التحقق من الاستخدام الإجمالي
+          if ((currentPromoData.timesUsed || 0) >= MAX_USES) {
+             throw new Error('CodeMaxUsesReached');
+          }
+          
+          // تحديث مستند الكود (زيادة عدد الاستخدام)
+          const newTimesUsed = (currentPromoData.timesUsed || 0) + 1;
+          tx.update(promoDoc.ref, { timesUsed: newTimesUsed });
+
+          // تحديث مستند المستخدم (إضافة النجوم وتحديد الكود المستخدم)
+          const currentStars = userData.stars || 0;
           const newStars = currentStars + STARS_TO_ADD;
           const newLevel = computeLevelFromStars(newStars);
-          const newPrestigeRank = computePrestigeRank(newStars); // 👈 تحديث الرتبة الفخرية
+          const newPrestigeRank = computePrestigeRank(newStars);
           
           tx.update(uref, { 
             stars: newStars, 
             level: newLevel,
-            prestigeRank: newPrestigeRank, // 👈 تحديث الحقل الجديد
-            activatedPromoCode: CODE_TO_APPLY, 
+            prestigeRank: newPrestigeRank,
+            activatedPromoCode: code.toUpperCase(), 
             promoActivatedAt: serverTimestamp() 
           });
         });
         
-        showToast(`تمت إضافة ${STARS_TOـADD} نجمة! Promo Code مفعل.`, '#3498db');
+        // عند النجاح
+        showToast(`تمت إضافة ${STARS_TO_ADD.toLocaleString('en-US')} نجمة! Promo Code مفعل.`, '#3498db');
         refreshUserDoc();
-        promoInput.value = ''; 
+        promoInput.value = '';
       }
       catch (e) { 
         if (e.message === 'CodeAlreadyUsed') {
             showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
+        } else if (e.message === 'CodeMaxUsesReached') {
+            showToast('تم استهلاك هذا الكود بالكامل.', '#e74c3c');
         } else {
             console.error('Promo error:', e); 
             showToast('فشل تفعيل الـ Promo Code.', '#e74c3c'); 
