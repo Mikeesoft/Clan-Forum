@@ -216,6 +216,46 @@
     }
     .danger-btn:hover { background: #c0392b !important; }
 
+    /* 🟢 تنسيق أيقونة التوثيق */
+    .verified-badge {
+        color: var(--accent); /* لون أزرق جذاب */
+        font-size: 1.1rem;
+        margin-inline-start: 8px;
+        vertical-align: middle;
+        animation: pulse-verify 1.5s infinite alternate;
+    }
+    @keyframes pulse-verify {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.05); opacity: 1; }
+    }
+
+    /* 🟢 تنسيق أدوات الإدارة الجديدة */
+    .admin-tools {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+    }
+
+    .admin-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--accent);
+        font-size: 1.2rem;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .admin-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+
     /* Toast & Alerts */
     .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,var(--success),#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
     .toast {
@@ -237,6 +277,15 @@
         .overall-progress-area { align-self: center; width: 100%; margin-top: 20px; }
         .content-grid { grid-template-columns: 1fr; } 
         .section-card { min-height: initial; }
+        
+        /* تعديل مكان ظهور زر الأدمن في وضع الموبايل */
+        .admin-tools {
+            position: relative; 
+            top: 0; 
+            right: 0;
+            margin-top: 10px;
+            align-self: flex-start; 
+        }
     }
     @media (max-width: 480px) {
         .frame { padding: 15px; gap: 15px; }
@@ -256,6 +305,12 @@
   <div class="page-wrap">
     <div class="frame" role="application" aria-label="Profile dashboard">
 
+      <div id="adminTools" class="admin-tools" style="display: none;">
+          <a href="admin.html" class="admin-btn" title="لوحة تحكم المسؤول">
+              <i class="fas fa-cog"></i>
+          </a>
+      </div>
+
       <section id="hero-card" class="profile-hero-card">
         <div class="profile-identity">
           <div class="avatar-wrap">
@@ -264,12 +319,13 @@
             <input id="fileInput" type="file" accept="image/*" style="display:none" />
           </div>
           <div class="profile-info">
-            <h2 id="displayName">اسم المستخدم</h2>
+            <h2 id="displayNameContainer">اسم المستخدم</h2> 
             <p id="emailText">user@example.com</p>
             <div class="level-box">
                 <span style="font-size:0.9em; margin-inline-end: 4px;">المستوى</span>
                 <strong id="levelNum">0</strong>
-                <span style="color:var(--muted)">/100</span> </div>
+                <span style="color:var(--muted)">/100</span>
+            </div>
           </div>
         </div>
 
@@ -357,9 +413,7 @@
     // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction, 
-        // لم تعد هذه الدوال مستخدمة في هذا الكود بسبب العودة لنظام الثابت
-        // collection, query, where, getDocs 
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction 
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
@@ -378,7 +432,7 @@
     const db = getFirestore(app);
 
     // DOM refs
-    const displayNameEl = document.getElementById('displayName');
+    const displayNameContainer = document.getElementById('displayNameContainer'); // 🟢 الحاوية الجديدة
     const emailTextEl = document.getElementById('emailText');
     const profileImageEl = document.getElementById('profileImage');
     const fileInput = document.getElementById('fileInput');
@@ -401,6 +455,7 @@
     
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
+    const adminTools = document.getElementById('adminTools'); // 🟢 زر الإعدادات
 
     // Constants
     const ACTIVITY_UPDATE_INTERVAL = 30; // ثواني
@@ -442,7 +497,6 @@
 
     // Levels Calculation
     function computeLevelFromStars(stars) { 
-        // الإصلاح: لا تحد المستوى بـ 100، بل احسبه فعلياً.
         const lvl = Math.floor(stars / STARS_PER_LEVEL); 
         return lvl; 
     }
@@ -490,25 +544,35 @@
       const stars = data?.stars || 0;
       const level = data?.level || 0;
       const prestigeRank = data?.prestigeRank || 0; 
+      const isAdmin = data?.isAdmin === true; // 🟢 جلب حالة الأدمن
+
+      // 🟢 منطق الأدمن: إظهار زر الإعدادات
+      if (adminTools) {
+          adminTools.style.display = isAdmin ? 'block' : 'none';
+      }
       
-      // الإصلاح: تنسيق عرض النجوم في شريط التقدم الكلي (100,000)
+      // 🟢 منطق التوثيق:
+      const name = currentUser.displayName || 'مستخدم';
+      let nameHTML = name;
+      if (isAdmin) {
+          // إضافة أيقونة التوثيق
+          nameHTML += `<i class="fas fa-check-circle verified-badge" title="مسؤول موثق"></i>`;
+      }
+      displayNameContainer.innerHTML = nameHTML; // تحديث الحاوية
+      
+      // الإصلاح: تنسيق عرض النجوم
       const formattedStars = stars.toLocaleString('en-US'); 
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
 
-      let levelDisplay = level; // المستوى الفعلي المحسوب
+      let levelDisplay = level; 
       let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
 
       if (level >= MAX_LEVEL) {
-        // إذا كان المستوى 100 أو أكثر
-        
-        // عرض الرمز + المستوى الفعلي (100+)
         levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol}</span>`;
-        // عرض المستوى الفعلي في الإحصائيات الجانبية (مثل Σ 2000)
         statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${levelDisplay}</span>`;
         
       } else {
-        // المستوى العادي (أقل من 100)
         levelNumEl.textContent = levelDisplay;
         statLevel.textContent = levelDisplay;
       }
@@ -544,7 +608,7 @@
       currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      displayNameEl.textContent = currentUser.displayName || 'مستخدم';
+      // displayNameContainer.textContent = currentUser.displayName || 'مستخدم'; // تم نقل هذا التحديث لـ updateUIFromData
       emailTextEl.textContent = currentUser.email || '';
 
       if (currentUser.photoURL) profileImageEl.src = currentUser.photoURL;
@@ -554,7 +618,7 @@
       
       let initialData;
       if (!snap.exists()) {
-        initialData = { stars:0, level:0, prestigeRank:0, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null };
+        initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null }; // 🟢 إضافة isAdmin
         await setDoc(uref, initialData);
       } else {
         initialData = snap.data();
@@ -605,7 +669,7 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              tx.set(uref, { stars:5, level:0, prestigeRank:0, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
+              tx.set(uref, { stars:5, level:0, prestigeRank:0, isAdmin:false, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
               return;
             }
             const data = snap.data();
