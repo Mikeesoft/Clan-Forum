@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>الملف الشخصي — المنتدى</title>
 
-  <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -79,7 +78,9 @@
     .mini-card .gift {
       width:46px; height:46px; border-radius:10px; background:linear-gradient(180deg,#ffd97a,#ffb84f);
       display:flex;align-items:center;justify-content:center;font-size:18px;color:#111; cursor:pointer; box-shadow:0 6px 14px rgba(0,0,0,0.36);
+      transition: transform 0.1s ease;
     }
+    .mini-card .gift:hover { transform: scale(1.05); }
     .stars-count { display:flex;align-items:center;gap:8px;color:var(--gold);font-weight:700 }
     .level-box { margin-left:auto;background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:8px;color:var(--muted);font-weight:700;font-size:0.95rem }
 
@@ -91,7 +92,8 @@
     .profile-top { display:flex; gap:14px; align-items:center }
     .avatar-wrap { position:relative; width:110px; height:110px; flex:0 0 110px }
     .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:4px solid rgba(255,255,255,0.06); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
-    .avatar-edit { position:absolute; right:6px; bottom:6px; background:var(--accent); color:#fff; width:36px; height:36px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid rgba(255,255,255,0.04) }
+    .avatar-edit { position:absolute; right:6px; bottom:6px; background:var(--accent); color:#fff; width:36px; height:36px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid rgba(255,255,255,0.04); transition:background 0.2s }
+    .avatar-edit:hover { background:#2980b9 }
 
     .profile-info h2 { margin:0; font-size:1.2rem; color:#fff }
     .profile-info p { margin:0; color:var(--muted); font-size:0.95rem }
@@ -102,10 +104,21 @@
 
     .card { background:var(--card); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.02) }
 
-    .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted); display:flex; align-items:center; gap:8px }
+    .help-btn { align-self:flex-end; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted); display:flex; align-items:center; gap:8px; transition:background 0.2s }
+    .help-btn:hover { background: rgba(255,255,255,0.05); color:#fff; }
+    .help-btn i { transition:transform 0.2s }
+    .help-btn:hover i { transform:rotate(5deg) }
 
     .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,#2ecc71,#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
 
+    /* Promo Input Style */
+    #promoInput { 
+      flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.1);color:#fff;outline:none;font-family:inherit;
+    }
+    #promoInput::placeholder { color: var(--muted); }
+    #applyPromo { background:var(--accent) !important; color:#fff !important; border:none !important; }
+    
     /* small screens / tablet: avoid overlap and column stacking */
     @media (max-width: 980px) {
       .frame { flex-direction:column; padding-bottom:36px; min-height:initial }
@@ -123,13 +136,44 @@
       .avatar-wrap{width:90px;height:90px}
       .mini-card .gift{width:44px;height:44px}
     }
+
+    /* Toast Notifications - Dark Theme (المحسّنة) */
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      padding: 12px 18px;
+      color: #fff;
+      background: #1c272a; /* خلفية داكنة للـ Toast */
+      border-radius: 8px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: translateX(100%);
+      font-weight: 600;
+      min-width: 200px;
+      text-align: right;
+      border-right: 4px solid #fff; /* اللون يتغير من JS */
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    @media (max-width: 600px) {
+      .toast {
+        right: 12px;
+        left: 12px;
+        bottom: 15px;
+        min-width: unset;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="page-wrap">
     <div class="frame" role="application" aria-label="Profile frame">
 
-      <!-- mini gift (fixed on large screens, inline on small screens) -->
       <div class="mini-card" title="الهدايا والنجوم" aria-hidden="false">
         <div id="giftBtn" class="gift" aria-label="صندوق الهدايا" title="استلام الهدية اليومية">
           <i class="fa-solid fa-gift"></i>
@@ -146,11 +190,10 @@
         </div>
       </div>
 
-      <!-- LEFT -->
       <div class="left" aria-hidden="false">
         <div class="profile-top">
           <div class="avatar-wrap">
-            <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar">
+            <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar" loading="lazy">
             <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
             <input id="fileInput" type="file" accept="image/*" style="display:none" />
           </div>
@@ -165,7 +208,7 @@
 
         <div style="display:flex;gap:12px;align-items:center">
           <div style="flex:1">
-            <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم</div>
+            <div style="color:var(--muted);font-size:13px;margin-bottom:8px">تقدم اليوم (هدف 30 دقيقة)</div>
             <div style="height:12px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden">
               <div id="dailyBar" style="height:100%;width:0%;background:linear-gradient(90deg,#3498db,#8e44ad);transition:width .6s ease"></div>
             </div>
@@ -175,19 +218,18 @@
 
         <div style="margin-top:14px;color:var(--muted);font-size:13px">
           <div style="font-weight:700;margin-bottom:8px">ماذا تفعل؟</div>
-          <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.6">
+          <ul style="margin:0;padding-right:18px;color:var(--muted);line-height:1.6; list-style:disc;">
             <li>افتح الموقع وابقَ نَشِطًا لتحصل على نجوم (كل 5 دقائق = 1 نجمة).</li>
             <li>اضغط صندوق الهدايا لاستلام الهدية اليومية (+5 نجوم) مرة كل يوم.</li>
           </ul>
         </div>
       </div>
 
-      <!-- CENTER -->
       <div class="center">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <h1 style="margin:0">LEAGUES</h1>
-            <p style="margin:4px 0 0;color:var(--muted)">is a rating system, based on the players' rank.</p>
+            <h1 style="margin:0">المستويات (LEAGUES)</h1>
+            <p style="margin:4px 0 0;color:var(--muted)">نظام تصنيف يعتمد على رتبة ونشاط اللاعبين.</p>
           </div>
           <div>
             <button id="signOutBtn" class="help-btn" title="تسجيل الخروج"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
@@ -202,28 +244,27 @@
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:8px">
-          <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> تاريخ الاستلام</button>
+          <button id="claimHistoryBtn" class="help-btn"><i class="fa-regular fa-clock"></i> آخر هدية</button>
         </div>
       </div>
 
-      <!-- RIGHT -->
       <div class="right">
         <button id="helpBtn" class="help-btn" title="مساعدة / المستويات"><i class="fa-regular fa-circle-question"></i> مساعدة</button>
 
         <div class="card">
-          <div style="font-weight:700;margin-bottom:8px">إحصائيات</div>
+          <div style="font-weight:700;margin-bottom:8px">إحصائيات الملف</div>
           <div style="display:flex;justify-content:space-between;color:var(--muted)">
-            <div>النجوم</div><div id="statStars">0</div>
+            <div>النجوم الحالية</div><div id="statStars">0</div>
           </div>
           <div style="display:flex;justify-content:space-between;color:var(--muted);margin-top:6px">
-            <div>المستوى</div><div id="statLevel">0</div>
+            <div>المستوى الحالي</div><div id="statLevel">0</div>
           </div>
         </div>
 
         <div class="card">
           <div style="font-weight:700;margin-bottom:8px">Promo Code</div>
           <div style="display:flex;gap:8px">
-            <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:transparent;color:var(--muted)">
+            <input id="promoInput" placeholder="ادخل كود الخصم" style="flex:1;" >
             <button id="applyPromo" class="help-btn" style="background:linear-gradient(90deg,#3498db,#8e44ad);color:#fff;border:none">استخدام</button>
           </div>
         </div>
@@ -235,7 +276,6 @@
     </div>
   </div>
 
-  <!-- Firebase + Logic (module) -->
   <script type="module">
     // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -244,7 +284,7 @@
 
     // ====== config ======
     const firebaseConfig = {
-      apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
+      apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ لا تنسَ استبدال هذا بـ API Key الحقيقي
       authDomain: "clan-forum.firebaseapp.com",
       projectId: "clan-forum",
       storageBucket: "clan-forum.firebasestorage.app",
@@ -279,16 +319,30 @@
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
 
+    // Constants
+    const ACTIVITY_UPDATE_INTERVAL = 30; // ثواني
+    const STAR_PER_5MIN = 1;
+    const SECONDS_PER_STAR = 5 * 60;
+    const STARS_PER_LEVEL = 50;
+    const MAX_LEVEL = 30;
+    const DAILY_MINS_GOAL = 30;
+
     // helpers
     function showToast(msg, color = '#2ecc71') {
       const t = document.createElement('div');
       t.className = 'toast';
-      t.style.background = color;
+      // استخدام لون الحدود (border-right)
+      t.style.borderColor = color; 
       t.textContent = msg;
       document.body.appendChild(t);
-      setTimeout(()=> t.style.opacity = '1', 20);
-      setTimeout(()=> { t.style.opacity = '0'; setTimeout(()=> t.remove(), 400); }, 3500);
+      // استخدام فئة "show" للحركة
+      setTimeout(()=> t.classList.add('show'), 20);
+      setTimeout(()=> { 
+        t.classList.remove('show'); 
+        setTimeout(()=> t.remove(), 400); 
+      }, 3500);
     }
+    
     function todayDateStr() {
       const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
@@ -298,20 +352,77 @@
     let currentUser = null;
     let sessionSeconds = 0;
     let sessionTimer = null;
-    const activityUpdateInterval = 30;
-    const STAR_PER_5MIN = 1;
-    const SECONDS_PER_STAR = 5*60;
+
+    // Levels Calculation
+    function computeLevelFromStars(stars) { 
+        const lvl = Math.floor(stars / STARS_PER_LEVEL); 
+        return Math.min(lvl, MAX_LEVEL); 
+    }
+
+    function computeProgressWithinLevel(stars) { 
+        // النجوم المتبقية في المستوى الحالي
+        const starsInCurrentLevel = stars % STARS_PER_LEVEL;
+        // النسبة المئوية للتقدم (من 0 إلى 100)
+        const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
+        
+        // التقدم الكلي يحسب المستوى + التقدم داخل المستوى (لملء الشريط الكلي)
+        const currentLevelRatio = Math.min(computeLevelFromStars(stars), MAX_LEVEL) / MAX_LEVEL;
+        const progressInLevelRatio = progressPercent / 100 / MAX_LEVEL;
+
+        const overallProgressPercent = (currentLevelRatio + progressInLevelRatio) * 100;
+        
+        progressFill.style.width = `${Math.min(overallProgressPercent, 100)}%`;
+        
+        return progressPercent; 
+    }
+
+
+    // UI updater
+    function updateUIFromData(data) {
+      const stars = data?.stars || 0;
+      const level = data?.level || 0;
+      
+      starsNumEl.textContent = stars;
+      levelNumEl.textContent = Math.min(level, MAX_LEVEL);
+      statStars.textContent = stars;
+      statLevel.textContent = Math.min(level, MAX_LEVEL);
+
+      // تحديث شريط التقدم الكلي داخل دالة الحساب
+      computeProgressWithinLevel(stars); 
+
+      // تحديث شريط التقدم اليومي
+      if (typeof data.dailySeconds === 'number') {
+        const mins = Math.floor((data.dailySeconds || 0) / 60);
+        todayMinutesEl.textContent = mins;
+        
+        const dailyPercent = Math.min((mins / DAILY_MINS_GOAL) * 100, 100);
+        dailyBar.style.width = `${dailyPercent}%`;
+      } else {
+        todayMinutesEl.textContent = 0;
+        dailyBar.style.width = '0%';
+      }
+    }
 
     // auth
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        try { await signInWithPopup(auth, provider); }
-        catch (e) { console.error('auth popup cancelled', e); showToast('يرجى تسجيل الدخول للمتابعة', '#e67e22'); return; }
+        // إذا لم يكن مسجل دخوله، يحاول تسجيل الدخول
+        try { 
+          await signInWithPopup(auth, provider); 
+        }
+        catch (e) { 
+          console.error('auth popup cancelled', e); 
+          showToast('يرجى تسجيل الدخول للمتابعة', '#e67e22'); 
+          // تحويله لصفحة الهوم إذا لم ينجح
+          setTimeout(() => location.href = 'index.html', 2000);
+          return; 
+        }
       }
 
       currentUser = auth.currentUser;
       if (!currentUser) return;
 
+      // تحديث معلومات المستخدم الأساسية
       displayNameEl.textContent = currentUser.displayName || 'مستخدم';
       emailTextEl.textContent = currentUser.email || '';
 
@@ -319,47 +430,30 @@
 
       const uref = userDocRef(currentUser.uid);
       const snap = await getDoc(uref);
+      
+      let initialData;
       if (!snap.exists()) {
-        await setDoc(uref, { stars:0, level:0, progress:0, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr() });
+        initialData = { stars:0, level:0, progress:0, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null };
+        await setDoc(uref, initialData);
       } else {
-        const data = snap.data();
-        if (data?.photoURL) profileImageEl.src = data.photoURL;
-        updateUIFromData(data);
+        initialData = snap.data();
+        // إذا كانت الصورة في Firestore أحدث من تلك الموجودة في Firebase Auth
+        if (initialData?.photoURL) profileImageEl.src = initialData.photoURL; 
       }
+      
+      updateUIFromData(initialData);
 
       startSessionTimer();
     });
 
-    // UI updater
-    function updateUIFromData(data) {
-      const stars = data?.stars || 0;
-      const level = data?.level || 0;
-      const progress = data?.progress ?? 0;
-      starsNumEl.textContent = stars;
-      levelNumEl.textContent = Math.min(level,30);
-      statStars.textContent = stars;
-      statLevel.textContent = Math.min(level,30);
-
-      // progressFill width is percent of full (0..100)
-      const overallPercent = Math.min(((level / 30) + (progress/3000)) * 100, 100);
-      progressFill.style.width = `${overallPercent}%`;
-
-      if (typeof data.dailySeconds === 'number') {
-        const mins = Math.floor((data.dailySeconds || 0) / 60);
-        todayMinutesEl.textContent = mins;
-        const dailyPercent = Math.min(((data.dailySeconds || 0) / (60*30)) * 100, 100);
-        dailyBar.style.width = `${dailyPercent}%`;
-      }
-    }
-
-    // Upload avatar WITHOUT Firebase Storage: convert to DataURL and save to Firestore doc
+    // Upload avatar WITHOUT Firebase Storage (uses DataURL)
     if (fileInput) {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file || !currentUser) return;
-        const MAX_BYTES = 300 * 1024; // 300KB limit recommendation
+        const MAX_BYTES = 300 * 1024; // 300KB limit
         if (file.size > MAX_BYTES) {
-          showToast('صورة كبيرة جدًا — حاول ضغطها إلى أقل من 300KB', '#f39c12');
+          showToast('صورة كبيرة جدًا — يجب أن تكون أقل من 300KB', '#f39c12');
           return;
         }
         const reader = new FileReader();
@@ -367,8 +461,10 @@
           const base64 = ev.target.result;
           try {
             profileImageEl.src = base64;
+            // حفظ في Firestore
             await setDoc(userDocRef(currentUser.uid), { photoURL: base64 }, { merge: true });
-            try { await updateProfile(currentUser, { photoURL: base64 }); } catch (err) { /* ignore */ }
+            // تحديث في Firebase Auth (يساعد في عرضها في أماكن أخرى)
+            try { await updateProfile(currentUser, { photoURL: base64 }); } catch (err) { /* ignore auth update errors */ }
             showToast('تم تحديث الصورة');
           } catch (err) {
             console.error('save photo', err);
@@ -391,14 +487,19 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
+              // إذا لم يكن هناك مستند، قم بإنشائه واعطِ الهدية
               tx.set(uref, { stars:5, level:0, progress:0, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
               return;
             }
             const data = snap.data();
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
+            
             const newStars = (data.stars || 0) + 5;
-            tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr() });
+            const newLevel = computeLevelFromStars(newStars);
+            const progress = computeProgressWithinLevel(newStars);
+
+            tx.update(uref, { stars: newStars, lastGiftDate: todayDateStr(), level: newLevel, progress: progress });
           });
           claimAnimation();
         } catch (e) {
@@ -415,7 +516,7 @@
       if (typeof window.launchConfetti === 'function') {
         try { window.launchConfetti(); } catch (e) { console.warn('confetti failed', e); }
       }
-      refreshUserDoc();
+      refreshUserDoc(); // تحديث فوري لواجهة المستخدم
     }
 
     // Session timer awarding stars
@@ -423,75 +524,109 @@
       if (sessionTimer) return;
       sessionSeconds = 0;
       sessionTimer = setInterval(async () => {
-        sessionSeconds += activityUpdateInterval;
+        sessionSeconds += ACTIVITY_UPDATE_INTERVAL;
         if (!currentUser) return;
+        
         const uref = userDocRef(currentUser.uid);
         try {
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
-            if (!snap.exists()) {
-              tx.set(uref, { stars:0, level:0, progress:0, dailySeconds: sessionSeconds, lastActiveDate: todayDateStr() });
-              return;
-            }
-            const data = snap.data();
+            const data = snap.exists() ? snap.data() : {};
+            
             const lastDate = data.lastActiveDate || '';
             let dailySec = data.dailySeconds || 0;
+            
+            // إعادة تعيين النشاط اليومي إذا كان اليوم جديداً
             if (lastDate !== todayDateStr()) dailySec = 0;
-            dailySec = (dailySec || 0) + activityUpdateInterval;
+            
+            dailySec = (dailySec || 0) + ACTIVITY_UPDATE_INTERVAL;
+            
             let starsToAdd = 0;
-            while (dailySec >= SECONDS_PER_STAR) { starsToAdd += STAR_PER_5MIN; dailySec -= SECONDS_PER_STAR; }
-            const newStars = (data.stars || 0) + starsToAdd;
+            // حساب النجوم المكتسبة
+            while (dailySec >= SECONDS_PER_STAR) { 
+                starsToAdd += STAR_PER_5MIN; 
+                dailySec -= SECONDS_PER_STAR; 
+            }
+            
+            // حساب الإجمالي والمستوى والتقدم
+            const currentStars = data.stars || 0;
+            const newStars = currentStars + starsToAdd;
             const newLevel = computeLevelFromStars(newStars);
-            const progress = computeProgressWithinLevel(newStars);
-            tx.update(uref, { stars: newStars, dailySeconds: dailySec, lastActiveDate: todayDateStr(), level: newLevel, progress: progress });
+            
+            // تحديث المستند
+            tx.update(uref, { 
+                stars: newStars, 
+                dailySeconds: dailySec, 
+                lastActiveDate: todayDateStr(), 
+                level: newLevel
+            });
+            // إذا كان هناك تحديث للمستوى/التقدم، نحتاج لـ refresh
+            if (starsToAdd > 0) refreshUserDoc();
+
           });
+          // تحديث الشريط اليومي بصورة متكررة حتى بدون نجوم
           refreshUserDoc();
         } catch (e) { console.error('session update err', e); }
-      }, activityUpdateInterval * 1000);
+      }, ACTIVITY_UPDATE_INTERVAL * 1000);
     }
 
+    // وقف الـ Timer عند الخروج من النافذة/التبويب وتشغيله عند العودة (لتقليل القراءة غير الضرورية)
     window.addEventListener('blur', () => { if (sessionTimer) clearInterval(sessionTimer); sessionTimer = null; });
     window.addEventListener('focus', () => { if (!sessionTimer && currentUser) startSessionTimer(); });
 
-    function computeLevelFromStars(stars) { const starsPerLevel = 50; const lvl = Math.floor(stars / starsPerLevel); return Math.min(lvl, 30); }
-    function computeProgressWithinLevel(stars) { const starsPerLevel = 50; return Math.min((stars % starsPerLevel) / starsPerLevel * 100, 100); }
 
-    // refresh user doc data into UI
+    // refresh user doc data into UI (يجب استدعاؤها في الـ timer وفي الإطلاق الأولي)
     async function refreshUserDoc() {
       if (!currentUser) return;
       const snap = await getDoc(userDocRef(currentUser.uid));
       if (!snap.exists()) return;
       const data = snap.data();
-      if (data?.photoURL) profileImageEl.src = data.photoURL;
       updateUIFromData(data);
     }
-    setInterval(()=> refreshUserDoc(), 6000);
+    // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
+    setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo
+    // promo code
     if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
       if (!code) return showToast('ادخل كود صالح', '#f39c12');
       if (!currentUser) return showToast('سجّل الدخول', '#e67e22');
-      try { await updateDoc(userDocRef(currentUser.uid), { promoCode: code, promoActivatedAt: serverTimestamp() }); showToast('تم تفعيل الكود'); }
-      catch (e) { console.error('promo err', e); showToast('فشل تفعيل الكود', '#e74c3c'); }
+      try { 
+        // ⚠️ يجب هنا إضافة منطق للتحقق من الكود! حالياً يقوم فقط بحفظه.
+        await updateDoc(userDocRef(currentUser.uid), { promoCode: code, promoActivatedAt: serverTimestamp() }); 
+        showToast('تم تفعيل الكود بنجاح!'); 
+      }
+      catch (e) { 
+        console.error('promo err', e); 
+        showToast('فشل تفعيل الكود', '#e74c3c'); 
+      }
     });
 
     // signout
-    if (signOutBtn) signOutBtn.addEventListener('click', async () => { try { await signOut(auth); showToast('تم تسجيل الخروج', '#3498db'); location.href = 'index.html'; } catch (e){ console.error(e); } });
+    if (signOutBtn) signOutBtn.addEventListener('click', async () => { 
+        try { 
+            await signOut(auth); 
+            showToast('تم تسجيل الخروج', '#3498db'); 
+            // بعد الخروج نعود لصفحة الرئيسية
+            setTimeout(() => location.href = 'index.html', 1000);
+        } catch (e){ 
+            console.error(e); 
+        } 
+    });
 
+    // claim history (display last claim date)
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
       const data = snap.exists() ? snap.data() : {};
-      const last = data.lastGiftDate || 'لم يتم الاستلام';
-      showToast('آخر استلام: ' + last, '#3498db');
+      const last = data.lastGiftDate || 'لم يتم الاستلام بعد';
+      showToast('آخر استلام للهدية كان بتاريخ: ' + last, '#3498db');
     });
 
     // initial load refresh
     window.addEventListener('load', () => setTimeout(()=> refreshUserDoc(), 1200));
   </script>
 
-  <!-- confetti library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
     window.launchConfetti = function() {
