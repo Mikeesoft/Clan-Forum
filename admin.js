@@ -1,4 +1,4 @@
-// admin.js
+// admin.js (النسخة النهائية والمُصححة)
 
 // ====== Firebase imports (v11 modular) ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -20,8 +20,8 @@ import {
     serverTimestamp,
     setDoc,
     increment,
-    // تم إضافة getCountFromServer لتحميل الإحصائيات بشكل أسرع (Beta feature)
-    getCountFromServer
+    // 💡 تم إضافة limit هنا لتصحيح خطأ "limit is not defined"
+    limit
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ====== config (يجب استبدالها ببيانات مشروعك الحقيقية) ======
@@ -88,7 +88,6 @@ function showToast(msg, color = '#2ecc71') {
     const t = document.createElement('div');
     t.className = 'toast';
     t.textContent = msg;
-    // نستخدم الـ style.borderColor لتحديد اللون في الـ CSS المدمج
     t.style.borderColor = color; 
     document.body.appendChild(t);
     
@@ -207,6 +206,7 @@ searchUserBtn.addEventListener('click', async () => {
             userDocSnap = await getDoc(doc(db, 'users', targetUID));
         } 
         else {
+            // الآن limit مُعرَّف وجاهز للاستخدام
             const q = query(usersCol, where('username', '==', term), limit(1));
             const snap = await getDocs(q);
             if (!snap.empty) {
@@ -327,8 +327,8 @@ async function updateStars(action, amount) {
             
             tx.update(uRef, { 
                 stars: newStars,
-                level: level, // تحديث المستوى
-                prestigeRank: prestigeSymbol // تحديث الرتبة
+                level: level, 
+                prestigeRank: prestigeSymbol 
             });
         });
         
@@ -349,15 +349,14 @@ setStarsBtn.addEventListener('click', () => updateStars('set', parseInt(starsAmo
 /* 4. الإحصائيات العامة */
 async function loadStats() {
     try {
-        const countQuery = query(usersCol);
-        const snapshot = await getCountFromServer(countQuery);
-        const totalUsers = snapshot.data().count;
+        // 💡 تم تبسيط الكود لحل مشكلة الإحصائيات، باستخدام getDocs لجلب البيانات
+        const q = query(usersCol); 
+        const snap = await getDocs(q); 
+        
+        const totalUsers = snap.size;
         
         let totalStars = 0;
-        // للأسف، لا يمكن جلب الإجمالي بدون تحميل جميع المستندات أو استخدام Cloud Functions.
-        // للتبسيط، نستخدم استعلام واحد ثم نحمل النجوم يدوياً (قد يكون بطيئاً جداً إذا كان عدد المستخدمين كبيراً).
-        const usersSnap = await getDocs(query(usersCol));
-        usersSnap.forEach(doc => {
+        snap.forEach(doc => {
             totalStars += doc.data().stars || 0;
         });
         
@@ -389,7 +388,6 @@ distributeStarsBtn.addEventListener('click', async () => {
         
         let successCount = 0;
         
-        // Loop through all users
         for (const userDoc of snapshot.docs) {
             const uRef = doc(db, 'users', userDoc.id);
             try {
@@ -438,7 +436,7 @@ generatePromoBtn.addEventListener('click', async () => {
             createdAt: serverTimestamp()
         });
         
-        generatedCodeFeedback.innerHTML = `تم توليد الكود: <strong style="color:var(--success);">${code}</strong> يضيف ${stars} نجمة. يجب تحديث logic الـ Promo في index/profile.`;
+        generatedCodeFeedback.innerHTML = `تم توليد الكود: <strong style="color:var(--success);">${code}</strong> يضيف ${stars} نجمة.`;
         showToast('تم توليد Promo Code بنجاح!', 'var(--success)');
 
     } catch (e) {
