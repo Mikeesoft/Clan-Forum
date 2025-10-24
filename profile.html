@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
+    /* CSS Code from the previous turn */
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
       --card-bg: rgba(255,255,255,0.03);
@@ -168,6 +169,7 @@
         color:#fff;
         outline:none;
         font-family:inherit;
+        flex: 1; /* Make input fill available space */
     }
     .apply-btn {
         background: var(--accent) !important; 
@@ -440,7 +442,7 @@
     const db = getFirestore(app);
 
     // DOM refs
-    const displayNameContainer = document.getElementById('displayNameContainer'); // 🟢 حاوية الاسم
+    const displayNameContainer = document.getElementById('displayNameContainer');
     const emailTextEl = document.getElementById('emailText');
     const profileImageEl = document.getElementById('profileImage');
     const fileInput = document.getElementById('fileInput');
@@ -463,7 +465,7 @@
     
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
-    const adminTools = document.getElementById('adminTools'); // 🟢 زر الإعدادات
+    const adminTools = document.getElementById('adminTools');
 
     // Constants
     const ACTIVITY_UPDATE_INTERVAL = 30; // ثواني
@@ -503,84 +505,76 @@
     let sessionSeconds = 0;
     let sessionTimer = null;
 
-    // Levels Calculation
-    function computeLevelFromStars(stars) { 
-        const lvl = Math.floor(stars / STARS_PER_LEVEL); 
-        return lvl; 
-    }
+    /* 🟢 الدالة المُعدّلة: حساب المستويات والرتب والتقدم */
+    function computeRanks(stars) { 
+        const MAX_STARS = MAX_LEVEL * STARS_PER_LEVEL; 
 
-    // دالة لحساب الرتبة الفخرية
-    function computePrestigeRank(stars) {
-        const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
-        if (starsAboveMax < 0) return 0;
+        // 1. حساب المستوى الأساسي (مغطى بـ 100 كحد أقصى)
+        const baseLevel = Math.min(Math.floor(stars / STARS_PER_LEVEL), MAX_LEVEL);
 
-        const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE) + 1;
-        
-        return Math.min(rank, PRESTIGE_SYMBOLS.length - 1);
-    }
-
-    function computeProgressWithinLevel(stars) { 
-        const level = computeLevelFromStars(stars);
-        let progressPercent;
-        
-        if (stars >= MAX_LEVEL * STARS_PER_LEVEL) { 
-            const starsAboveMax = stars - (MAX_LEVEL * STARS_PER_LEVEL);
-            const starsInCurrentPrestige = starsAboveMax % STARS_FOR_PRESTIGE;
-            progressPercent = (starsInCurrentPrestige / STARS_FOR_PRESTIGE) * 100;
-            
-        } else {
-            const starsInCurrentLevel = stars % STARS_PER_LEVEL;
-            const progressInLevel = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
-            
-            const currentLevelRatio = level / MAX_LEVEL;
-            const progressInLevelRatio = progressInLevel / 100 / MAX_LEVEL;
-            
-            progressPercent = (currentLevelRatio + progressInLevelRatio) * 100;
+        // 2. حساب الرتبة الفخرية (يبدأ من 1 بعد المستوى 100)
+        let prestigeRank = 0;
+        if (stars >= MAX_STARS) {
+            const starsAboveMax = stars - MAX_STARS;
+            // الرتبة تبدأ من 1 (لذلك نضيف 1)
+            const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE); 
+            prestigeRank = Math.min(rank + 1, PRESTIGE_SYMBOLS.length - 1);
         }
 
-        progressFill.style.width = `${Math.min(progressPercent, 100)}%`;
+        // 3. حساب التقدم ضمن المستوى الحالي (لشريط الملء)
+        const starsInCurrentLevel = stars % STARS_PER_LEVEL;
+        const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
+
+        return { 
+            level: baseLevel, 
+            prestigeRank: prestigeRank, 
+            progressPercent: progressPercent 
+        };
     }
 
 
     // UI updater
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
-      const level = data?.level || 0;
-      const prestigeRank = data?.prestigeRank || 0; 
-      const isAdmin = data?.isAdmin === true; // 🟢 جلب حالة الأدمن
+      const isAdmin = data?.isAdmin === true; 
+      
+      // 🟢 استخدام الدالة المُبسّطة للحساب
+      const ranks = computeRanks(stars); 
+      const level = ranks.level;
+      const prestigeRank = ranks.prestigeRank;
+      const progressPercent = ranks.progressPercent;
 
-      // 🟢 منطق الأدمن: إظهار زر الإعدادات
+      // منطق الأدمن: إظهار زر الإعدادات
       if (adminTools) {
-          adminTools.style.display = isAdmin ? 'flex' : 'none'; // استخدم 'flex'
+          adminTools.style.display = isAdmin ? 'flex' : 'none';
       }
       
-      // 🟢 منطق التوثيق:
+      // منطق التوثيق
       const name = currentUser.displayName || 'مستخدم';
       let nameHTML = name;
       if (isAdmin) {
-          // إضافة أيقونة التوثيق
           nameHTML += `<i class="fas fa-check-circle verified-badge" title="مسؤول موثق"></i>`;
       }
-      displayNameContainer.innerHTML = nameHTML; // تحديث الحاوية
+      displayNameContainer.innerHTML = nameHTML;
       
-      // الإصلاح: تنسيق عرض النجوم
+      // تنسيق عرض النجوم
       const formattedStars = stars.toLocaleString('en-US'); 
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
 
-      let levelDisplay = level; 
+      // 🟢 تحديث شريط التقدم بالتقدم داخل المستوى
+      progressFill.style.width = `${Math.min(progressPercent, 100)}%`; 
+
       let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
 
       if (level >= MAX_LEVEL) {
         levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol}</span>`;
-        statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${levelDisplay}</span>`;
+        statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${level}</span>`;
         
       } else {
-        levelNumEl.textContent = levelDisplay;
-        statLevel.textContent = levelDisplay;
+        levelNumEl.textContent = level;
+        statLevel.textContent = level;
       }
-
-      computeProgressWithinLevel(stars); 
 
       if (typeof data.dailySeconds === 'number') {
         const mins = Math.floor((data.dailySeconds || 0) / 60);
@@ -620,7 +614,6 @@
       
       let initialData;
       if (!snap.exists()) {
-        // 🟢 إضافة isAdmin: false عند أول تسجيل
         initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null }; 
         await setDoc(uref, initialData);
       } else {
@@ -663,7 +656,7 @@
       if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
     }
 
-    // Gift (daily claim)
+    // Gift (daily claim) - 🟢 مُعدّلة
     if (giftBtn) {
       giftBtn.addEventListener('click', async () => {
         if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
@@ -672,22 +665,32 @@
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) {
-              tx.set(uref, { stars:5, level:0, prestigeRank:0, isAdmin:false, lastGiftDate: todayDateStr(), dailySeconds:0, lastActiveDate: todayDateStr() });
-              return;
+                // If doc doesn't exist, create it with 5 stars
+                tx.set(uref, { 
+                    stars:5, 
+                    level: computeRanks(5).level, 
+                    prestigeRank: computeRanks(5).prestigeRank, 
+                    isAdmin:false, 
+                    lastGiftDate: todayDateStr(), 
+                    dailySeconds:0, 
+                    lastActiveDate: todayDateStr() 
+                });
+                return;
             }
+            
             const data = snap.data();
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
             
             const newStars = (data.stars || 0) + 5;
-            const newLevel = computeLevelFromStars(newStars);
-            const newPrestigeRank = computePrestigeRank(newStars); 
+            // 🟢 استخدام الدالة الجديدة للحساب
+            const ranks = computeRanks(newStars); 
 
             tx.update(uref, { 
                 stars: newStars, 
                 lastGiftDate: todayDateStr(), 
-                level: newLevel,
-                prestigeRank: newPrestigeRank 
+                level: ranks.level,
+                prestigeRank: ranks.prestigeRank 
             });
           });
           claimAnimation();
@@ -708,7 +711,7 @@
       refreshUserDoc();
     }
 
-    // Session timer awarding stars
+    // Session timer awarding stars - 🟢 مُعدّلة
     function startSessionTimer() {
       if (sessionTimer) return;
       sessionSeconds = 0;
@@ -737,22 +740,23 @@
             
             const currentStars = data.stars || 0;
             const newStars = currentStars + starsToAdd;
-            const newLevel = computeLevelFromStars(newStars);
-            const newPrestigeRank = computePrestigeRank(newStars); 
+            
+            // 🟢 استخدام الدالة الجديدة للحساب
+            const ranks = computeRanks(newStars); 
             
             tx.update(uref, { 
                 stars: newStars, 
                 dailySeconds: dailySec, 
                 lastActiveDate: todayDateStr(), 
-                level: newLevel,
-                prestigeRank: newPrestigeRank 
+                level: ranks.level,
+                prestigeRank: ranks.prestigeRank 
             });
             
-            if (starsToAdd > 0) refreshUserDoc();
+            if (starsToAdd > 0) refreshUserDoc(); // force UI update when stars are added
 
           });
           
-          refreshUserDoc();
+          refreshUserDoc(); // Update minutes count visually
         } catch (e) { console.error('session update err', e); }
       }, ACTIVITY_UPDATE_INTERVAL * 1000);
     }
@@ -761,7 +765,7 @@
     window.addEventListener('focus', () => { if (!sessionTimer && currentUser) startSessionTimer(); });
 
 
-    // refresh user doc data into UI (يجب استدعاؤها في الـ timer وفي الإطلاق الأولي)
+    // refresh user doc data into UI
     async function refreshUserDoc() {
       if (!currentUser) return;
       const snap = await getDoc(userDocRef(currentUser.uid));
@@ -772,11 +776,11 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code (الثابت المُعدّل)
+    // promo code (الثابت المُعدّل) - 🟢 مُعدّلة
     if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
-      const CODE_TO_APPLY = 'WELCOME1000'; // 👈 الكود الترحيبي الثابت
-      const STARS_TO_ADD = 1000;          // 👈 1000 نجمة ترحيبية
+      const CODE_TO_APPLY = 'WELCOME1000'; 
+      const STARS_TO_ADD = 1000;          
 
       if (!code) return showToast('الرجاء إدخال Promo Code صالح.', '#f39c12');
       if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
@@ -790,27 +794,25 @@
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
           
-          // التحقق من استخدام الكود سابقاً
           if (data.activatedPromoCode === CODE_TO_APPLY) {
             throw new Error('CodeAlreadyUsed');
           }
           
           const currentStars = data.stars || 0;
           const newStars = currentStars + STARS_TO_ADD;
-          const newLevel = computeLevelFromStars(newStars);
-          const newPrestigeRank = computePrestigeRank(newStars); 
           
-          // تحديث مستند المستخدم
+          // 🟢 استخدام الدالة الجديدة للحساب
+          const ranks = computeRanks(newStars);
+          
           tx.update(uref, { 
             stars: newStars, 
-            level: newLevel,
-            prestigeRank: newPrestigeRank,
-            activatedPromoCode: CODE_TO_APPLY, // حفظ الكود لمنع التكرار
+            level: ranks.level,
+            prestigeRank: ranks.prestigeRank,
+            activatedPromoCode: CODE_TO_APPLY, 
             promoActivatedAt: serverTimestamp() 
           });
         });
         
-        // عند النجاح
         showToast(`تمت إضافة ${STARS_TO_ADD.toLocaleString('en-US')} نجمة! Promo Code مفعل.`, '#3498db');
         refreshUserDoc();
         promoInput.value = '';
@@ -838,7 +840,7 @@
         } 
     });
 
-    // claim history (display last claim date) (المُعدّل)
+    // claim history (display last claim date)
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
@@ -851,7 +853,7 @@
     
     // Help button
     if (helpBtn) helpBtn.addEventListener('click', () => {
-        showToast('شرح المستويات: المستوى الأقصى هو 100. كل 500 نجمة إضافية تمنحك رتبة فخرية (Prestige Rank).', '#3498db');
+        showToast('شرح المستويات: المستوى الأقصى هو 100. كل 50 نجمة ترفعك مستوى. كل 500 نجمة إضافية بعد المستوى 100 تمنحك رتبة فخرية (Prestige Rank).', '#3498db');
     });
 
     // initial load refresh
@@ -860,6 +862,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
+    // Confetti Helper
     window.launchConfetti = function() {
       var duration = 2 * 1000; var end = Date.now() + duration;
       (function frame() {
