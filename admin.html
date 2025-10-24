@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>لوحة تحكم المسؤول — المنتدى</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <style>
+    :root{
+      --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
+      --card-bg: rgba(255,255,255,0.05);
+      --muted: #bfc9cb;
+      --accent: #3498db;
+      --gold: #f1c40f;
+      --danger: #e74c3c;
+      --success: #2ecc71;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:'Cairo',system-ui,Arial;
+      background:var(--bg);
+      color:#e7eef0;
+      -webkit-font-smoothing:antialiased;
+      direction: rtl;
+      text-align: right;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    h1 {
+        color: var(--accent);
+        font-size: 2.5rem;
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+    }
+
+    /* هيكل لوحة التحكم */
+    .admin-dashboard {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    .panel-card {
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .panel-card h2 {
+        color: #fff;
+        font-size: 1.8rem;
+        margin-top: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* شريط البحث للإدارة */
+    .admin-search {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    #adminSearchInput {
+        flex-grow: 1;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(0,0,0,0.2);
+        color: #fff;
+        font-family: inherit;
+        font-size: 1em;
+        outline: none;
+    }
+    #adminSearchBtn {
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    
+    /* قائمة المستخدمين (جدول بسيط) */
+    .user-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .user-row {
+        background: rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 5px solid var(--muted);
+    }
+    .user-row.admin { border-left-color: var(--gold); }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex-grow: 1;
+    }
+    .user-info strong { color: #fff; font-size: 1.1em; }
+    .user-info span { color: var(--muted); font-size: 0.9em; }
+
+    .user-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .action-btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        cursor: pointer;
+        color: #fff;
+        transition: opacity 0.2s;
+    }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .action-btn.toggle-admin { background: var(--gold); }
+    .action-btn.view-profile { background: #555; }
+    
+    /* رسالة التحميل والخطأ */
+    .message-box {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--muted);
+        font-size: 1.2em;
+        background: rgba(0,0,0,0.1);
+        border-radius: 12px;
+    }
+    .message-box i { margin-inline-end: 10px; }
+    
+    /* تنسيق خاص لتنبيهات Toast */
+    .toast {
+      position: fixed; bottom: 25px; right: 25px; padding: 12px 18px; color: #fff;
+      background: #1c272a; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+      z-index: 10000; opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: translateX(100%); font-weight: 600; min-width: 200px; text-align: right;
+      border-right: 4px solid #fff; 
+    }
+
+    @media (max-width: 768px) {
+        .user-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .user-actions {
+            width: 100%;
+            justify-content: space-around;
+        }
+        .container { margin: 20px auto; }
+    }
+  </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-screwdriver-wrench"></i> لوحة تحكم المسؤول</h1>
+        
+        <div id="authCheck" class="message-box">
+            <i id="authIcon" class="fas fa-spinner fa-spin"></i>
+            <span id="authStatus">جارٍ التحقق من صلاحيات المسؤول...</span>
+        </div>
+        
+        <div id="adminDashboard" class="admin-dashboard" style="display:none;">
+            
+            <div id="userManagementPanel" class="panel-card">
+                <h2>إدارة المستخدمين</h2>
+                
+                <div class="admin-search">
+                    <input type="text" id="adminSearchInput" placeholder="ابحث عن مستخدم باليوزر أو UID" />
+                    <button id="adminSearchBtn"><i class="fas fa-search"></i> بحث</button>
+                    <button id="adminResetBtn" style="background:#555;"><i class="fas fa-undo"></i> الكل</button>
+                </div>
+                
+                <div id="userList" class="user-list">
+                    </div>
+                
+                <button id="loadMoreUsers" class="action-btn" style="background:#444; width:100%; margin-top:20px;">تحميل المزيد</button>
+
+            </div>
+            
+            </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, limit, startAfter, getDocs, doc, getDoc, updateDoc, where, runTransaction 
+        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // ====== config (يجب استبدالها) ======
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", 
+            authDomain: "clan-forum.firebaseapp.com",
+            projectId: "clan-forum",
+            storageBucket: "clan-forum.firebasestorage.app",
+            messagingSenderId: "1011903491894",
+            appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Refs
+        const authCheck = document.getElementById('authCheck');
+        const authStatus = document.getElementById('authStatus');
+        const authIcon = document.getElementById('authIcon');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const userList = document.getElementById('userList');
+        const loadMoreUsersBtn = document.getElementById('loadMoreUsers');
+        const adminSearchInput = document.getElementById('adminSearchInput');
+        const adminSearchBtn = document.getElementById('adminSearchBtn');
+        const adminResetBtn = document.getElementById('adminResetBtn');
+
+        // Constants
+        const USERS_PER_PAGE = 10;
+        
+        // State
+        let currentUser = null;
+        let lastVisible = null; 
+        let isSearching = false; 
+        let currentSearchTerm = '';
+        
+        // Firestore Collection Ref
+        const usersCol = collection(db, 'users');
+        const usernamesCol = collection(db, 'usernames');
+
+        // Helpers
+        function showToast(msg, color = '#2ecc71') {
+          const t = document.createElement('div');
+          // استخدام الـ CSS المدمج بدلاً من inline styles
+          t.className = 'toast';
+          t.textContent = msg;
+          t.style.borderColor = color; 
+          document.body.appendChild(t);
+          
+          setTimeout(()=> t.style.transform = 'translateX(0)', 20);
+          setTimeout(()=> { 
+            t.style.transform = 'translateX(100%)';
+            t.style.opacity = 0; 
+            setTimeout(()=> t.remove(), 400); 
+          }, 3500);
+        }
+        
+        // الدالة المسؤولة عن بناء صف المستخدم في القائمة
+        function renderUserRow(userData) {
+            const isAdmin = userData.isAdmin === true;
+            const username = userData.username || 'N/A';
+            const display = userData.displayName || 'مستخدم غير معروف';
+            const email = userData.email || 'N/A';
+            const uid = userData.uid;
+
+            const row = document.createElement('div');
+            row.className = `user-row ${isAdmin ? 'admin' : ''}`;
+            row.innerHTML = `
+                <div class="user-info">
+                    <strong>@${username} (${display})</strong>
+                    <span>البريد: ${email} | UID: ${uid}</span>
+                    <span>الحالة: ${isAdmin ? 'مسؤول (Admin)' : 'عضو عادي'} | النجوم: ${userData.stars || 0}</span>
+                </div>
+                <div class="user-actions">
+                    <a href="profile.html?uid=${uid}" class="action-btn view-profile" target="_blank">
+                        <i class="fas fa-user"></i> ملف
+                    </a>
+                    <button data-uid="${uid}" data-is-admin="${isAdmin}" class="action-btn toggle-admin" ${uid === auth.currentUser.uid ? 'disabled' : ''}>
+                        <i class="fas fa-user-shield"></i> ${isAdmin ? 'عزل' : 'ترقية'}
+                    </button>
+                </div>
+            `;
+            userList.appendChild(row);
+        }
+
+        /* ====== دالة جلب وعرض المستخدمين ====== */
+        async function fetchUsers(initialLoad = true, search = false) {
+            loadMoreUsersBtn.disabled = true;
+            
+            if (initialLoad) {
+                userList.innerHTML = '';
+                lastVisible = null;
+            }
+
+            try {
+                if (search && currentSearchTerm) {
+                    // البحث باستخدام اليوزر أو UID (نبحث في Users Collection مباشرة)
+                    
+                    // 1. البحث عن طريق اليوزر (يتطلب فهرس لـ username)
+                    const usernameQuery = query(usersCol, where('username', '==', currentSearchTerm), limit(1));
+                    const usernameSnap = await getDocs(usernameQuery);
+                    
+                    if (!usernameSnap.empty) {
+                        usernameSnap.forEach(doc => renderUserRow({ ...doc.data(), uid: doc.id }));
+                    } 
+                    // 2. البحث عن طريق UID (سيتطلب تحميل مستند واحد مباشرة)
+                    else if (currentSearchTerm.length === 28) { 
+                        const userDoc = await getDoc(doc(db, 'users', currentSearchTerm));
+                        if (userDoc.exists()) {
+                            renderUserRow({ ...userDoc.data(), uid: userDoc.id, email: userDoc.data().email || 'N/A' });
+                        }
+                    }
+
+                    if (userList.children.length === 0) {
+                        userList.innerHTML = `<div class="message-box"><i class="fas fa-info-circle"></i> لا توجد نتائج بحث مطابقة.</div>`;
+                    }
+                    loadMoreUsersBtn.style.display = 'none';
+                    return;
+
+                } else {
+                    // تصفح عادي (الكل مرتب حسب النجوم)
+                    let q = query(usersCol, orderBy('stars', 'desc'), limit(USERS_PER_PAGE));
+                    if (lastVisible) {
+                        q = query(usersCol, orderBy('stars', 'desc'), startAfter(lastVisible), limit(USERS_PER_PAGE));
+                    }
+
+                    const snapshot = await getDocs(q);
+                    
+                    if (snapshot.empty && initialLoad) {
+                        userList.innerHTML = `<div class="message-box"><i class="fas fa-users"></i> لا يوجد مستخدمون مسجلون.</div>`;
+                    }
+
+                    snapshot.docs.forEach(doc => {
+                        lastVisible = doc;
+                        // نستخدم display name من Auth إذا كان موجوداً، أو من Firestore
+                        const email = doc.data().email || auth.currentUser.email; // استخدام إيميل الحالي كاحتياطي
+                        renderUserRow({ ...doc.data(), uid: doc.id, email: email, displayName: doc.data().displayName || auth.currentUser.displayName });
+                    });
+
+                    if (snapshot.size < USERS_PER_PAGE) {
+                        loadMoreUsersBtn.textContent = 'نهاية القائمة';
+                        loadMoreUsersBtn.disabled = true;
+                    } else {
+                        loadMoreUsersBtn.textContent = 'تحميل المزيد';
+                        loadMoreUsersBtn.disabled = false;
+                    }
+                    loadMoreUsersBtn.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error("Error fetching users for admin panel:", error);
+                showToast("فشل في تحميل قائمة المستخدمين.", 'var(--danger)');
+                userList.innerHTML = `<div class="message-box">حدث خطأ في الاتصال بالبيانات.</div>`;
+            }
+        }
+        
+        /* ====== دالة تبديل حالة المسؤول ====== */
+        async function toggleAdmin(uid, currentStatus) {
+            if (!confirm(`هل أنت متأكد من ${currentStatus ? 'عزل صلاحيات الإدارة عن' : 'ترقية'} هذا المستخدم؟`)) return;
+            
+            try {
+                const userRef = doc(db, 'users', uid);
+                // ⚠️ يجب أن تكون قواعد الأمان تسمح بتعديل حقل isAdmin من قبل مسؤول آخر
+                await updateDoc(userRef, {
+                    isAdmin: !currentStatus
+                });
+                showToast(`تم تحديث حالة المستخدم بنجاح!`, 'var(--accent)');
+                
+                // إعادة تحميل القائمة لتحديث الحالة المرئية
+                fetchUsers(true); 
+                
+            } catch (e) {
+                console.error(e);
+                showToast("فشل تحديث صلاحيات المسؤول. تأكد من قواعد الأمان.", 'var(--danger)');
+            }
+        }
+
+
+        /* ====== وظيفة التحقق من الصلاحيات وربط الأحداث ====== */
+        function bindAdminListeners() {
+            loadMoreUsersBtn.addEventListener('click', () => fetchUsers(false));
+            adminResetBtn.addEventListener('click', () => {
+                isSearching = false;
+                currentSearchTerm = '';
+                adminSearchInput.value = '';
+                fetchUsers(true);
+            });
+            
+            adminSearchBtn.addEventListener('click', () => {
+                const term = adminSearchInput.value.trim();
+                if (term) {
+                    isSearching = true;
+                    currentSearchTerm = term.toLowerCase();
+                    fetchUsers(true, true);
+                } else {
+                    showToast("الرجاء إدخال يوزر أو UID للبحث.", 'var(--gold)');
+                }
+            });
+
+            // ربط حدث زر الترقية/العزل
+            userList.addEventListener('click', (e) => {
+                if (e.target.closest('.toggle-admin')) {
+                    const btn = e.target.closest('.toggle-admin');
+                    const uid = btn.getAttribute('data-uid');
+                    const isAdmin = btn.getAttribute('data-is-admin') === 'true';
+                    toggleAdmin(uid, isAdmin);
+                }
+            });
+        }
+
+
+        /* ====== التهيئة والتحقق الأولي ====== */
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                authStatus.textContent = 'يرجى تسجيل الدخول أولاً.';
+                authIcon.className = 'fas fa-times-circle';
+                authIcon.style.color = 'var(--danger)';
+                setTimeout(() => location.href = 'index.html', 2000);
+                return;
+            }
+
+            currentUser = user;
+            const userDocRef = doc(db, 'users', user.uid);
+            const snap = await getDoc(userDocRef);
+
+            if (!snap.exists()) {
+                authStatus.textContent = 'المستخدم غير مسجل في قاعدة البيانات.';
+                authIcon.className = 'fas fa-times-circle';
+                authIcon.style.color = 'var(--danger)';
+                return;
+            }
+
+            const userData = snap.data();
+            
+            if (userData.isAdmin === true) {
+                // 🎉 المستخدم هو مسؤول! إظهار لوحة التحكم.
+                authCheck.style.display = 'none';
+                adminDashboard.style.display = 'grid';
+                
+                // بدء تحميل المستخدمين وربط الأحداث
+                fetchUsers(true);
+                bindAdminListeners();
+            } else {
+                // المستخدم ليس مسؤولاً
+                authStatus.textContent = 'غير مصرح لك بالوصول إلى لوحة التحكم هذه.';
+                authIcon.className = 'fas fa-lock';
+                authIcon.style.color = 'var(--danger)';
+            }
+        });
+    </script>
+</body>
+</html>
