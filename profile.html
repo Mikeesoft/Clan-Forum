@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-    /* CSS Code from the previous turn */
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
       --card-bg: rgba(255,255,255,0.03);
@@ -218,13 +217,13 @@
     }
     .danger-btn:hover { background: #c0392b !important; }
 
-    /* 🟢 تنسيق أيقونة التوثيق (المُحسَّن - شكل فيسبوك/إنستغرام) */
+    /* 🟢 تنسيق أيقونة التوثيق */
     .verified-badge {
-        color: #fff; /* لون العلامة الداخلية أبيض */
-        background-color: var(--accent); /* خلفية زرقاء - #3498db */
+        color: #fff; 
+        background-color: var(--accent); 
         border-radius: 50%;
-        font-size: 0.7em; /* تصغير حجم الأيقونة لتناسب الدائرة */
-        padding: 2px; /* مسافة داخلية لجعلها دائرة مرئية */
+        font-size: 0.7em; 
+        padding: 2px; 
         height: 18px;
         width: 18px;
         display: inline-flex;
@@ -233,14 +232,14 @@
         margin-inline-start: 8px;
         vertical-align: middle;
         animation: pulse-verify 1.5s infinite alternate;
-        box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); /* إضافة لمعان خفيف */
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); 
     }
     @keyframes pulse-verify {
         0% { transform: scale(1); opacity: 0.8; }
         100% { transform: scale(1.05); opacity: 1; }
     }
 
-    /* 🟢 تنسيق أدوات الإدارة الجديدة */
+    /* 🟢 تنسيق أدوات الإدارة */
     .admin-tools {
         position: absolute;
         top: 20px;
@@ -277,6 +276,72 @@
       border-right: 4px solid #fff; 
     }
     .toast.show { opacity: 1; transform: translateX(0); }
+    
+    /* ======= Modal Styles (لاختيار اليوزر) ======= */
+    .modal {
+        display: none; /* مخفي افتراضياً */
+        position: fixed; 
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        justify-content: center;
+        align-items: center;
+    }
+    .modal.show { display: flex; }
+
+    .modal-content {
+        background: #1c272a; /* خلفية داكنة تناسب الثيم */
+        margin: auto;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .modal-content h2 { color: var(--accent); margin-top: 0; font-size: 1.6rem; }
+    .modal-content p { color: var(--muted); margin-bottom: 20px; }
+
+    #usernameInput {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        font-size: 1.1em;
+        outline: none;
+        text-align: center;
+    }
+    #usernameInput:focus { border-color: var(--gold); }
+
+    #saveUsernameBtn {
+        background: var(--accent);
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+    #saveUsernameBtn:hover { background: #2980b9; transform: translateY(-2px); }
+
+    .feedback-text {
+        margin-top: 15px;
+        font-size: 0.95em;
+        color: var(--gold); /* لون تحذيري */
+    }
 
     /* Media Queries */
     @media (max-width: 980px) {
@@ -419,11 +484,23 @@
     </div>
   </div>
 
+  <div id="usernameModal" class="modal">
+    <div class="modal-content">
+        <h2>اختر يوزر (Username)</h2>
+        <p>الرجاء اختيار اسم مستخدم فريد (يجب أن يكون بالإنجليزية وأحرف وأرقام فقط).</p>
+        <input type="text" id="usernameInput" placeholder="ادخل يوزر المستخدم هنا">
+        <button id="saveUsernameBtn">حفظ</button>
+        <div id="usernameFeedback" class="feedback-text"></div>
+    </div>
+  </div>
+
   <script type="module">
     // ===== Firebase imports (v11 modular) =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction 
+    import { 
+        getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction,
+        collection, query, where, getDocs // 🟢 تم إضافة استيرادات جديدة لـ Username
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
@@ -466,6 +543,13 @@
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
     const adminTools = document.getElementById('adminTools');
+    
+    // 🟢 DOM refs لـ Username Modal
+    const usernameModal = document.getElementById('usernameModal');
+    const usernameInput = document.getElementById('usernameInput');
+    const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+    const usernameFeedback = document.getElementById('usernameFeedback');
+
 
     // Constants
     const ACTIVITY_UPDATE_INTERVAL = 30; // ثواني
@@ -499,13 +583,15 @@
       const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
     function userDocRef(uid){ return doc(db,'users', uid); }
+    // 🟢 مرجع جديد لـ Username Lookup
+    const usernamesCol = collection(db, 'usernames');
 
     // state
     let currentUser = null;
     let sessionSeconds = 0;
     let sessionTimer = null;
 
-    /* 🟢 الدالة المُعدّلة: حساب المستويات والرتب والتقدم */
+    // Levels Calculation: دالة واحدة لحساب المستوى والرتب والتقدم
     function computeRanks(stars) { 
         const MAX_STARS = MAX_LEVEL * STARS_PER_LEVEL; 
 
@@ -516,7 +602,6 @@
         let prestigeRank = 0;
         if (stars >= MAX_STARS) {
             const starsAboveMax = stars - MAX_STARS;
-            // الرتبة تبدأ من 1 (لذلك نضيف 1)
             const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE); 
             prestigeRank = Math.min(rank + 1, PRESTIGE_SYMBOLS.length - 1);
         }
@@ -532,13 +617,66 @@
         };
     }
 
+    // 🟢 دالة التحقق وحفظ اليوزر
+    async function handleUsernameSelection(user) {
+        usernameModal.classList.add('show');
+        usernameModal.style.display = 'flex'; 
+
+        saveUsernameBtn.onclick = async () => {
+            const username = usernameInput.value.trim().toLowerCase();
+            
+            // 1. التحقق من صحة اليوزر (أحرف إنجليزية وأرقام فقط)
+            if (!/^[a-z0-9]{3,16}$/.test(username)) {
+                usernameFeedback.textContent = 'يجب أن يكون اليوزر بين 3 و 16 حرفًا أو رقمًا (بالإنجليزية فقط).';
+                return;
+            }
+            
+            saveUsernameBtn.disabled = true;
+            usernameFeedback.textContent = 'جارٍ التحقق...';
+
+            try {
+                // 2. التحقق من التوفر في مجموعة usernames
+                const q = query(usernamesCol, where('username', '==', username));
+                const snap = await getDocs(q);
+                
+                if (!snap.empty) {
+                    usernameFeedback.textContent = `يوزر المستخدم (${username}) غير متاح. الرجاء اختيار يوزر آخر.`;
+                    return;
+                }
+                
+                // 3. اليوزر متاح، الآن نحفظه في مستند المستخدم وننشئ مدخل البحث
+                const uref = userDocRef(user.uid);
+                
+                await runTransaction(db, async (tx) => {
+                    // تحديث مستند المستخدم
+                    tx.update(uref, { username: username });
+
+                    // إنشاء مدخل للبحث السريع (يوزر -> UID)
+                    const unameRef = doc(db, 'usernames', username);
+                    tx.set(unameRef, { uid: user.uid, createdAt: serverTimestamp() });
+                });
+
+                // 4. إغلاق النافذة وتحديث الواجهة
+                usernameModal.classList.remove('show');
+                usernameModal.style.display = 'none';
+                showToast(`تم حفظ يوزر المستخدم بنجاح: ${username}`, '#2ecc71');
+                refreshUserDoc();
+                
+            } catch (e) {
+                console.error('Username save error', e);
+                usernameFeedback.textContent = 'حدث خطأ غير متوقع أثناء الحفظ.';
+            } finally {
+                saveUsernameBtn.disabled = false;
+            }
+        };
+    }
 
     // UI updater
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
+      const username = data?.username || null; // 🟢 جلب اليوزر
       
-      // 🟢 استخدام الدالة المُبسّطة للحساب
       const ranks = computeRanks(stars); 
       const level = ranks.level;
       const prestigeRank = ranks.prestigeRank;
@@ -557,12 +695,19 @@
       }
       displayNameContainer.innerHTML = nameHTML;
       
+      // 🟢 تحديث حاوية البريد الإلكتروني لتشمل اليوزر
+      if (username) {
+        emailTextEl.textContent = `@${username} · ${currentUser.email || ''}`;
+      } else {
+        emailTextEl.textContent = currentUser.email || '';
+      }
+      
       // تنسيق عرض النجوم
       const formattedStars = stars.toLocaleString('en-US'); 
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
 
-      // 🟢 تحديث شريط التقدم بالتقدم داخل المستوى
+      // تحديث شريط التقدم بالتقدم داخل المستوى
       progressFill.style.width = `${Math.min(progressPercent, 100)}%`; 
 
       let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
@@ -588,7 +733,7 @@
       }
     }
 
-    // auth
+    // auth - 🟢 مُعدّلة
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try { 
@@ -605,24 +750,33 @@
       currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      emailTextEl.textContent = currentUser.email || '';
-
-      if (currentUser.photoURL) profileImageEl.src = currentUser.photoURL;
-
       const uref = userDocRef(currentUser.uid);
       const snap = await getDoc(uref);
       
       let initialData;
       if (!snap.exists()) {
-        initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null }; 
+        // إذا لم يكن المستند موجوداً، سننشئه ونطلب اليوزر
+        initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null, username: null }; 
         await setDoc(uref, initialData);
+        // 🚨 استدعاء اختيار اليوزر
+        updateUIFromData(initialData); // تحديث مبدئي
+        handleUsernameSelection(currentUser);
+        
       } else {
         initialData = snap.data();
         if (initialData?.photoURL) profileImageEl.src = initialData.photoURL; 
+
+        // 🚨 التحقق من وجود اليوزر إذا كان المستند موجوداً
+        if (!initialData.username) {
+             // تحديث مبدئي قبل الـ modal
+            updateUIFromData(initialData); 
+            handleUsernameSelection(currentUser);
+            // لا تبدأ الـ timer قبل اختيار اليوزر
+            return;
+        }
       }
       
       updateUIFromData(initialData);
-
       startSessionTimer();
     });
 
@@ -656,7 +810,7 @@
       if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
     }
 
-    // Gift (daily claim) - 🟢 مُعدّلة
+    // Gift (daily claim)
     if (giftBtn) {
       giftBtn.addEventListener('click', async () => {
         if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
@@ -664,26 +818,15 @@
         try {
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
-            if (!snap.exists()) {
-                // If doc doesn't exist, create it with 5 stars
-                tx.set(uref, { 
-                    stars:5, 
-                    level: computeRanks(5).level, 
-                    prestigeRank: computeRanks(5).prestigeRank, 
-                    isAdmin:false, 
-                    lastGiftDate: todayDateStr(), 
-                    dailySeconds:0, 
-                    lastActiveDate: todayDateStr() 
-                });
-                return;
-            }
-            
+            if (!snap.exists()) throw new Error("no-doc");
+
             const data = snap.data();
+            if (!data.username) throw new Error("no-username"); // 🟢 تحقق إضافي
+
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
             
             const newStars = (data.stars || 0) + 5;
-            // 🟢 استخدام الدالة الجديدة للحساب
             const ranks = computeRanks(newStars); 
 
             tx.update(uref, { 
@@ -696,6 +839,7 @@
           claimAnimation();
         } catch (e) {
           if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
+          else if (e?.message === 'no-username') showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
           else { console.error('claim err', e); showToast('فشل استلام الهدية', '#e74c3c'); }
         }
       });
@@ -711,7 +855,7 @@
       refreshUserDoc();
     }
 
-    // Session timer awarding stars - 🟢 مُعدّلة
+    // Session timer awarding stars
     function startSessionTimer() {
       if (sessionTimer) return;
       sessionSeconds = 0;
@@ -725,6 +869,8 @@
             const snap = await tx.get(uref);
             const data = snap.exists() ? snap.data() : {};
             
+            if (!data.username) return; // 🟢 توقف إذا لم يكن اليوزر موجوداً
+
             const lastDate = data.lastActiveDate || '';
             let dailySec = data.dailySeconds || 0;
             
@@ -740,8 +886,6 @@
             
             const currentStars = data.stars || 0;
             const newStars = currentStars + starsToAdd;
-            
-            // 🟢 استخدام الدالة الجديدة للحساب
             const ranks = computeRanks(newStars); 
             
             tx.update(uref, { 
@@ -752,11 +896,11 @@
                 prestigeRank: ranks.prestigeRank 
             });
             
-            if (starsToAdd > 0) refreshUserDoc(); // force UI update when stars are added
+            if (starsToAdd > 0) refreshUserDoc();
 
           });
           
-          refreshUserDoc(); // Update minutes count visually
+          refreshUserDoc();
         } catch (e) { console.error('session update err', e); }
       }, ACTIVITY_UPDATE_INTERVAL * 1000);
     }
@@ -776,7 +920,7 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code (الثابت المُعدّل) - 🟢 مُعدّلة
+    // promo code (الثابت المُعدّل)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
       const code = promoInput.value.trim();
       const CODE_TO_APPLY = 'WELCOME1000'; 
@@ -794,14 +938,14 @@
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
           
+          if (!data.username) throw new Error("no-username"); // 🟢 تحقق إضافي
+
           if (data.activatedPromoCode === CODE_TO_APPLY) {
             throw new Error('CodeAlreadyUsed');
           }
           
           const currentStars = data.stars || 0;
           const newStars = currentStars + STARS_TO_ADD;
-          
-          // 🟢 استخدام الدالة الجديدة للحساب
           const ranks = computeRanks(newStars);
           
           tx.update(uref, { 
@@ -820,7 +964,10 @@
       catch (e) { 
         if (e.message === 'CodeAlreadyUsed') {
             showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
-        } else {
+        } else if (e?.message === 'no-username') {
+             showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
+        }
+        else {
             console.error('Promo error:', e); 
             showToast('فشل تفعيل الـ Promo Code.', '#e74c3c'); 
         }
