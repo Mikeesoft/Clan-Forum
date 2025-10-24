@@ -81,8 +81,41 @@
     .avatar-edit { position:absolute; right:0; bottom:0; background:var(--accent); color:#fff; width:30px; height:30px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid #000; font-size: 0.9em; transition:background 0.2s }
     .avatar-edit:hover { background:#2980b9 }
 
-    .profile-info h2 { margin:0; font-size:1.8rem; color:#fff }
-    .profile-info p { margin:2px 0 8px; color:var(--muted); font-size:1rem }
+    /* 🟢 تنسيق اليوزر والإيميل المُحسّن */
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; 
+    }
+    .profile-info h2 { 
+        margin:0; 
+        font-size:1.8rem; 
+        color:#fff;
+        display: flex; 
+        align-items: center;
+    }
+    .profile-info .identity-line {
+        margin: 5px 0 5px; 
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        color: var(--muted);
+    }
+    .username-tag {
+        font-weight: 700;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-inline-end: 10px;
+        font-size: 0.9em;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .email-text-muted {
+        font-size: 0.95em;
+        color: var(--muted);
+    }
+
     .level-box { 
         display:inline-flex; 
         align-items: center; 
@@ -168,7 +201,7 @@
         color:#fff;
         outline:none;
         font-family:inherit;
-        flex: 1; /* Make input fill available space */
+        flex: 1; 
     }
     .apply-btn {
         background: var(--accent) !important; 
@@ -279,7 +312,7 @@
     
     /* ======= Modal Styles (لاختيار اليوزر) ======= */
     .modal {
-        display: none; /* مخفي افتراضياً */
+        display: none; 
         position: fixed; 
         z-index: 2000;
         left: 0;
@@ -295,7 +328,7 @@
     .modal.show { display: flex; }
 
     .modal-content {
-        background: #1c272a; /* خلفية داكنة تناسب الثيم */
+        background: #1c272a; 
         margin: auto;
         padding: 30px;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -340,7 +373,7 @@
     .feedback-text {
         margin-top: 15px;
         font-size: 0.95em;
-        color: var(--gold); /* لون تحذيري */
+        color: var(--gold); 
     }
 
     /* Media Queries */
@@ -349,7 +382,7 @@
         .profile-hero-card { flex-direction: column; align-items: center; text-align: center; }
         .profile-identity { flex-direction: column; align-items: center; text-align: center; min-width: unset; }
         .profile-info h2 { margin-top: 10px; }
-        .profile-info p { margin-bottom: 10px; }
+        .profile-info .identity-line { justify-content: center; } /* توسيط العناصر الداخلية */
         .overall-progress-area { align-self: center; width: 100%; margin-top: 20px; }
         .content-grid { grid-template-columns: 1fr; } 
         .section-card { min-height: initial; }
@@ -370,7 +403,8 @@
         .avatar-wrap img { border-width: 2px; }
         .avatar-edit { width: 26px; height: 26px; font-size: 0.8em; }
         .profile-info h2 { font-size: 1.4rem; }
-        .profile-info p { font-size: 0.9rem; }
+        .profile-info .identity-line { font-size: 0.9rem; }
+        .username-tag { margin-inline-end: 8px; padding: 1px 6px; }
         .content-grid { gap: 15px; }
         .content-grid > div { min-width: unset; }
         .minutes-count { width: 60px; }
@@ -396,7 +430,10 @@
           </div>
           <div class="profile-info">
             <h2 id="displayNameContainer">اسم المستخدم</h2> 
-            <p id="emailText">user@example.com</p>
+            
+            <div id="identityLine" class="identity-line">
+                </div>
+            
             <div class="level-box">
                 <span style="font-size:0.9em; margin-inline-end: 4px;">المستوى</span>
                 <strong id="levelNum">0</strong>
@@ -500,7 +537,7 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { 
         getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction,
-        collection, query, where, getDocs // 🟢 تم إضافة استيرادات جديدة لـ Username
+        collection, query, where, getDocs 
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
@@ -520,7 +557,8 @@
 
     // DOM refs
     const displayNameContainer = document.getElementById('displayNameContainer');
-    const emailTextEl = document.getElementById('emailText');
+    // 🟢 تم استبدال emailTextEl بـ identityLineEl
+    const identityLineEl = document.getElementById('identityLine');
     const profileImageEl = document.getElementById('profileImage');
     const fileInput = document.getElementById('fileInput');
 
@@ -544,7 +582,7 @@
     const todayMinutesEl = document.getElementById('todayMinutes');
     const adminTools = document.getElementById('adminTools');
     
-    // 🟢 DOM refs لـ Username Modal
+    // DOM refs لـ Username Modal
     const usernameModal = document.getElementById('usernameModal');
     const usernameInput = document.getElementById('usernameInput');
     const saveUsernameBtn = document.getElementById('saveUsernameBtn');
@@ -583,7 +621,6 @@
       const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
     function userDocRef(uid){ return doc(db,'users', uid); }
-    // 🟢 مرجع جديد لـ Username Lookup
     const usernamesCol = collection(db, 'usernames');
 
     // state
@@ -617,7 +654,7 @@
         };
     }
 
-    // 🟢 دالة التحقق وحفظ اليوزر
+    // دالة التحقق وحفظ اليوزر
     async function handleUsernameSelection(user) {
         usernameModal.classList.add('show');
         usernameModal.style.display = 'flex'; 
@@ -648,10 +685,8 @@
                 const uref = userDocRef(user.uid);
                 
                 await runTransaction(db, async (tx) => {
-                    // تحديث مستند المستخدم
                     tx.update(uref, { username: username });
 
-                    // إنشاء مدخل للبحث السريع (يوزر -> UID)
                     const unameRef = doc(db, 'usernames', username);
                     tx.set(unameRef, { uid: user.uid, createdAt: serverTimestamp() });
                 });
@@ -671,11 +706,11 @@
         };
     }
 
-    // UI updater
+    // UI updater - 🟢 تم التعديل هنا
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
-      const username = data?.username || null; // 🟢 جلب اليوزر
+      const username = data?.username || null; 
       
       const ranks = computeRanks(stars); 
       const level = ranks.level;
@@ -687,7 +722,7 @@
           adminTools.style.display = isAdmin ? 'flex' : 'none';
       }
       
-      // منطق التوثيق
+      // 1. تحديث الاسم وشارة التوثيق
       const name = currentUser.displayName || 'مستخدم';
       let nameHTML = name;
       if (isAdmin) {
@@ -695,11 +730,15 @@
       }
       displayNameContainer.innerHTML = nameHTML;
       
-      // 🟢 تحديث حاوية البريد الإلكتروني لتشمل اليوزر
+      // 2. تحديث سطر الهوية (اليوزر والإيميل)
       if (username) {
-        emailTextEl.textContent = `@${username} · ${currentUser.email || ''}`;
+        identityLineEl.innerHTML = `
+            <span class="username-tag">@${username}</span> 
+            <span class="email-text-muted">${currentUser.email || ''}</span>
+        `;
       } else {
-        emailTextEl.textContent = currentUser.email || '';
+        // إذا لم يتم اختيار يوزر بعد، نعرض الإيميل فقط كنص خافت
+        identityLineEl.innerHTML = `<span class="email-text-muted">${currentUser.email || ''}</span>`;
       }
       
       // تنسيق عرض النجوم
@@ -733,7 +772,7 @@
       }
     }
 
-    // auth - 🟢 مُعدّلة
+    // auth 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try { 
@@ -755,24 +794,19 @@
       
       let initialData;
       if (!snap.exists()) {
-        // إذا لم يكن المستند موجوداً، سننشئه ونطلب اليوزر
         initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null, username: null }; 
         await setDoc(uref, initialData);
-        // 🚨 استدعاء اختيار اليوزر
-        updateUIFromData(initialData); // تحديث مبدئي
+        updateUIFromData(initialData); 
         handleUsernameSelection(currentUser);
-        
+        return; // لا تبدأ الـ timer قبل اختيار اليوزر
       } else {
         initialData = snap.data();
         if (initialData?.photoURL) profileImageEl.src = initialData.photoURL; 
 
-        // 🚨 التحقق من وجود اليوزر إذا كان المستند موجوداً
         if (!initialData.username) {
-             // تحديث مبدئي قبل الـ modal
             updateUIFromData(initialData); 
             handleUsernameSelection(currentUser);
-            // لا تبدأ الـ timer قبل اختيار اليوزر
-            return;
+            return; // لا تبدأ الـ timer قبل اختيار اليوزر
         }
       }
       
@@ -821,7 +855,7 @@
             if (!snap.exists()) throw new Error("no-doc");
 
             const data = snap.data();
-            if (!data.username) throw new Error("no-username"); // 🟢 تحقق إضافي
+            if (!data.username) throw new Error("no-username"); 
 
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
@@ -869,7 +903,7 @@
             const snap = await tx.get(uref);
             const data = snap.exists() ? snap.data() : {};
             
-            if (!data.username) return; // 🟢 توقف إذا لم يكن اليوزر موجوداً
+            if (!data.username) return; 
 
             const lastDate = data.lastActiveDate || '';
             let dailySec = data.dailySeconds || 0;
@@ -938,7 +972,7 @@
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
           
-          if (!data.username) throw new Error("no-username"); // 🟢 تحقق إضافي
+          if (!data.username) throw new Error("no-username");
 
           if (data.activatedPromoCode === CODE_TO_APPLY) {
             throw new Error('CodeAlreadyUsed');
