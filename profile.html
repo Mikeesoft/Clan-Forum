@@ -77,6 +77,7 @@
         min-width: 300px;
     }
     .avatar-wrap { position:relative; width:100px; height:100px; flex:0 0 100px }
+    /* صورة افتراضية للمساعدة في التصميم إذا لم تُحمّل الصورة الحقيقية */
     .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--accent); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
     .avatar-edit { position:absolute; right:0; bottom:0; background:var(--accent); color:#fff; width:30px; height:30px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid #000; font-size: 0.9em; transition:background 0.2s }
     .avatar-edit:hover { background:#2980b9 }
@@ -382,12 +383,11 @@
         .profile-hero-card { flex-direction: column; align-items: center; text-align: center; }
         .profile-identity { flex-direction: column; align-items: center; text-align: center; min-width: unset; }
         .profile-info h2 { margin-top: 10px; }
-        .profile-info .identity-line { justify-content: center; } /* توسيط العناصر الداخلية */
+        .profile-info .identity-line { justify-content: center; } 
         .overall-progress-area { align-self: center; width: 100%; margin-top: 20px; }
         .content-grid { grid-template-columns: 1fr; } 
         .section-card { min-height: initial; }
         
-        /* تعديل مكان ظهور زر الأدمن في وضع الموبايل */
         .admin-tools {
             position: relative; 
             top: 0; 
@@ -424,7 +424,7 @@
       <section id="hero-card" class="profile-hero-card">
         <div class="profile-identity">
           <div class="avatar-wrap">
-            <img id="profileImage" src="https://via.placeholder.com/300x300?text=User" alt="Avatar" loading="lazy">
+            <img id="profileImage" src="https://via.placeholder.com/300x300/1C272A/FFFFFF?text=U" alt="Avatar" loading="lazy">
             <label for="fileInput" class="avatar-edit" title="تعديل الصورة"><i class="fa-solid fa-camera"></i></label>
             <input id="fileInput" type="file" accept="image/*" style="display:none" />
           </div>
@@ -557,8 +557,7 @@
 
     // DOM refs
     const displayNameContainer = document.getElementById('displayNameContainer');
-    // 🟢 تم استبدال emailTextEl بـ identityLineEl
-    const identityLineEl = document.getElementById('identityLine');
+    const identityLineEl = document.getElementById('identityLine'); // 🟢 الحاوية المُعدّلة
     const profileImageEl = document.getElementById('profileImage');
     const fileInput = document.getElementById('fileInput');
 
@@ -594,11 +593,14 @@
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5 * 60;
     const STARS_PER_LEVEL = 50;
-    const MAX_LEVEL = 100; // المستوى الأقصى العادي
-    const STARS_FOR_PRESTIGE = 500; // 500 نجمة لكل رتبة فخرية جديدة بعد المستوى 100
+    const MAX_LEVEL = 100; 
+    const STARS_FOR_PRESTIGE = 500; 
     const DAILY_MINS_GOAL = 30;
 
-    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ']; // الرتب من 0 إلى 5 (0 = عادي)
+    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ'];
+    
+    // 🟢 صورة احتياطية لضمان ظهور شيء إذا فشل كل شيء
+    const DEFAULT_AVATAR_PLACEHOLDER = 'https://via.placeholder.com/300x300/1C272A/FFFFFF?text=U';
 
 
     // helpers
@@ -706,7 +708,7 @@
         };
     }
 
-    // UI updater - 🟢 تم التعديل هنا
+    // UI updater
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
@@ -737,7 +739,6 @@
             <span class="email-text-muted">${currentUser.email || ''}</span>
         `;
       } else {
-        // إذا لم يتم اختيار يوزر بعد، نعرض الإيميل فقط كنص خافت
         identityLineEl.innerHTML = `<span class="email-text-muted">${currentUser.email || ''}</span>`;
       }
       
@@ -772,7 +773,7 @@
       }
     }
 
-    // auth 
+    // auth - 🟢 منطق الصورة المعزز
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try { 
@@ -793,20 +794,34 @@
       const snap = await getDoc(uref);
       
       let initialData;
+      
       if (!snap.exists()) {
         initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null, username: null }; 
         await setDoc(uref, initialData);
+        
+        // 🟢 تحديد مصدر الصورة
+        profileImageEl.src = currentUser.photoURL || DEFAULT_AVATAR_PLACEHOLDER; 
+        
         updateUIFromData(initialData); 
         handleUsernameSelection(currentUser);
-        return; // لا تبدأ الـ timer قبل اختيار اليوزر
+        return; 
       } else {
         initialData = snap.data();
-        if (initialData?.photoURL) profileImageEl.src = initialData.photoURL; 
-
+        
+        // 🟢 المنطق الجديد لترتيب جلب الصورة:
+        let photoSource = null;
+        if (initialData?.photoURL) {
+            photoSource = initialData.photoURL;
+        } else if (currentUser.photoURL) {
+            photoSource = currentUser.photoURL;
+        }
+        
+        profileImageEl.src = photoSource || DEFAULT_AVATAR_PLACEHOLDER; 
+        
         if (!initialData.username) {
             updateUIFromData(initialData); 
             handleUsernameSelection(currentUser);
-            return; // لا تبدأ الـ timer قبل اختيار اليوزر
+            return; 
         }
       }
       
