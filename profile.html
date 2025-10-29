@@ -299,6 +299,16 @@
         transform: rotate(90deg);
     }
 
+    /* Banned Message Styling */
+    .ban-message-area {
+        text-align:center; 
+        padding:50px; 
+        color:var(--danger); 
+        background: var(--card-bg);
+        border-radius: 12px;
+        margin-top: 50px;
+    }
+
 
     /* Toast & Alerts */
     .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,var(--success),#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
@@ -413,7 +423,7 @@
 </head>
 <body>
   <div class="page-wrap">
-    <div class="frame" role="application" aria-label="Profile dashboard">
+    <div class="frame" id="mainContentFrame" role="application" aria-label="Profile dashboard">
 
       <div id="adminTools" class="admin-tools" style="display: none;">
           <a href="admin.html" class="admin-btn" title="لوحة تحكم المسؤول">
@@ -580,6 +590,7 @@
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
     const adminTools = document.getElementById('adminTools');
+    const mainContentFrame = document.getElementById('mainContentFrame'); // للحظر
     
     // DOM refs لـ Username Modal
     const usernameModal = document.getElementById('usernameModal');
@@ -792,7 +803,7 @@
         }
     }
 
-    // 🟢 دالة جديدة: التحقق من حالة الحظر
+    // 🟢 دالة جديدة ومعدلة: التحقق من حالة الحظر (لا تلمس الواجهة)
     function checkBanStatus(data) {
         const isPermanent = data.isBannedPermanent === true;
         const bannedUntil = data.bannedUntil?.toDate ? data.bannedUntil.toDate() : null;
@@ -808,21 +819,33 @@
             
             const reason = data.banReason ? ` السبب: ${data.banReason}` : '';
             
-            // إظهار رسالة خطأ واضحة للمستخدم
-            document.querySelector('.frame').innerHTML = `
-                <div style="text-align:center; padding:50px; color:var(--danger);">
-                    <i class="fas fa-gavel" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                    <h2>وصول محظور</h2>
-                    <p style="font-size: 1.2em;">${msg}${reason}</p>
-                    <p>الرجاء التواصل مع الإدارة للمزيد من التفاصيل.</p>
-                    <button onclick="location.href='index.html'" style="background:var(--accent); color:white; padding:10px 20px; border-radius:8px; margin-top:15px;">العودة للرئيسية</button>
-                </div>
-            `;
-            // إيقاف أي مؤقتات أو عمليات
-            if (sessionTimer) clearInterval(sessionTimer);
-            return true; // نعم، هو محظور
+            // ⚠️ الآن، هذه الدالة ترجع رسالة الحظر فقط ولا تعدل الـ DOM
+            return { 
+                isBanned: true, 
+                message: msg, 
+                reason: reason 
+            }; 
         }
-        return false; // ليس محظوراً
+        return { isBanned: false }; 
+    }
+    
+    // 🟢 دالة عرض رسالة الحظر (تحديث الواجهة - تُستدعى خارج الـ Transaction)
+    function displayBanMessage(banStatus) {
+        if (!banStatus.isBanned) return;
+
+        // إيقاف أي مؤقتات أو عمليات
+        if (sessionTimer) clearInterval(sessionTimer);
+        
+        // إظهار رسالة خطأ واضحة للمستخدم
+        mainContentFrame.innerHTML = `
+            <div class="ban-message-area">
+                <i class="fas fa-gavel" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                <h2>وصول محظور</h2>
+                <p style="font-size: 1.2em;">${banStatus.message}${banStatus.reason}</p>
+                <p>الرجاء التواصل مع الإدارة للمزيد من التفاصيل.</p>
+                <button onclick="location.href='index.html'" style="background:var(--accent); color:white; padding:10px 20px; border-radius:8px; margin-top:15px;">العودة للرئيسية</button>
+            </div>
+        `;
     }
 
 
@@ -861,8 +884,10 @@
       } else {
         initialData = snap.data();
         
-        // التحقق من الحظر قبل إظهار أي شيء آخر
-        if (checkBanStatus(initialData)) {
+        // 🟢 التحقق من الحظر وعرض الرسالة إذا لزم الأمر
+        const banStatus = checkBanStatus(initialData);
+        if (banStatus.isBanned) {
+            displayBanMessage(banStatus);
             return; 
         }
 
@@ -924,16 +949,21 @@
       giftBtn.addEventListener('click', async () => {
         if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
         const uref = userDocRef(currentUser.uid);
+        
         try {
           await runTransaction(db, async (tx) => {
             const snap = await tx.get(uref);
             if (!snap.exists()) throw new Error("no-doc");
 
             const data = snap.data();
+            
+            // 🟢 التحقق من الحظر باستخدام الدالة التي لا تلمس DOM
+            const banStatus = checkBanStatus(data);
+            if (banStatus.isBanned) {
+                throw new Error("banned"); 
+            }
+            
             if (!data.username) throw new Error("no-username"); 
-            // 🟢 تحقق إضافي: لا يمكن المطالبة إذا كان محظوراً
-            if (checkBanStatus(data)) throw new Error("banned"); 
-
 
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
@@ -952,7 +982,12 @@
         } catch (e) {
           if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
           else if (e?.message === 'no-username') showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
-          else if (e?.message === 'banned') showToast('لا يمكنك المطالبة بالهدية وأنت محظور.', 'var(--danger)');
+          else if (e?.message === 'banned') {
+             // 💡 يتم عرض رسالة الحظر هنا بأمان خارج الـ Transaction
+             const data = userLastFetchedData || {}; // نستخدم البيانات المجلوبة الأخيرة
+             const banStatus = checkBanStatus(data);
+             showToast(banStatus.message, 'var(--danger)');
+          }
           else { console.error('claim err', e); showToast('فشل استلام الهدية', '#e74c3c'); }
         }
       });
@@ -978,7 +1013,7 @@
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
           
-          if (!data.username || checkBanStatus(data)) return; 
+          if (!data.username || checkBanStatus(data).isBanned) return; 
 
           const lastDate = data.lastActiveDate || '';
           let dailySec = data.dailySeconds || 0;
@@ -1069,7 +1104,9 @@
       userLastFetchedData = data;
       
       // 🟢 التحقق من الحظر عند التحديث
-      if (checkBanStatus(data)) {
+      const banStatus = checkBanStatus(data);
+      if (banStatus.isBanned) {
+          displayBanMessage(banStatus);
           return; 
       }
       
@@ -1097,8 +1134,13 @@
           
           const userData = userSnap.exists() ? userSnap.data() : {};
           
+          // 🟢 التحقق من الحظر
+          const banStatus = checkBanStatus(userData);
+          if (banStatus.isBanned) {
+              throw new Error("banned"); 
+          }
+          
           if (!userData.username) throw new Error("no-username");
-          if (checkBanStatus(userData)) throw new Error("banned"); 
           if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
 
           const promoData = promoSnap.data();
@@ -1150,7 +1192,10 @@
         } else if (e?.message === 'no-username') {
              showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
         } else if (e?.message === 'banned') {
-             showToast('لا يمكنك استخدام الكود وأنت محظور.', 'var(--danger)');
+             // 💡 يتم عرض رسالة الحظر هنا بأمان خارج الـ Transaction
+             const data = userLastFetchedData || {};
+             const banStatus = checkBanStatus(data);
+             showToast(banStatus.message, 'var(--danger)');
         }
         else {
             console.error('Promo error:', e); 
@@ -1180,7 +1225,11 @@
       const snap = await getDoc(userDocRef(currentUser.uid));
       const data = snap.exists() ? snap.data() : {};
       
-      if (checkBanStatus(data)) return; 
+      const banStatus = checkBanStatus(data);
+      if (banStatus.isBanned) {
+          displayBanMessage(banStatus);
+          return; 
+      }
 
       const lastGift = data.lastGiftDate || 'لم يتم الاستلام بعد';
       const promoUsedCount = Array.isArray(data.activatedPromos) ? data.activatedPromos.length : 0;
