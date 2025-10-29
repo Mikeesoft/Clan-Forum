@@ -537,7 +537,7 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { 
         getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction,
-        collection, query, where, getDocs 
+        collection, query, where, getDocs, increment
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // ====== config ======
@@ -589,7 +589,8 @@
 
 
     // Constants
-    const ACTIVITY_UPDATE_INTERVAL = 30; // ثواني
+    // 💡 تم زيادة الفاصل الزمني للتحديث لمرة كل 5 دقائق
+    const ACTIVITY_UPDATE_INTERVAL = 5 * 60; // 300 ثانية = 5 دقائق
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5 * 60;
     const STARS_PER_LEVEL = 50;
@@ -604,7 +605,7 @@
 
     // state
     let currentUser = null;
-    let sessionSeconds = 0;
+    let localSecondsSinceLastUpdate = 0; // 💡 إضافة مؤقت محلي
     let sessionTimer = null;
 
     // helpers
@@ -628,6 +629,7 @@
     }
     function userDocRef(uid){ return doc(db,'users', uid); }
     const usernamesCol = collection(db, 'usernames');
+    const promosCol = collection(db, 'promos'); // 💡 مرجع لمجموعة الأكواد
 
     // Levels Calculation: دالة واحدة لحساب المستوى والرتب والتقدم
     function computeRanks(stars) { 
@@ -746,7 +748,7 @@
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
 
-      // تحديث شريط التقدم بالتقدم داخل المستوى
+      // تحديث شريط التقدم بالتقدم ضمن المستوى الحالي
       progressFill.style.width = `${Math.min(progressPercent, 100)}%`; 
 
       let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
@@ -945,58 +947,97 @@
       refreshUserDoc();
     }
 
-    // Session timer awarding stars
-    function startSessionTimer() {
-      if (sessionTimer) return;
-      sessionSeconds = 0;
-      sessionTimer = setInterval(async () => {
-        sessionSeconds += ACTIVITY_UPDATE_INTERVAL;
-        if (!currentUser) return;
-        
-        const uref = userDocRef(currentUser.uid);
-        try {
-          await runTransaction(db, async (tx) => {
-            const snap = await tx.get(uref);
-            const data = snap.exists() ? snap.data() : {};
-            
-            if (!data.username || checkBanStatus(data)) return; // 🟢 منع بدء المؤقت إذا كان محظوراً
+    // Session timer awarding stars (💡 منطق مُحسَّن)
+    async function updateActivity() {
+      if (!currentUser) return;
+      
+      const uref = userDocRef(currentUser.uid);
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(uref);
+          const data = snap.exists() ? snap.data() : {};
+          
+          if (!data.username || checkBanStatus(data)) return; 
 
-            const lastDate = data.lastActiveDate || '';
-            let dailySec = data.dailySeconds || 0;
-            
-            if (lastDate !== todayDateStr()) dailySec = 0;
-            
-            dailySec = (dailySec || 0) + ACTIVITY_UPDATE_INTERVAL;
-            
-            let starsToAdd = 0;
-            while (dailySec >= SECONDS_PER_STAR) { 
-                starsToAdd += STAR_PER_5MIN; 
-                dailySec -= SECONDS_PER_STAR; 
-            }
-            
-            const currentStars = data.stars || 0;
-            const newStars = currentStars + starsToAdd;
-            const ranks = computeRanks(newStars); 
-            
-            tx.update(uref, { 
-                stars: newStars, 
-                dailySeconds: dailySec, 
-                lastActiveDate: todayDateStr(), 
-                level: ranks.level,
-                prestigeRank: ranks.prestigeRank 
-            });
-            
-            if (starsToAdd > 0) refreshUserDoc();
-
+          const lastDate = data.lastActiveDate || '';
+          let dailySec = data.dailySeconds || 0;
+          
+          // إذا كان يوم جديد، صفر عدد الثواني اليومية
+          if (lastDate !== todayDateStr()) dailySec = 0;
+          
+          // 💡 إضافة الثواني المحلية التي تم تجميعها
+          dailySec = (dailySec || 0) + localSecondsSinceLastUpdate;
+          
+          // حساب النجوم المستحقة
+          let starsToAdd = 0;
+          while (dailySec >= SECONDS_PER_STAR) { 
+              starsToAdd += STAR_PER_5MIN; 
+              dailySec -= SECONDS_PER_STAR; 
+          }
+          
+          const currentStars = data.stars || 0;
+          const newStars = currentStars + starsToAdd;
+          const ranks = computeRanks(newStars); 
+          
+          tx.update(uref, { 
+              stars: newStars, 
+              dailySeconds: dailySec, 
+              lastActiveDate: todayDateStr(), 
+              level: ranks.level,
+              prestigeRank: ranks.prestigeRank 
           });
           
-          refreshUserDoc();
-        } catch (e) { console.error('session update err', e); }
-      }, ACTIVITY_UPDATE_INTERVAL * 1000);
+          if (starsToAdd > 0) refreshUserDoc();
+
+        });
+        
+        // 💡 تصفير المؤقت المحلي بعد الكتابة الناجحة
+        localSecondsSinceLastUpdate = 0;
+        
+      } catch (e) { console.error('session update err', e); }
     }
 
-    window.addEventListener('blur', () => { if (sessionTimer) clearInterval(sessionTimer); sessionTimer = null; });
-    window.addEventListener('focus', () => { if (!sessionTimer && currentUser) startSessionTimer(); });
+
+    function startSessionTimer() {
+      if (sessionTimer) return;
+      // 💡 يتم تشغيل المؤقت كل 30 ثانية لتجميع الثواني محلياً
+      const LOCAL_UPDATE_INTERVAL = 30; 
+      
+      // 💡 يتم استدعاء updateActivity (الكتابة إلى Firestore) مرة واحدة كل 5 دقائق
+      const FIREBASE_WRITE_INTERVAL = ACTIVITY_UPDATE_INTERVAL; 
+
+      sessionTimer = setInterval(() => {
+        localSecondsSinceLastUpdate += LOCAL_UPDATE_INTERVAL;
+        
+        // تحديث الواجهة كل 30 ثانية (لإعطاء شعور بالاستجابة)
+        if (currentUser) refreshUserDoc(); 
+
+        // الكتابة إلى Firestore فقط عند الوصول للفاصل الزمني
+        if (localSecondsSinceLastUpdate >= FIREBASE_WRITE_INTERVAL) {
+            updateActivity();
+        }
+        
+      }, LOCAL_UPDATE_INTERVAL * 1000);
+    }
+    
+    // 💡 حفظ النشاط عند مغادرة الصفحة
+    window.addEventListener('beforeunload', () => { 
+        if (localSecondsSinceLastUpdate > 0) {
+             updateActivity();
+        }
+        if (sessionTimer) clearInterval(sessionTimer); 
+    });
+
+
+    window.addEventListener('blur', () => { 
+        // 💡 حفظ النشاط عند فقدان التركيز
+        if (localSecondsSinceLastUpdate > 0) updateActivity();
+        if (sessionTimer) clearInterval(sessionTimer); sessionTimer = null; 
+    });
+    window.addEventListener('focus', () => { 
+        // 💡 استئناف المؤقت عند العودة
+        if (!sessionTimer && currentUser) startSessionTimer(); 
+    });
 
 
     // refresh user doc data into UI
@@ -1016,44 +1057,61 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code (الثابت المُعدّل)
+    // promo code (💡 ربط المنطق بمجموعة Promos)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
-      const code = promoInput.value.trim();
-      const CODE_TO_APPLY = 'WELCOME1000'; 
-      const STARS_TO_ADD = 1000;          
-
+      const code = promoInput.value.trim().toUpperCase();
       if (!code) return showToast('الرجاء إدخال Promo Code صالح.', '#f39c12');
       if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
       
-      // 🟢 مؤقتاً: نستخدم الكود الثابت
-      if (code.toUpperCase() !== CODE_TO_APPLY) return showToast('Promo Code غير صحيح.', '#e74c3c');
-
       const uref = userDocRef(currentUser.uid);
+      const promoRef = doc(db, 'promos', code);
       applyPromo.disabled = true;
 
       try {
         await runTransaction(db, async (tx) => {
-          const snap = await tx.get(uref);
-          const data = snap.exists() ? snap.data() : {};
+          const userSnap = await tx.get(uref);
+          const promoSnap = await tx.get(promoRef);
           
-          if (!data.username) throw new Error("no-username");
-          if (checkBanStatus(data)) throw new Error("banned"); // 🟢 تحقق من الحظر
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          
+          if (!userData.username) throw new Error("no-username");
+          if (checkBanStatus(userData)) throw new Error("banned"); 
+          if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
 
-          if (data.activatedPromoCode === CODE_TO_APPLY) {
+          const promoData = promoSnap.data();
+          const starsToAdd = promoData.stars || 0;
+          
+          // التحقق من الاستخدام المسبق
+          if (userData.activatedPromos?.includes(code)) {
             throw new Error('CodeAlreadyUsed');
           }
           
-          const currentStars = data.stars || 0;
-          const newStars = currentStars + STARS_TO_ADD;
+          // التحقق من عدد مرات الاستخدام الأقصى
+          if (promoData.maxUses > 0 && promoData.uses >= promoData.maxUses) {
+              throw new Error('CodeExpired');
+          }
+          
+          const currentStars = userData.stars || 0;
+          const newStars = currentStars + starsToAdd;
           const ranks = computeRanks(newStars);
+          
+          // 1. تحديث مستند المستخدم
+          const activatedPromos = Array.isArray(userData.activatedPromos) ? [...userData.activatedPromos] : [];
+          activatedPromos.push(code);
           
           tx.update(uref, { 
             stars: newStars, 
             level: ranks.level,
             prestigeRank: ranks.prestigeRank,
-            activatedPromoCode: CODE_TO_APPLY, 
+            activatedPromos: activatedPromos,
+            lastPromoActivated: code,
             promoActivatedAt: serverTimestamp() 
           });
+          
+          // 2. تحديث مستند البرومو كود (زيادة عدد مرات الاستخدام)
+          tx.update(promoRef, { uses: increment(1) });
+
+          return starsToAdd;
         });
         
         showToast(`تمت إضافة ${STARS_TO_ADD.toLocaleString('en-US')} نجمة! Promo Code مفعل.`, '#3498db');
@@ -1063,6 +1121,10 @@
       catch (e) { 
         if (e.message === 'CodeAlreadyUsed') {
             showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
+        } else if (e.message === 'CodeNotFound') {
+            showToast('Promo Code غير صحيح أو لم يعد متاحًا.', '#e74c3c');
+        } else if (e.message === 'CodeExpired') {
+            showToast('انتهى العدد الأقصى لاستخدام هذا الكود.', '#e74c3c');
         } else if (e?.message === 'no-username') {
              showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
         } else if (e?.message === 'banned') {
@@ -1079,6 +1141,8 @@
 
     // signout
     if (signOutBtn) signOutBtn.addEventListener('click', async () => { 
+        // 💡 حفظ النشاط عند الخروج
+        if (localSecondsSinceLastUpdate > 0) await updateActivity();
         try { 
             await signOut(auth); 
             showToast('تم تسجيل الخروج', '#3498db'); 
@@ -1094,12 +1158,12 @@
       const snap = await getDoc(userDocRef(currentUser.uid));
       const data = snap.exists() ? snap.data() : {};
       
-      if (checkBanStatus(data)) return; // 🟢 تحقق من الحظر
+      if (checkBanStatus(data)) return; 
 
       const lastGift = data.lastGiftDate || 'لم يتم الاستلام بعد';
-      const promoUsed = data.activatedPromoCode || 'لم يتم استخدام Promo Code.';
+      const promoUsedCount = Array.isArray(data.activatedPromos) ? data.activatedPromos.length : 0;
       
-      showToast(`آخر استلام هدية: ${lastGift}. Promo Code مُفعَّل: ${promoUsed}`, '#3498db');
+      showToast(`آخر استلام هدية: ${lastGift}. تم تفعيل ${promoUsedCount} Promo Codes.`, '#3498db');
     });
     
     // Help button
