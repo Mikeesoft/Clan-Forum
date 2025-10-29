@@ -1,11 +1,11 @@
-/* main.js (النسخة التي كانت تعمل لديك على التابلت) */
+/* main.js (النسخة النهائية والمُدمجة والمُحسَّنة) */
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup, // 💡 تم العودة إلى signInWithPopup
+  signInWithPopup,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -26,9 +26,9 @@ import {
   getDocs 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ====== تكوين Firebase (الرجاء التأكد من صحة هذه البيانات) ====== */
+/* ====== تكوين Firebase (ضع هنا بيانات مشروعك الحقيقية) ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", 
+  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ استبدل هذا بـ API Key الحقيقي
   authDomain: "clan-forum.firebaseapp.com",
   projectId: "clan-forum",
   storageBucket: "clan-forum.firebasestorage.app",
@@ -139,7 +139,6 @@ function listenPost() {
 if (likeBtn) {
   likeBtn.addEventListener("click", async () => {
     if (!auth.currentUser) {
-      // 💡 العودة لـ signInWithPopup
       try { await signInWithPopup(auth, provider); } 
       catch { return showToast("يجب تسجيل الدخول أولاً."); }
     }
@@ -196,6 +195,7 @@ function createCommentElement(docData) {
     div.classList.add("comment");
     const author = docData.authorName || "عضو";
     let created = "";
+    // نستخدم toDate() فقط إذا كانت موجودة (لبيانات Firestore)
     if (docData.createdAt?.toDate) {
       created = docData.createdAt.toDate().toLocaleString();
     } else if (docData.createdAt instanceof Date) {
@@ -261,7 +261,6 @@ async function loadComments(initial = false) {
 /* ====== منع تكرار صندوق التعليق وإرساله ====== */
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
-    // 💡 العودة لـ signInWithPopup
     try { 
       await signInWithPopup(auth, provider).catch(() => {
           throw new Error("Login failed");
@@ -357,7 +356,6 @@ function bindAuthUI() {
       // المستخدم غير مسجل دخوله
       loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
       
-      // 💡 العودة لـ signInWithPopup
       document.getElementById("googleLoginBtn").onclick = () => {
         signInWithPopup(auth, provider).then(() => {
             showToast("تم تسجيل الدخول بنجاح", "success");
@@ -389,7 +387,7 @@ function renderMessage(docData, currentUid, docId) {
 
   const msg = document.createElement("div");
   msg.className = `msg ${isMe ? "sent" : "received"}`;
-  msg.setAttribute('data-doc-id', docId); 
+  msg.setAttribute('data-doc-id', docId); // لسهولة العثور عليها وحذفها/تعديلها
   
   // بناء الرسالة بناءً على ما إذا كانت مُرسَلة أو مُستلَمة
   msg.innerHTML = `
@@ -424,6 +422,7 @@ async function bindChatRealtime() {
   // 💡 استخدام snapshot.docChanges() لتحسين الأداء
   unsubscribeChat = onSnapshot(q, (snapshot) => {
     
+    // التحقق من التمرير للأسفل (قبل المعالجة)
     const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop < chatMessages.clientHeight + 100;
 
     const user = auth.currentUser;
@@ -469,7 +468,6 @@ async function bindChatRealtime() {
 async function sendChatMessage(text) {
   if (!text) return;
   if (!auth.currentUser) {
-    // 💡 استخدام signInWithPopup
     try {
       await signInWithPopup(auth, provider);
     } catch {
