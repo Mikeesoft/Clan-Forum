@@ -77,7 +77,6 @@
         min-width: 300px;
     }
     .avatar-wrap { position:relative; width:100px; height:100px; flex:0 0 100px }
-    /* صورة افتراضية للمساعدة في التصميم إذا لم تُحمّل الصورة الحقيقية */
     .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--accent); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
     .avatar-edit { position:absolute; right:0; bottom:0; background:var(--accent); color:#fff; width:30px; height:30px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid #000; font-size: 0.9em; transition:background 0.2s }
     .avatar-edit:hover { background:#2980b9 }
@@ -101,6 +100,7 @@
         display: flex;
         align-items: center;
         color: var(--muted);
+        flex-wrap: wrap; /* للسماح للزر بالانتقال لسطر جديد عند الحاجة */
     }
     .username-tag {
         font-weight: 700;
@@ -177,6 +177,7 @@
         gap: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         transition: transform 0.15s ease, background-color 0.2s;
+        cursor: pointer; /* تأكيد أن الزر قابل للنقر */
     }
     .gift-btn:active { transform: translateY(1px); }
     .reward-desc { font-size: 0.9em; color: var(--muted); margin: 8px 0 0; }
@@ -210,6 +211,7 @@
         padding: 8px 12px;
         border-radius: 8px;
         box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+        cursor: pointer;
     }
     
     /* شريط النشاط اليومي */
@@ -292,23 +294,13 @@
         color: var(--accent);
         font-size: 1.2rem;
         transition: background 0.2s, transform 0.2s;
+        cursor: pointer;
     }
 
     .admin-btn:hover {
         background: rgba(255, 255, 255, 0.2);
         transform: rotate(90deg);
     }
-
-    /* Banned Message Styling (تم إزالتها من الكود لكن ستبقي التنسيق احتياطياً) */
-    .ban-message-area {
-        text-align:center; 
-        padding:50px; 
-        color:var(--danger); 
-        background: var(--card-bg);
-        border-radius: 12px;
-        margin-top: 50px;
-    }
-
 
     /* Toast & Alerts */
     .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,var(--success),#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
@@ -415,7 +407,7 @@
         .profile-info h2 { font-size: 1.4rem; }
         .profile-info .identity-line { font-size: 0.9rem; }
         .username-tag { margin-inline-end: 8px; padding: 1px 6px; }
-        .content-grid { gap: 15px; }
+        .content-grid { grid-template-columns: 1fr; }
         .content-grid > div { min-width: unset; }
         .minutes-count { width: 60px; }
     }
@@ -576,7 +568,7 @@
     const progressFill = document.getElementById('progressFill');
     const statStars = document.getElementById('statStars');
     const statLevel = document.getElementById('statLevel');
-    const overallProgressLabel = document.querySelector('.progress-label'); // NEW REF
+    const overallProgressLabel = document.querySelector('.progress-label'); 
 
     const giftBtn = document.getElementById('giftBtn');
     const claimNotification = document.getElementById('claimNotification');
@@ -649,7 +641,6 @@
         const MAX_STARS_BEFORE_PRESTIGE = MAX_LEVEL * STARS_PER_LEVEL; // 5000 نجمة
 
         // 1. حساب المستوى الأساسي (المستوى المرئي من 0 إلى 100)
-        // إذا كان أقل من 5000 نجمة، نحسب المستوى العادي.
         const baseLevel = Math.min(Math.floor(stars / STARS_PER_LEVEL), MAX_LEVEL);
 
         // 2. حساب الرتبة الفخرية (Prestige Rank)
@@ -657,24 +648,15 @@
         let starsInLevelCycle = stars;
 
         if (stars >= MAX_STARS_BEFORE_PRESTIGE) {
-            // النجوم الزائدة عن المستوى 100
             const starsBeyondMaxLevel = stars - MAX_STARS_BEFORE_PRESTIGE;
-            
-            // كل STARS_FOR_PRESTIGE (500) نجمة إضافية هي رتبة فخرية واحدة
             const prestigeCycleCount = Math.floor(starsBeyondMaxLevel / STARS_FOR_PRESTIGE);
-            
-            // اختيار الرمز (نستخدم index من 0 إلى 5)
             prestigeRankIndex = Math.min(prestigeCycleCount, PRESTIGE_SYMBOLS.length - 1);
-            
-            // لتحديث شريط التقدم: نستخدم النجوم المتبقية في دورة الـ 500 نجمة
             starsInLevelCycle = starsBeyondMaxLevel % STARS_FOR_PRESTIGE;
         } else {
-             // إذا كنا تحت مستوى 100، النجوم في الدورة هي النجوم الكلية
-            starsInLevelCycle = stars;
+             starsInLevelCycle = stars;
         }
 
         // 3. حساب التقدم ضمن المستوى الحالي (لشريط الملء)
-        // التقدم دائماً يحسب من 0 إلى 50 نجمة.
         const starsInCurrentLevel = starsInLevelCycle % STARS_PER_LEVEL;
         const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
 
@@ -682,11 +664,11 @@
             level: baseLevel, 
             prestigeRank: prestigeRankIndex, 
             progressPercent: progressPercent,
-            starsInLevelCycle: starsInLevelCycle // النجوم ضمن دورة الـ 500 نجمة أو 5000 نجمة
+            starsInLevelCycle: starsInLevelCycle 
         };
     }
 
-    // دالة تحديث حالة زر الهدية (مُضافة)
+    // دالة تحديث حالة زر الهدية 
     function updateGiftButtonState(lastGiftDate) {
       if (!giftBtn) return;
       const today = todayDateStr();
@@ -712,7 +694,6 @@
         saveUsernameBtn.onclick = async () => {
             const username = usernameInput.value.trim().toLowerCase();
             
-            // 1. التحقق من صحة اليوزر (أحرف إنجليزية وأرقام فقط)
             if (!/^[a-z0-9]{3,16}$/.test(username)) {
                 usernameFeedback.textContent = 'يجب أن يكون اليوزر بين 3 و 16 حرفًا أو رقمًا (بالإنجليزية فقط).';
                 return;
@@ -731,7 +712,7 @@
                     return;
                 }
                 
-                // 3. اليوزر متاح، الآن نحفظه في مستند المستخدم وننشئ مدخل البحث
+                // 3. اليوزر متاح، الآن نحفظه
                 const uref = userDocRef(user.uid);
                 
                 await runTransaction(db, async (tx) => {
@@ -756,7 +737,7 @@
         };
     }
 
-    // UI updater - 🟢 تم التعديل لعرض الرتب الفخرية وتحديث وصف شريط التقدم
+    // UI updater - 🟢 تم تطبيق زر اقتراح اليوزر
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
@@ -769,10 +750,7 @@
       const progressPercent = ranks.progressPercent;
       const starsInLevelCycle = ranks.starsInLevelCycle;
 
-      // منطق الأدمن: إظهار زر الإعدادات
-      if (adminTools) {
-          adminTools.style.display = isAdmin ? 'flex' : 'none';
-      }
+      if (adminTools) adminTools.style.display = isAdmin ? 'flex' : 'none';
       
       // 1. تحديث الاسم وشارة التوثيق
       const name = currentUser.displayName || 'مستخدم';
@@ -789,10 +767,21 @@
             <span class="email-text-muted">${currentUser.email || ''}</span>
         `;
       } else {
-        identityLineEl.innerHTML = `<span class="email-text-muted">${currentUser.email || ''}</span>`;
+        // 💡 إظهار خيار لتعيين اليوزر
+        identityLineEl.innerHTML = `
+            <span class="email-text-muted">${currentUser.email || ''}</span>
+            <button id="chooseUsernameHint" class="help-btn" style="padding: 4px 8px; font-size: 0.85em; margin-inline-start: 10px;">
+                <i class="fas fa-edit"></i> اختر يوزر المستخدم
+            </button>
+        `;
+        // ربط الزر بفتح الـ Modal بعد 100ms لضمان إنشاء العنصر
+        setTimeout(() => {
+            const hintBtn = document.getElementById('chooseUsernameHint');
+            if (hintBtn) hintBtn.onclick = () => handleUsernameSelection(currentUser);
+        }, 100);
       }
       
-      // 3. تحديث حالة زر الهدية (مُضاف)
+      // 3. تحديث حالة زر الهدية
       updateGiftButtonState(lastGiftDate);
 
       // 4. تحديث المستوى والرتب الفخرية
@@ -800,14 +789,12 @@
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
 
-      // تحديث شريط التقدم بالتقدم ضمن المستوى الحالي
       progressFill.style.width = `${Math.min(progressPercent, 100)}%`; 
 
       let rankSymbol = PRESTIGE_SYMBOLS[prestigeRankIndex] || PRESTIGE_SYMBOLS[0];
       let displayLevel = level;
       
       if (prestigeRankIndex > 0) {
-        // إذا كان هناك رتبة فخرية، عرض الرمز و المستوى 100
         levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol} ${displayLevel}</span>`;
         statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${displayLevel}</span>`;
       } else {
@@ -831,7 +818,7 @@
           overallProgressLabel.innerHTML = `تقدم المستوى الكلي (<strong>${formattedStars}</strong> نجمة): ${nextMilestone}`;
       }
 
-      // 🟢 تحديث النشاط
+      // 6. تحديث النشاط
       if (typeof data.dailySeconds === 'number') {
         const totalSeconds = (data.dailySeconds || 0) + localSecondsSinceLastUpdate;
         const mins = Math.floor(totalSeconds / 60);
@@ -958,6 +945,7 @@
         const currentSnap = await getDoc(uref);
         const currentData = currentSnap.data() || {};
         
+        // 💡 التحقق السريع من اليوزر قبل الـ Transaction
         if (!currentData.username) return showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
         
         giftBtn.disabled = true;
@@ -971,8 +959,6 @@
 
             const data = snap.data();
             
-            if (!data.username) throw new Error("no-username"); 
-
             // التحقق من الاستلام
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
@@ -997,7 +983,6 @@
           updateGiftButtonState(currentData.lastGiftDate || null);
           
           if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
-          else if (e?.message === 'no-username') showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
           else { 
             console.error('claim err (transaction failed)', e); 
             showToast('فشل استلام الهدية. (يرجى مراجعة قواعد الأمان)', '#e74c3c'); 
