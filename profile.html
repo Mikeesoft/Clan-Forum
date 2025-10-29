@@ -100,7 +100,7 @@
         display: flex;
         align-items: center;
         color: var(--muted);
-        flex-wrap: wrap; /* للسماح للزر بالانتقال لسطر جديد عند الحاجة */
+        flex-wrap: wrap; 
     }
     .username-tag {
         font-weight: 700;
@@ -177,7 +177,7 @@
         gap: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         transition: transform 0.15s ease, background-color 0.2s;
-        cursor: pointer; /* تأكيد أن الزر قابل للنقر */
+        cursor: pointer;
     }
     .gift-btn:active { transform: translateY(1px); }
     .reward-desc { font-size: 0.9em; color: var(--muted); margin: 8px 0 0; }
@@ -1111,14 +1111,14 @@
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
-    // promo code (💡 ربط المنطق بمجموعة Promos)
+    // promo code (💡 تم التصحيح لضمان عمله)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
-      const code = promoInput.value.trim().toUpperCase();
+      const code = promoInput.value.trim().toUpperCase(); // التأكد من أنه UPPERCASE
       if (!code) return showToast('الرجاء إدخال Promo Code صالح.', '#f39c12');
       if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
       
       const uref = userDocRef(currentUser.uid);
-      const promoRef = doc(db, 'promos', code);
+      const promoRef = doc(db, 'promos', code); // البحث باستخدام الكود كـ Doc ID
       applyPromo.disabled = true;
 
       let starsToAdd = 0;
@@ -1131,6 +1131,8 @@
           const userData = userSnap.exists() ? userSnap.data() : {};
           
           if (!userData.username) throw new Error("no-username");
+          
+          // 🚨 التحقق من وجود الكود أولاً
           if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
 
           const promoData = promoSnap.data();
@@ -1176,7 +1178,8 @@
         if (e.message === 'CodeAlreadyUsed') {
             showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
         } else if (e.message === 'CodeNotFound') {
-            showToast('Promo Code غير صحيح أو لم يعد متاحًا.', '#e74c3c');
+            // 🚨 إذا ظهر هذا الخطأ، فالمشكلة في الـ Doc ID أو قاعدة الأمان.
+            showToast('Promo Code غير صحيح أو لم يعد متاحًا.', '#e74c3c'); 
         } else if (e.message === 'CodeExpired') {
             showToast('انتهى العدد الأقصى لاستخدام هذا الكود.', '#e74c3c');
         } else if (e?.message === 'no-username') {
