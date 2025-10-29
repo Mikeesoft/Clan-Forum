@@ -1,12 +1,11 @@
-/* main.js (الكود النهائي المُحدَّث للمصادقة وللأداء) */
+/* main.js (النسخة التي كانت تعمل لديك على التابلت) */
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect, // 💡 تحويل إلى Redirect للمصادقة الموثوقة على الهاتف
-  getRedirectResult,  // 💡 لمعالجة النتيجة بعد إعادة التوجيه
+  signInWithPopup, // 💡 تم العودة إلى signInWithPopup
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -27,9 +26,9 @@ import {
   getDocs 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ====== تكوين Firebase (الرجاء استبدال هذا ببياناتك الحقيقية) ====== */
+/* ====== تكوين Firebase (الرجاء التأكد من صحة هذه البيانات) ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ✅ تم تصحيح تنسيق الفواصل
+  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", 
   authDomain: "clan-forum.firebaseapp.com",
   projectId: "clan-forum",
   storageBucket: "clan-forum.firebasestorage.app",
@@ -111,20 +110,6 @@ function formatTime(ts) {
   }
 }
 
-/* ====== معالجة نتيجة إعادة التوجيه (Redirect Result Handler) ====== */
-async function handleRedirectResult() {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      // تم تسجيل الدخول بنجاح بعد إعادة التوجيه
-      showToast("تم تسجيل الدخول بنجاح", "success");
-    }
-  } catch (error) {
-    console.error("Error during redirect result:", error);
-    showToast("فشل معالجة تسجيل الدخول بعد التحويل.", "error");
-  }
-}
-
 /* ====== تأكيد وجود المستند الرئيسي (Initialization) ====== */
 async function ensureDoc() {
   const snap = await getDoc(postRef);
@@ -154,8 +139,8 @@ function listenPost() {
 if (likeBtn) {
   likeBtn.addEventListener("click", async () => {
     if (!auth.currentUser) {
-      // 💡 استخدام signInWithRedirect
-      try { await signInWithRedirect(auth, provider); return; } 
+      // 💡 العودة لـ signInWithPopup
+      try { await signInWithPopup(auth, provider); } 
       catch { return showToast("يجب تسجيل الدخول أولاً."); }
     }
     const user = auth.currentUser;
@@ -276,12 +261,15 @@ async function loadComments(initial = false) {
 /* ====== منع تكرار صندوق التعليق وإرساله ====== */
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
-    // 💡 استخدام signInWithRedirect
+    // 💡 العودة لـ signInWithPopup
     try { 
-      await signInWithRedirect(auth, provider);
-      return;
+      await signInWithPopup(auth, provider).catch(() => {
+          throw new Error("Login failed");
+      });
     } catch (e) { 
-      return showToast("يجب تسجيل الدخول للتعليق."); 
+      if (e.message === "Login failed") {
+        return showToast("يجب تسجيل الدخول للتعليق."); 
+      }
     }
   }
 
@@ -369,9 +357,12 @@ function bindAuthUI() {
       // المستخدم غير مسجل دخوله
       loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
       
-      // 💡 التعديل هنا: استخدام signInWithRedirect
+      // 💡 العودة لـ signInWithPopup
       document.getElementById("googleLoginBtn").onclick = () => {
-        signInWithRedirect(auth, provider).catch((error) => {
+        signInWithPopup(auth, provider).then(() => {
+            showToast("تم تسجيل الدخول بنجاح", "success");
+        })
+        .catch((error) => {
             console.error("Authentication Error:", error);
             showToast("فشل تسجيل الدخول. (رمز الخطأ: " + (error.code || "غير معروف") + ")", "error");
         });
@@ -400,6 +391,7 @@ function renderMessage(docData, currentUid, docId) {
   msg.className = `msg ${isMe ? "sent" : "received"}`;
   msg.setAttribute('data-doc-id', docId); 
   
+  // بناء الرسالة بناءً على ما إذا كانت مُرسَلة أو مُستلَمة
   msg.innerHTML = `
     ${isMe ? `
       <div class="bubble">
@@ -477,10 +469,9 @@ async function bindChatRealtime() {
 async function sendChatMessage(text) {
   if (!text) return;
   if (!auth.currentUser) {
-    // 💡 استخدام signInWithRedirect
+    // 💡 استخدام signInWithPopup
     try {
-      await signInWithRedirect(auth, provider);
-      return;
+      await signInWithPopup(auth, provider);
     } catch {
       return showToast("يجب تسجيل الدخول لإرسال رسالة.");
     }
@@ -558,16 +549,8 @@ chatInput.addEventListener("keydown", async (e) => {
 
 /* ====== init ====== */
 (async function init() {
-  // 💡 1. معالجة نتيجة إعادة التوجيه في البداية (لتلقي نتيجة تسجيل الدخول)
-  await handleRedirectResult(); 
-
-  // 2. ضمان وجود المستند الرئيسي
   await ensureDoc();
-  
-  // 3. ربط واجهة المصادقة
   bindAuthUI();
-  
-  // 4. تحميل أول مجموعة من التعليقات
+  // تحميل أول مجموعة من التعليقات
   loadComments(true); 
-  
 })();
