@@ -589,8 +589,8 @@
 
 
     // Constants
-    // 💡 تم زيادة الفاصل الزمني للتحديث لمرة كل 5 دقائق
-    const ACTIVITY_UPDATE_INTERVAL = 5 * 60; // 300 ثانية = 5 دقائق
+    const ACTIVITY_UPDATE_INTERVAL = 5 * 60; // 300 ثانية = 5 دقائق (فاصل زمني للكتابة على Firebase)
+    const LOCAL_UPDATE_INTERVAL = 30; // 30 ثانية (فاصل زمني لتحديث العداد المحلي)
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5 * 60;
     const STARS_PER_LEVEL = 50;
@@ -605,8 +605,9 @@
 
     // state
     let currentUser = null;
-    let localSecondsSinceLastUpdate = 0; // 💡 إضافة مؤقت محلي
+    let localSecondsSinceLastUpdate = 0; 
     let sessionTimer = null;
+    let userLastFetchedData = null; // للاحتفاظ بآخر بيانات تم جلبها من Firestore
 
     // helpers
     function showToast(msg, color = '#2ecc71') {
@@ -629,7 +630,7 @@
     }
     function userDocRef(uid){ return doc(db,'users', uid); }
     const usernamesCol = collection(db, 'usernames');
-    const promosCol = collection(db, 'promos'); // 💡 مرجع لمجموعة الأكواد
+    const promosCol = collection(db, 'promos'); 
 
     // Levels Calculation: دالة واحدة لحساب المستوى والرتب والتقدم
     function computeRanks(stars) { 
@@ -709,7 +710,7 @@
         };
     }
 
-    // UI updater
+    // UI updater - 🟢 تم تعديل هذا الجزء ليعرض التقدم المحلي للنشاط
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
@@ -762,8 +763,10 @@
         statLevel.textContent = level;
       }
 
+      // 🟢 تحديث النشاط (يأخذ بعين الاعتبار الثواني المجمعة محلياً)
       if (typeof data.dailySeconds === 'number') {
-        const mins = Math.floor((data.dailySeconds || 0) / 60);
+        const totalSeconds = (data.dailySeconds || 0) + localSecondsSinceLastUpdate;
+        const mins = Math.floor(totalSeconds / 60);
         todayMinutesEl.textContent = mins;
         
         const dailyPercent = Math.min((mins / DAILY_MINS_GOAL) * 100, 100);
@@ -774,6 +777,21 @@
       }
     }
     
+    // دالة تحديث العرض المحلي للدقائق فقط (تستدعى كل 30 ثانية)
+    function updateLocalMinutesDisplay() {
+        if (!userLastFetchedData) return;
+        const data = userLastFetchedData; 
+        
+        if (typeof data.dailySeconds === 'number') {
+            const totalSeconds = (data.dailySeconds || 0) + localSecondsSinceLastUpdate;
+            const mins = Math.floor(totalSeconds / 60);
+            todayMinutesEl.textContent = mins;
+            
+            const dailyPercent = Math.min((mins / DAILY_MINS_GOAL) * 100, 100);
+            dailyBar.style.width = `${dailyPercent}%`;
+        }
+    }
+
     // 🟢 دالة جديدة: التحقق من حالة الحظر
     function checkBanStatus(data) {
         const isPermanent = data.isBannedPermanent === true;
@@ -836,6 +854,7 @@
         
         profileImageEl.src = currentUser.photoURL || DEFAULT_AVATAR_PLACEHOLDER; 
         
+        userLastFetchedData = initialData; // حفظ البيانات
         updateUIFromData(initialData); 
         handleUsernameSelection(currentUser);
         return; 
@@ -856,6 +875,8 @@
         }
         
         profileImageEl.src = photoSource || DEFAULT_AVATAR_PLACEHOLDER; 
+        
+        userLastFetchedData = initialData; // حفظ البيانات
         
         if (!initialData.username) {
             updateUIFromData(initialData); 
@@ -947,7 +968,7 @@
       refreshUserDoc();
     }
 
-    // Session timer awarding stars (💡 منطق مُحسَّن)
+    // Session timer awarding stars (🟢 منطق مُحسَّن لتقليل القراءة)
     async function updateActivity() {
       if (!currentUser) return;
       
@@ -1000,19 +1021,16 @@
 
     function startSessionTimer() {
       if (sessionTimer) return;
-      // 💡 يتم تشغيل المؤقت كل 30 ثانية لتجميع الثواني محلياً
-      const LOCAL_UPDATE_INTERVAL = 30; 
       
-      // 💡 يتم استدعاء updateActivity (الكتابة إلى Firestore) مرة واحدة كل 5 دقائق
       const FIREBASE_WRITE_INTERVAL = ACTIVITY_UPDATE_INTERVAL; 
 
       sessionTimer = setInterval(() => {
         localSecondsSinceLastUpdate += LOCAL_UPDATE_INTERVAL;
         
-        // تحديث الواجهة كل 30 ثانية (لإعطاء شعور بالاستجابة)
-        if (currentUser) refreshUserDoc(); 
+        // 🟢 تحديث العرض المحلي للدقائق دون قراءة من Firestore
+        if (currentUser) updateLocalMinutesDisplay(); 
 
-        // الكتابة إلى Firestore فقط عند الوصول للفاصل الزمني
+        // الكتابة إلى Firestore فقط عند الوصول للفاصل الزمني (5 دقائق)
         if (localSecondsSinceLastUpdate >= FIREBASE_WRITE_INTERVAL) {
             updateActivity();
         }
@@ -1047,6 +1065,9 @@
       if (!snap.exists()) return;
       const data = snap.data();
       
+      // 🟢 تحديث البيانات المجلوبة الأخيرة
+      userLastFetchedData = data;
+      
       // 🟢 التحقق من الحظر عند التحديث
       if (checkBanStatus(data)) {
           return; 
@@ -1067,6 +1088,8 @@
       const promoRef = doc(db, 'promos', code);
       applyPromo.disabled = true;
 
+      let starsToAdd = 0;
+
       try {
         await runTransaction(db, async (tx) => {
           const userSnap = await tx.get(uref);
@@ -1079,7 +1102,7 @@
           if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
 
           const promoData = promoSnap.data();
-          const starsToAdd = promoData.stars || 0;
+          starsToAdd = promoData.stars || 0; // يتم تعيين القيمة هنا
           
           // التحقق من الاستخدام المسبق
           if (userData.activatedPromos?.includes(code)) {
@@ -1111,10 +1134,9 @@
           // 2. تحديث مستند البرومو كود (زيادة عدد مرات الاستخدام)
           tx.update(promoRef, { uses: increment(1) });
 
-          return starsToAdd;
         });
         
-        showToast(`تمت إضافة ${STARS_TO_ADD.toLocaleString('en-US')} نجمة! Promo Code مفعل.`, '#3498db');
+        showToast(`تمت إضافة ${starsToAdd.toLocaleString('en-US')} نجمة! Promo Code مفعل.`, '#3498db');
         refreshUserDoc();
         promoInput.value = '';
       }
