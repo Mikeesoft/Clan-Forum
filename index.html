@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>المنتدى</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <meta name="description" content="منتدى العشيرة - منصة عربية للتواصل الهادف، تبادل الخبرات، والمشاركة في المجموعات المتخصصة. انضم إلينا الآن.">
+  <title>المنتدى - تواصل وشارك</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;600&display=swap&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <link rel="stylesheet" href="style.css">
   <style>
-    /* إخفاء الأقسام غير الرئيسية افتراضيًا */
+    /* إخفاء الأقسام غير الرئيسية افتراضيًا (يمكن نقلها لـ style.css لاحقاً) */
     .page-section { display: none; }
     .page-section.active { display: block; }
   </style>
@@ -17,11 +20,11 @@
   <header class="main-header">
     <nav class="navbar">
       <div class="nav-right">
-        <a href="#" class="nav-icon active" data-section="home"><i class="fas fa-home"></i><span>الرئيسية</span></a>
-        <a href="#" class="nav-icon" data-section="members"><i class="fas fa-users"></i><span>الأعضاء</span></a>
-        <a href="#" class="nav-icon" data-section="groups"><i class="fas fa-layer-group"></i><span>المجموعات</span></a>
-        <a href="#" class="nav-icon" data-section="notifications"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
-        <a href="#" class="nav-icon" data-section="updates"><i class="fas fa-sync-alt"></i><span>التحديثات</span></a>
+        <a href="#home" class="nav-icon active" data-section="home" aria-label="الرئيسية"><i class="fas fa-home"></i><span>الرئيسية</span></a>
+        <a href="#members" class="nav-icon" data-section="members" aria-label="الأعضاء"><i class="fas fa-users"></i><span>الأعضاء</span></a>
+        <a href="#groups" class="nav-icon" data-section="groups" aria-label="المجموعات"><i class="fas fa-layer-group"></i><span>المجموعات</span></a>
+        <a href="#notifications" class="nav-icon" data-section="notifications" aria-label="الإشعارات"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
+        <a href="#updates" class="nav-icon" data-section="updates" aria-label="التحديثات"><i class="fas fa-sync-alt"></i><span>التحديثات</span></a>
       </div>
       <div id="loginBtnContainer" class="nav-left">
         <button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>
@@ -33,17 +36,16 @@
     <section id="home" class="page-section active">
       <div class="admin-message-section">
         <div class="message-card">
-          <h2>رسالة من إدارة المنتدى</h2>
+          <h3>رسالة من إدارة المنتدى</h3> 
           <p>
           أهلاً وسهلاً بكم في منتدى العشيرة! هذا المكان مخصص للتواصل الهادف وتبادل الخبرات بين الأعضاء.  
                 نرجو من الجميع الالتزام بقوانين المنتدى واحترام الآخرين. نتمنى لكم وقتاً ممتعاً ومفيداً معنا.
           </p>
           <div class="message-actions">
-            <button id="likeBtn" class="action-btn like-btn">
-              <i class="fas fa-heart"></i>
-              <span>إعجاب (<span id="likeCount">0</span>)</span>
+            <button id="likeBtn" class="action-btn like-btn" aria-label="أعجبني">
+              <i class="far fa-heart"></i> <span>إعجاب (<span id="likeCount">0</span>)</span>
             </button>
-            <button id="commentBtn" class="action-btn comment-btn">
+            <button id="commentBtn" class="action-btn comment-btn" aria-label="إضافة تعليق">
               <i class="fas fa-comment"></i>
               <span>تعليق</span>
             </button>
@@ -74,19 +76,19 @@
     </section>
   </main>
 
-  <button id="chatBtn" class="chat-fab">
+  <button id="chatBtn" class="chat-fab" aria-label="فتح الدردشة العامة">
     <i class="fas fa-globe"></i>
   </button>
 
-  <div id="chatWindow" class="chat-window">
+  <div id="chatWindow" class="chat-window" aria-modal="true" role="dialog">
     <div class="chat-header">
       <span><i class="fas fa-comments"></i> المحادثة العامة</span>
-      <button id="closeChat" class="close-btn">&times;</button>
+      <button id="closeChat" class="close-btn" aria-label="إغلاق نافذة الدردشة">&times;</button>
     </div>
     <div id="chatMessages" class="chat-messages"></div>
     <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="اكتب رسالة..." />
-      <button id="sendMsg" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+      <input type="text" id="chatInput" placeholder="اكتب رسالة..." aria-label="رسالة الدردشة" />
+      <button id="sendMsg" class="send-btn" aria-label="إرسال الرسالة"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 
