@@ -23,7 +23,7 @@ import {
   startAfter,
   onSnapshot,
   serverTimestamp,
-  getDocs // 👈 تم إضافة getDocs لـ loadComments
+  getDocs 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 /* ====== تكوين Firebase (ضع هنا بيانات مشروعك الحقيقية) ====== */
@@ -216,9 +216,14 @@ async function loadComments(initial = false) {
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
     try { 
-      await signInWithPopup(auth, provider); 
-    } catch { 
-      return showToast("يجب تسجيل الدخول للتعليق."); 
+      // 💡 إضافة catch لمعالجة خطأ تسجيل الدخول
+      await signInWithPopup(auth, provider).catch(() => {
+          throw new Error("Login failed");
+      });
+    } catch (e) { 
+      if (e.message === "Login failed") {
+        return showToast("يجب تسجيل الدخول للتعليق."); 
+      }
     }
   }
 
@@ -266,7 +271,7 @@ function bindAuthUI() {
       // المستخدم مسجل دخوله
       const name = escapeHtml(user.displayName || "مستخدم");
       const photo = user.photoURL
-        ? `<img src="${user.photoURL}" alt="${name}" loading="lazy">` // إضافة loading="lazy" لتحسين الأداء
+        ? `<img src="${user.photoURL}" alt="${name}" loading="lazy">` 
         : `<i class="fas fa-user-circle" style="margin-inline-end:8px; font-size: 28px;"></i>`;
       loginContainer.innerHTML = `
         <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
@@ -281,9 +286,16 @@ function bindAuthUI() {
     } else {
       // المستخدم غير مسجل دخوله
       loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
+      
+      // 🟢 الكود المُصحَّح هنا: إضافة .catch لمعالجة الفشل في تسجيل الدخول
       document.getElementById("googleLoginBtn").onclick = () => {
         signInWithPopup(auth, provider).then(() => {
             showToast("تم تسجيل الدخول بنجاح", "success");
+        })
+        .catch((error) => {
+            console.error("Authentication Error:", error);
+            // إظهار رسالة خطأ أكثر وضوحاً
+            showToast("فشل تسجيل الدخول. (رمز الخطأ: " + (error.code || "غير معروف") + ")", "error");
         });
       };
     }
