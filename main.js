@@ -1,12 +1,11 @@
-/* main.js (النسخة النهائية والمُدمجة والمُحسَّنة للمصادقة عبر الهاتف) */
+/* main.js (النسخة النهائية والمُدمجة والمُحسَّنة) */
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect, // 💡 تم التغيير إلى Redirect
-  getRedirectResult,  // 💡 إضافة دالة معالجة النتيجة
+  signInWithPopup,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -111,23 +110,6 @@ function formatTime(ts) {
   }
 }
 
-/* ====== معالجة نتيجة إعادة التوجيه (Redirect Result Handler) ====== */
-async function handleRedirectResult() {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      // تم تسجيل الدخول بنجاح بعد إعادة التوجيه
-      showToast("تم تسجيل الدخول بنجاح", "success");
-      // لا تحتاج لعمل شيء إضافي هنا، لأن onAuthStateChanged ستتعامل مع باقي الواجهة
-    }
-  } catch (error) {
-    console.error("Error during redirect result:", error);
-    // يمكن هنا إظهار رسالة خطأ إضافية للمستخدم
-    showToast("فشل معالجة تسجيل الدخول بعد التحويل.", "error");
-  }
-}
-
-
 /* ====== تأكيد وجود المستند الرئيسي (Initialization) ====== */
 async function ensureDoc() {
   const snap = await getDoc(postRef);
@@ -144,6 +126,7 @@ function listenPost() {
     likeCountSpan.textContent = data.likes ?? 0;
 
     const user = auth.currentUser;
+    // التحقق من حالة الإعجاب للمستخدم الحالي
     if (user && Array.isArray(data.likedBy) && data.likedBy.includes(user.uid)) {
       likeBtn.classList.add("liked");
     } else {
@@ -156,11 +139,7 @@ function listenPost() {
 if (likeBtn) {
   likeBtn.addEventListener("click", async () => {
     if (!auth.currentUser) {
-      // 💡 استخدام signInWithRedirect عند محاولة الإعجاب
-      try { 
-        await signInWithRedirect(auth, provider); 
-        return; // الخروج من الدالة لأن المتصفح سيُعاد توجيهه
-      } 
+      try { await signInWithPopup(auth, provider); } 
       catch { return showToast("يجب تسجيل الدخول أولاً."); }
     }
     const user = auth.currentUser;
@@ -177,12 +156,14 @@ if (likeBtn) {
         const data = snap.data();
         const likedBy = Array.isArray(data.likedBy) ? [...data.likedBy] : [];
         if (likedBy.includes(user.uid)) {
+          // إلغاء الإعجاب
           tx.update(postRef, {
             likedBy: likedBy.filter(id => id !== user.uid),
             likes: Math.max((data.likes || 1) - 1, 0)
           });
           showToast("تم إلغاء الإعجاب.", "error");
         } else {
+          // إضافة الإعجاب
           likedBy.push(user.uid);
           tx.update(postRef, {
             likedBy,
@@ -201,17 +182,26 @@ if (likeBtn) {
 }
 
 // =========================================================
-// ====== التعليقات (Load More) ======
+// ====== التعليقات (Load More) - وظيفة مُحسَّنة للـ DOM ======
 // =========================================================
 let lastVisible = null;
 const COMMENTS_LIMIT = 3;
 
+/**
+ * دالة لإنشاء عنصر التعليق في DOM
+ */
 function createCommentElement(docData) {
     const div = document.createElement("div");
     div.classList.add("comment");
     const author = docData.authorName || "عضو";
     let created = "";
-    if (docData.createdAt?.toDate) created = docData.createdAt.toDate().toLocaleString();
+    // نستخدم toDate() فقط إذا كانت موجودة (لبيانات Firestore)
+    if (docData.createdAt?.toDate) {
+      created = docData.createdAt.toDate().toLocaleString();
+    } else if (docData.createdAt instanceof Date) {
+      created = docData.createdAt.toLocaleString();
+    }
+    
 
     div.innerHTML = `
         <div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
@@ -222,9 +212,11 @@ function createCommentElement(docData) {
 
 
 async function loadComments(initial = false) {
+  // 1. البحث عن زر "عرض المزيد" وإزالته
   const existingLoadBtn = commentsContainer.querySelector(".load-more-btn");
   if (existingLoadBtn) existingLoadBtn.remove();
   
+  // ⚠️ إذا كانت أول عملية تحميل، نفرغ الحاوية
   if (initial) commentsContainer.innerHTML = "";
 
   let q = query(commentsCol, orderBy("createdAt", "asc"), limit(COMMENTS_LIMIT));
@@ -235,7 +227,9 @@ async function loadComments(initial = false) {
   try {
     const snapshot = await getDocs(q);
     
+    // 2. إضافة التعليقات الجديدة إلى الواجهة
     snapshot.forEach(docSnap => {
+        // تحديث آخر عنصر مرئي فقط إذا كنا نحمل من جديد وليس في أول عملية
         if (!initial) lastVisible = docSnap; 
         
         const item = docSnap.data();
@@ -244,7 +238,9 @@ async function loadComments(initial = false) {
         commentsContainer.appendChild(el); 
     });
 
+    // 3. إعادة إضافة زر "عرض المزيد" إذا كانت النتائج بحجم الحد الأقصى
     if (snapshot.size === COMMENTS_LIMIT) {
+        // نحدث lastVisible ليكون آخر مستند تم عرضه
         lastVisible = snapshot.docs[snapshot.docs.length - 1]; 
         
         const loadBtn = document.createElement("button");
@@ -265,15 +261,18 @@ async function loadComments(initial = false) {
 /* ====== منع تكرار صندوق التعليق وإرساله ====== */
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
-    // 💡 استخدام signInWithRedirect عند محاولة التعليق
     try { 
-      await signInWithRedirect(auth, provider);
-      return; 
+      await signInWithPopup(auth, provider).catch(() => {
+          throw new Error("Login failed");
+      });
     } catch (e) { 
-      return showToast("يجب تسجيل الدخول للتعليق."); 
+      if (e.message === "Login failed") {
+        return showToast("يجب تسجيل الدخول للتعليق."); 
+      }
     }
   }
 
+  // إذا كان صندوق الإدخال موجوداً بالفعل، نركز عليه ونخرج
   const existingInput = document.getElementById("newCommentInput");
   if (existingInput) {
     existingInput.focus();
@@ -286,6 +285,7 @@ commentBtn.addEventListener("click", async () => {
     <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
     <button id="addCommentBtn">إضافة تعليق</button>
   `;
+  // نضع صندوق التعليق في بداية الحاوية
   commentsContainer.insertAdjacentElement("afterbegin", inputArea);
   document.getElementById("newCommentInput").focus();
 
@@ -301,25 +301,22 @@ commentBtn.addEventListener("click", async () => {
       inputField.disabled = true;
       sendButton.disabled = true;
       
-      await addDoc(commentsCol, {
+      const newDocRef = await addDoc(commentsCol, {
         authorName: user?.displayName || "عضو",
         authorId: user?.uid || null,
         text: txt,
         createdAt: serverTimestamp()
       });
       
+      // 💡 تحديث واجهة المستخدم فوراً (بدون انتظار تحميل Firestore)
       const newCommentEl = createCommentElement({
           authorName: user?.displayName || "عضو",
           text: txt,
-          createdAt: { toDate: () => new Date() }
+          createdAt: new Date() // وقت محلي مؤقت
       });
       
-      const loadBtn = commentsContainer.querySelector(".load-more-btn");
-      if (loadBtn) {
-         commentsContainer.insertBefore(newCommentEl, loadBtn); 
-      } else {
-         commentsContainer.appendChild(newCommentEl);
-      }
+      // نضع التعليق الجديد قبل صندوق الإدخال (لأنه في الأعلى)
+      commentsContainer.insertBefore(newCommentEl, inputArea);
       
       // إزالة صندوق الإدخال بعد الإرسال الناجح
       inputArea.remove();
@@ -338,7 +335,6 @@ commentBtn.addEventListener("click", async () => {
 
 /* ====== Auth UI (تسجيل الدخول/الخروج) ====== */
 function bindAuthUI() {
-  // 1. الاستماع لتغييرات حالة المصادقة
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // المستخدم مسجل دخوله
@@ -360,9 +356,11 @@ function bindAuthUI() {
       // المستخدم غير مسجل دخوله
       loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
       
-      // 💡 التعديل هنا: استخدام signInWithRedirect
       document.getElementById("googleLoginBtn").onclick = () => {
-        signInWithRedirect(auth, provider).catch((error) => {
+        signInWithPopup(auth, provider).then(() => {
+            showToast("تم تسجيل الدخول بنجاح", "success");
+        })
+        .catch((error) => {
             console.error("Authentication Error:", error);
             showToast("فشل تسجيل الدخول. (رمز الخطأ: " + (error.code || "غير معروف") + ")", "error");
         });
@@ -389,8 +387,9 @@ function renderMessage(docData, currentUid, docId) {
 
   const msg = document.createElement("div");
   msg.className = `msg ${isMe ? "sent" : "received"}`;
-  msg.setAttribute('data-doc-id', docId); 
+  msg.setAttribute('data-doc-id', docId); // لسهولة العثور عليها وحذفها/تعديلها
   
+  // بناء الرسالة بناءً على ما إذا كانت مُرسَلة أو مُستلَمة
   msg.innerHTML = `
     ${isMe ? `
       <div class="bubble">
@@ -416,11 +415,14 @@ function scrollChatToBottom() {
 }
 
 async function bindChatRealtime() {
+  // افصل أي مستمع قديم
   if (unsubscribeChat) unsubscribeChat();
 
   const q = query(chatMessagesCol, orderBy("createdAt", "asc"));
+  // 💡 استخدام snapshot.docChanges() لتحسين الأداء
   unsubscribeChat = onSnapshot(q, (snapshot) => {
     
+    // التحقق من التمرير للأسفل (قبل المعالجة)
     const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop < chatMessages.clientHeight + 100;
 
     const user = auth.currentUser;
@@ -432,20 +434,24 @@ async function bindChatRealtime() {
       const existingEl = chatMessages.querySelector(`[data-doc-id="${docId}"]`);
 
       if (change.type === "added") {
+        // إضافة رسالة جديدة
         const el = renderMessage(data, currentUid, docId);
         
         chatMessages.appendChild(el);
         
+        // التمرير للأسفل إذا كانت رسالة جديدة وأنت قريب من الأسفل
         if (shouldScroll || change.doc.isEqual(snapshot.docs[snapshot.docs.length - 1])) {
             scrollChatToBottom();
         }
         
       } else if (change.type === "modified") {
+        // تحديث رسالة موجودة
         if (existingEl) {
           const newEl = renderMessage(data, currentUid, docId);
           chatMessages.replaceChild(newEl, existingEl);
         }
       } else if (change.type === "removed") {
+        // حذف رسالة
         if (existingEl) {
           existingEl.remove();
         }
@@ -462,10 +468,8 @@ async function bindChatRealtime() {
 async function sendChatMessage(text) {
   if (!text) return;
   if (!auth.currentUser) {
-    // 💡 استخدام signInWithRedirect عند محاولة إرسال رسالة
     try {
-      await signInWithRedirect(auth, provider);
-      return;
+      await signInWithPopup(auth, provider);
     } catch {
       return showToast("يجب تسجيل الدخول لإرسال رسالة.");
     }
@@ -485,6 +489,7 @@ async function sendChatMessage(text) {
     sendMsg.disabled = true;
     chatInput.disabled = true;
     await addDoc(chatMessagesCol, payload);
+    // مسح حقل الإدخال مباشرةً
     chatInput.value = ""; 
   } catch (e) {
     console.error("send msg error", e);
@@ -503,11 +508,13 @@ chatBtn.addEventListener("click", () => {
   const isVisible = chatWindow.style.display === "flex";
   
   if (!isVisible) {
+    // لو فتحنا الشات
     chatWindow.style.display = "flex";
     bindChatRealtime();
     chatInput.focus();
     chatBtn.style.display = 'none';
   } else {
+    // لو أغلقنا الشات
     chatWindow.style.display = "none";
     if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
     chatBtn.style.display = 'flex';
@@ -540,16 +547,8 @@ chatInput.addEventListener("keydown", async (e) => {
 
 /* ====== init ====== */
 (async function init() {
-  // 💡 1. معالجة نتيجة إعادة التوجيه في البداية
-  await handleRedirectResult(); 
-
-  // 2. ضمان وجود المستند الرئيسي
   await ensureDoc();
-  
-  // 3. ربط واجهة المصادقة (التي تحتوي على المستمع onAuthStateChanged)
   bindAuthUI();
-  
-  // 4. تحميل أول مجموعة من التعليقات
+  // تحميل أول مجموعة من التعليقات
   loadComments(true); 
-  
 })();
