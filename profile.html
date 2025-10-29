@@ -176,7 +176,7 @@
         align-items: center;
         gap: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        transition: transform 0.15s ease;
+        transition: transform 0.15s ease, background-color 0.2s;
     }
     .gift-btn:active { transform: translateY(1px); }
     .reward-desc { font-size: 0.9em; color: var(--muted); margin: 8px 0 0; }
@@ -299,7 +299,7 @@
         transform: rotate(90deg);
     }
 
-    /* Banned Message Styling */
+    /* Banned Message Styling (تم إزالتها من الكود لكن ستبقي التنسيق احتياطياً) */
     .ban-message-area {
         text-align:center; 
         padding:50px; 
@@ -576,6 +576,7 @@
     const progressFill = document.getElementById('progressFill');
     const statStars = document.getElementById('statStars');
     const statLevel = document.getElementById('statLevel');
+    const overallProgressLabel = document.querySelector('.progress-label'); // NEW REF
 
     const giftBtn = document.getElementById('giftBtn');
     const claimNotification = document.getElementById('claimNotification');
@@ -606,10 +607,10 @@
     const SECONDS_PER_STAR = 5 * 60;
     const STARS_PER_LEVEL = 50;
     const MAX_LEVEL = 100; 
-    const STARS_FOR_PRESTIGE = 500; 
+    const STARS_FOR_PRESTIGE = 500; // كل 500 نجمة إضافية بعد المستوى 100 تعتبر رتبة فخرية
     const DAILY_MINS_GOAL = 30;
 
-    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ'];
+    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ']; // 6 رموز
     
     const DEFAULT_AVATAR_PLACEHOLDER = 'https://via.placeholder.com/300x300/1C272A/FFFFFF?text=U';
 
@@ -618,7 +619,7 @@
     let currentUser = null;
     let localSecondsSinceLastUpdate = 0; 
     let sessionTimer = null;
-    let userLastFetchedData = null; // للاحتفاظ بآخر بيانات تم جلبها من Firestore
+    let userLastFetchedData = null; 
 
     // helpers
     function showToast(msg, color = '#2ecc71') {
@@ -643,30 +644,64 @@
     const usernamesCol = collection(db, 'usernames');
     const promosCol = collection(db, 'promos'); 
 
-    // Levels Calculation: دالة واحدة لحساب المستوى والرتب والتقدم
+    // Levels Calculation: دالة واحدة لحساب المستوى والرتب والتقدم (معدلة)
     function computeRanks(stars) { 
-        const MAX_STARS = MAX_LEVEL * STARS_PER_LEVEL; 
+        const MAX_STARS_BEFORE_PRESTIGE = MAX_LEVEL * STARS_PER_LEVEL; // 5000 نجمة
 
-        // 1. حساب المستوى الأساسي (مغطى بـ 100 كحد أقصى)
+        // 1. حساب المستوى الأساسي (المستوى المرئي من 0 إلى 100)
+        // إذا كان أقل من 5000 نجمة، نحسب المستوى العادي.
         const baseLevel = Math.min(Math.floor(stars / STARS_PER_LEVEL), MAX_LEVEL);
 
-        // 2. حساب الرتبة الفخرية (يبدأ من 1 بعد المستوى 100)
-        let prestigeRank = 0;
-        if (stars >= MAX_STARS) {
-            const starsAboveMax = stars - MAX_STARS;
-            const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE); 
-            prestigeRank = Math.min(rank + 1, PRESTIGE_SYMBOLS.length - 1);
+        // 2. حساب الرتبة الفخرية (Prestige Rank)
+        let prestigeRankIndex = 0;
+        let starsInLevelCycle = stars;
+
+        if (stars >= MAX_STARS_BEFORE_PRESTIGE) {
+            // النجوم الزائدة عن المستوى 100
+            const starsBeyondMaxLevel = stars - MAX_STARS_BEFORE_PRESTIGE;
+            
+            // كل STARS_FOR_PRESTIGE (500) نجمة إضافية هي رتبة فخرية واحدة
+            const prestigeCycleCount = Math.floor(starsBeyondMaxLevel / STARS_FOR_PRESTIGE);
+            
+            // اختيار الرمز (نستخدم index من 0 إلى 5)
+            prestigeRankIndex = Math.min(prestigeCycleCount, PRESTIGE_SYMBOLS.length - 1);
+            
+            // لتحديث شريط التقدم: نستخدم النجوم المتبقية في دورة الـ 500 نجمة
+            starsInLevelCycle = starsBeyondMaxLevel % STARS_FOR_PRESTIGE;
+        } else {
+             // إذا كنا تحت مستوى 100، النجوم في الدورة هي النجوم الكلية
+            starsInLevelCycle = stars;
         }
 
         // 3. حساب التقدم ضمن المستوى الحالي (لشريط الملء)
-        const starsInCurrentLevel = stars % STARS_PER_LEVEL;
+        // التقدم دائماً يحسب من 0 إلى 50 نجمة.
+        const starsInCurrentLevel = starsInLevelCycle % STARS_PER_LEVEL;
         const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
 
         return { 
             level: baseLevel, 
-            prestigeRank: prestigeRank, 
-            progressPercent: progressPercent 
+            prestigeRank: prestigeRankIndex, 
+            progressPercent: progressPercent,
+            starsInLevelCycle: starsInLevelCycle // النجوم ضمن دورة الـ 500 نجمة أو 5000 نجمة
         };
+    }
+
+    // دالة تحديث حالة زر الهدية (مُضافة)
+    function updateGiftButtonState(lastGiftDate) {
+      if (!giftBtn) return;
+      const today = todayDateStr();
+      
+      if (lastGiftDate === today) {
+        giftBtn.disabled = true;
+        giftBtn.style.backgroundColor = 'var(--success)';
+        giftBtn.innerHTML = '<i class="fa-solid fa-check"></i> تم استلام هدية اليوم';
+        giftBtn.style.color = '#fff';
+      } else {
+        giftBtn.disabled = false;
+        giftBtn.style.backgroundColor = 'var(--gold)';
+        giftBtn.innerHTML = '<i class="fa-solid fa-gift"></i> استلام الهدية اليومية';
+        giftBtn.style.color = '#111';
+      }
     }
 
     // دالة التحقق وحفظ اليوزر
@@ -721,16 +756,18 @@
         };
     }
 
-    // UI updater - 🟢 تم تعديل هذا الجزء ليعرض التقدم المحلي للنشاط
+    // UI updater - 🟢 تم التعديل لعرض الرتب الفخرية وتحديث وصف شريط التقدم
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
       const username = data?.username || null; 
+      const lastGiftDate = data?.lastGiftDate || null; 
       
       const ranks = computeRanks(stars); 
       const level = ranks.level;
-      const prestigeRank = ranks.prestigeRank;
+      const prestigeRankIndex = ranks.prestigeRank;
       const progressPercent = ranks.progressPercent;
+      const starsInLevelCycle = ranks.starsInLevelCycle;
 
       // منطق الأدمن: إظهار زر الإعدادات
       if (adminTools) {
@@ -755,7 +792,10 @@
         identityLineEl.innerHTML = `<span class="email-text-muted">${currentUser.email || ''}</span>`;
       }
       
-      // تنسيق عرض النجوم
+      // 3. تحديث حالة زر الهدية (مُضاف)
+      updateGiftButtonState(lastGiftDate);
+
+      // 4. تحديث المستوى والرتب الفخرية
       const formattedStars = stars.toLocaleString('en-US'); 
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
@@ -763,18 +803,35 @@
       // تحديث شريط التقدم بالتقدم ضمن المستوى الحالي
       progressFill.style.width = `${Math.min(progressPercent, 100)}%`; 
 
-      let rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
-
-      if (level >= MAX_LEVEL) {
-        levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol}</span>`;
-        statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${level}</span>`;
-        
+      let rankSymbol = PRESTIGE_SYMBOLS[prestigeRankIndex] || PRESTIGE_SYMBOLS[0];
+      let displayLevel = level;
+      
+      if (prestigeRankIndex > 0) {
+        // إذا كان هناك رتبة فخرية، عرض الرمز و المستوى 100
+        levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol} ${displayLevel}</span>`;
+        statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${displayLevel}</span>`;
       } else {
-        levelNumEl.textContent = level;
-        statLevel.textContent = level;
+        levelNumEl.textContent = displayLevel;
+        statLevel.textContent = displayLevel;
+      }
+      
+      // 5. تحديث تسمية شريط التقدم الكلي
+      if (overallProgressLabel) {
+          let nextMilestone = '';
+          const starsNeededForNextLevel = STARS_PER_LEVEL - (starsInLevelCycle % STARS_PER_LEVEL);
+          
+          if (level < MAX_LEVEL) {
+              nextMilestone = `النجوم المتبقية للمستوى ${level + 1} هي ${starsNeededForNextLevel}`;
+          } else if (prestigeRankIndex < PRESTIGE_SYMBOLS.length - 1) {
+               const starsNeededForNextPrestige = STARS_FOR_PRESTIGE - starsInLevelCycle;
+               nextMilestone = `النجوم المتبقية للرتبة ${PRESTIGE_SYMBOLS[prestigeRankIndex + 1]} هي ${starsNeededForNextPrestige}`;
+          } else {
+              nextMilestone = `وصلت لأعلى رتبة فخرية! 🎉`;
+          }
+          overallProgressLabel.innerHTML = `تقدم المستوى الكلي (<strong>${formattedStars}</strong> نجمة): ${nextMilestone}`;
       }
 
-      // 🟢 تحديث النشاط (يأخذ بعين الاعتبار الثواني المجمعة محلياً)
+      // 🟢 تحديث النشاط
       if (typeof data.dailySeconds === 'number') {
         const totalSeconds = (data.dailySeconds || 0) + localSecondsSinceLastUpdate;
         const mins = Math.floor(totalSeconds / 60);
@@ -892,19 +949,19 @@
       if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
     }
 
-    // Gift (daily claim) - 🟢 تم تبسيط المنطق لضمان العمل
+    // Gift (daily claim) - 🟢 (مُحسَّن)
     if (giftBtn) {
       giftBtn.addEventListener('click', async () => {
         if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
         const uref = userDocRef(currentUser.uid);
         
-        // 💡 جلب البيانات قبل الـ Transaction لتفادي مشاكل الـ Race Condition
         const currentSnap = await getDoc(uref);
         const currentData = currentSnap.data() || {};
         
         if (!currentData.username) return showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
         
         giftBtn.disabled = true;
+        updateGiftButtonState(todayDateStr()); // تحديث فوري (افتراضي)
 
         try {
           await runTransaction(db, async (tx) => {
@@ -936,15 +993,20 @@
           claimAnimation();
           
         } catch (e) {
+          // إعادة ضبط حالة الزر في حالة الفشل
+          updateGiftButtonState(currentData.lastGiftDate || null);
+          
           if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
           else if (e?.message === 'no-username') showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
           else { 
             console.error('claim err (transaction failed)', e); 
-            // 💡 رسالة عامة لإخفاء تفاصيل خطأ Firebase الداخلي
             showToast('فشل استلام الهدية. (يرجى مراجعة قواعد الأمان)', '#e74c3c'); 
           }
         } finally {
-            giftBtn.disabled = false;
+            // يتم فتح الزر فقط إذا كان الفشل ليس بسبب 'claimed'
+            if(giftBtn.style.backgroundColor !== 'var(--success)') {
+                 giftBtn.disabled = false;
+            }
         }
       });
     }
@@ -959,7 +1021,7 @@
       refreshUserDoc();
     }
 
-    // Session timer awarding stars (🟢 منطق مُحسَّن لتقليل القراءة)
+    // Session timer awarding stars
     async function updateActivity() {
       if (!currentUser) return;
       
@@ -1087,7 +1149,7 @@
           if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
 
           const promoData = promoSnap.data();
-          starsToAdd = promoData.stars || 0; // يتم تعيين القيمة هنا
+          starsToAdd = promoData.stars || 0; 
           
           // التحقق من الاستخدام المسبق
           if (userData.activatedPromos?.includes(code)) {
@@ -1178,4 +1240,19 @@
     window.addEventListener('load', () => setTimeout(()=> refreshUserDoc(), 1200));
   </script>
 
-  <script src="
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    // Confetti Helper
+    window.launchConfetti = function() {
+      var duration = 2 * 1000; var end = Date.now() + duration;
+      (function frame() {
+        try {
+          confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+          confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+        } catch (e) { console.warn('confetti lib error', e); }
+        if (Date.now() < end) requestAnimationFrame(frame);
+      }());
+    };
+  </script>
+</body>
+</html>
