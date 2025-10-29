@@ -590,7 +590,7 @@
     const dailyBar = document.getElementById('dailyBar');
     const todayMinutesEl = document.getElementById('todayMinutes');
     const adminTools = document.getElementById('adminTools');
-    const mainContentFrame = document.getElementById('mainContentFrame'); // للحظر
+    const mainContentFrame = document.getElementById('mainContentFrame');
     
     // DOM refs لـ Username Modal
     const usernameModal = document.getElementById('usernameModal');
@@ -803,53 +803,8 @@
         }
     }
 
-    // 🟢 دالة جديدة ومعدلة: التحقق من حالة الحظر (لا تلمس الواجهة)
-    function checkBanStatus(data) {
-        const isPermanent = data.isBannedPermanent === true;
-        const bannedUntil = data.bannedUntil?.toDate ? data.bannedUntil.toDate() : null;
-        const isTemporarilyBanned = bannedUntil && bannedUntil > new Date();
 
-        if (isPermanent || isTemporarilyBanned) {
-            let msg = "تم حظر حسابك مؤقتاً.";
-            if (isPermanent) {
-                msg = "تم حظر حسابك نهائياً (باند).";
-            } else if (isTemporarilyBanned) {
-                msg += ` ينتهي الحظر في: ${bannedUntil.toLocaleString()}.`;
-            }
-            
-            const reason = data.banReason ? ` السبب: ${data.banReason}` : '';
-            
-            // ⚠️ الآن، هذه الدالة ترجع رسالة الحظر فقط ولا تعدل الـ DOM
-            return { 
-                isBanned: true, 
-                message: msg, 
-                reason: reason 
-            }; 
-        }
-        return { isBanned: false }; 
-    }
-    
-    // 🟢 دالة عرض رسالة الحظر (تحديث الواجهة - تُستدعى خارج الـ Transaction)
-    function displayBanMessage(banStatus) {
-        if (!banStatus.isBanned) return;
-
-        // إيقاف أي مؤقتات أو عمليات
-        if (sessionTimer) clearInterval(sessionTimer);
-        
-        // إظهار رسالة خطأ واضحة للمستخدم
-        mainContentFrame.innerHTML = `
-            <div class="ban-message-area">
-                <i class="fas fa-gavel" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                <h2>وصول محظور</h2>
-                <p style="font-size: 1.2em;">${banStatus.message}${banStatus.reason}</p>
-                <p>الرجاء التواصل مع الإدارة للمزيد من التفاصيل.</p>
-                <button onclick="location.href='index.html'" style="background:var(--accent); color:white; padding:10px 20px; border-radius:8px; margin-top:15px;">العودة للرئيسية</button>
-            </div>
-        `;
-    }
-
-
-    // auth - 🟢 منطق الصورة المعزز + التحقق من الحظر
+    // auth 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try { 
@@ -884,13 +839,6 @@
       } else {
         initialData = snap.data();
         
-        // 🟢 التحقق من الحظر وعرض الرسالة إذا لزم الأمر
-        const banStatus = checkBanStatus(initialData);
-        if (banStatus.isBanned) {
-            displayBanMessage(banStatus);
-            return; 
-        }
-
         // منطق ترتيب جلب الصورة:
         let photoSource = null;
         if (initialData?.photoURL) {
@@ -944,30 +892,35 @@
       if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
     }
 
-    // Gift (daily claim)
+    // Gift (daily claim) - 🟢 تم تبسيط المنطق لضمان العمل
     if (giftBtn) {
       giftBtn.addEventListener('click', async () => {
         if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
         const uref = userDocRef(currentUser.uid);
         
+        // 💡 جلب البيانات قبل الـ Transaction لتفادي مشاكل الـ Race Condition
+        const currentSnap = await getDoc(uref);
+        const currentData = currentSnap.data() || {};
+        
+        if (!currentData.username) return showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
+        
+        giftBtn.disabled = true;
+
         try {
           await runTransaction(db, async (tx) => {
+            
             const snap = await tx.get(uref);
             if (!snap.exists()) throw new Error("no-doc");
 
             const data = snap.data();
             
-            // 🟢 التحقق من الحظر باستخدام الدالة التي لا تلمس DOM
-            const banStatus = checkBanStatus(data);
-            if (banStatus.isBanned) {
-                throw new Error("banned"); 
-            }
-            
             if (!data.username) throw new Error("no-username"); 
 
+            // التحقق من الاستلام
             const last = data.lastGiftDate || null;
             if (last === todayDateStr()) throw new Error('claimed');
             
+            // تنفيذ التحديث
             const newStars = (data.stars || 0) + 5;
             const ranks = computeRanks(newStars); 
 
@@ -978,17 +931,20 @@
                 prestigeRank: ranks.prestigeRank 
             });
           });
+          
+          // في حالة النجاح
           claimAnimation();
+          
         } catch (e) {
           if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
           else if (e?.message === 'no-username') showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
-          else if (e?.message === 'banned') {
-             // 💡 يتم عرض رسالة الحظر هنا بأمان خارج الـ Transaction
-             const data = userLastFetchedData || {}; // نستخدم البيانات المجلوبة الأخيرة
-             const banStatus = checkBanStatus(data);
-             showToast(banStatus.message, 'var(--danger)');
+          else { 
+            console.error('claim err (transaction failed)', e); 
+            // 💡 رسالة عامة لإخفاء تفاصيل خطأ Firebase الداخلي
+            showToast('فشل استلام الهدية. (يرجى مراجعة قواعد الأمان)', '#e74c3c'); 
           }
-          else { console.error('claim err', e); showToast('فشل استلام الهدية', '#e74c3c'); }
+        } finally {
+            giftBtn.disabled = false;
         }
       });
     }
@@ -1013,7 +969,7 @@
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
           
-          if (!data.username || checkBanStatus(data).isBanned) return; 
+          if (!data.username) return; 
 
           const lastDate = data.lastActiveDate || '';
           let dailySec = data.dailySeconds || 0;
@@ -1103,13 +1059,6 @@
       // 🟢 تحديث البيانات المجلوبة الأخيرة
       userLastFetchedData = data;
       
-      // 🟢 التحقق من الحظر عند التحديث
-      const banStatus = checkBanStatus(data);
-      if (banStatus.isBanned) {
-          displayBanMessage(banStatus);
-          return; 
-      }
-      
       updateUIFromData(data);
     }
     // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
@@ -1133,12 +1082,6 @@
           const promoSnap = await tx.get(promoRef);
           
           const userData = userSnap.exists() ? userSnap.data() : {};
-          
-          // 🟢 التحقق من الحظر
-          const banStatus = checkBanStatus(userData);
-          if (banStatus.isBanned) {
-              throw new Error("banned"); 
-          }
           
           if (!userData.username) throw new Error("no-username");
           if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
@@ -1191,11 +1134,6 @@
             showToast('انتهى العدد الأقصى لاستخدام هذا الكود.', '#e74c3c');
         } else if (e?.message === 'no-username') {
              showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
-        } else if (e?.message === 'banned') {
-             // 💡 يتم عرض رسالة الحظر هنا بأمان خارج الـ Transaction
-             const data = userLastFetchedData || {};
-             const banStatus = checkBanStatus(data);
-             showToast(banStatus.message, 'var(--danger)');
         }
         else {
             console.error('Promo error:', e); 
@@ -1224,12 +1162,6 @@
       if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
       const snap = await getDoc(userDocRef(currentUser.uid));
       const data = snap.exists() ? snap.data() : {};
-      
-      const banStatus = checkBanStatus(data);
-      if (banStatus.isBanned) {
-          displayBanMessage(banStatus);
-          return; 
-      }
 
       const lastGift = data.lastGiftDate || 'لم يتم الاستلام بعد';
       const promoUsedCount = Array.isArray(data.activatedPromos) ? data.activatedPromos.length : 0;
@@ -1246,19 +1178,4 @@
     window.addEventListener('load', () => setTimeout(()=> refreshUserDoc(), 1200));
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script>
-    // Confetti Helper
-    window.launchConfetti = function() {
-      var duration = 2 * 1000; var end = Date.now() + duration;
-      (function frame() {
-        try {
-          confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
-          confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-        } catch (e) { console.warn('confetti lib error', e); }
-        if (Date.now() < end) requestAnimationFrame(frame);
-      }());
-    };
-  </script>
-</body>
-</html>
+  <script src="
