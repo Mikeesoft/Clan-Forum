@@ -9,6 +9,19 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
+  /* أضف هذا داخل <style> في profile.html لتوحيد الشكل */
+body {
+  /* ... بقية الخصائص ... */
+  background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71); /* نفس تدرج الصفحة الرئيسية */
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
     :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
       --card-bg: rgba(255,255,255,0.03);
