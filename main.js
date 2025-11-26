@@ -163,3 +163,63 @@ document.querySelectorAll('.nav-item').forEach(item => {
         document.getElementById(targetId).classList.add('active');
     });
 });
+/* = 6. كود نشر بوست جديد = */
+const publishPostBtn = document.getElementById('publishPostBtn');
+const postContentInput = document.getElementById('postContentInput');
+const createPostModal = document.getElementById('createPostModal');
+const addPostFab = document.getElementById('addPostFab');
+const closePostModal = document.getElementById('closePostModal');
+
+// فتح نافذة النشر
+if (addPostFab) {
+    addPostFab.addEventListener('click', () => {
+        if (!auth.currentUser) return alert("يجب تسجيل الدخول للنشر!");
+        createPostModal.style.display = 'flex';
+        postContentInput.focus();
+    });
+}
+
+// غلق نافذة النشر
+if (closePostModal) {
+    closePostModal.addEventListener('click', () => createPostModal.style.display = 'none');
+}
+
+// تنفيذ النشر
+if (publishPostBtn) {
+    publishPostBtn.addEventListener('click', async () => {
+        const text = postContentInput.value.trim();
+        if (!text) return; // لو مفيش كلام متعملش حاجة
+        
+        const user = auth.currentUser;
+        
+        // تغيير الزر لـ "جاري النشر"
+        publishPostBtn.innerText = "جاري...";
+        publishPostBtn.disabled = true;
+
+        try {
+            // هنجيب بيانات اليوزر الحالية من الداتابيز عشان الاسم والصورة يبقوا مظبوطين
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            const userData = userSnap.exists() ? userSnap.data() : {};
+
+            await addDoc(collection(db, "posts"), {
+                text: text,
+                authorId: user.uid,
+                authorName: userData.fullName || user.displayName,
+                authorUsername: userData.username || "user",
+                authorAvatar: user.photoURL,
+                createdAt: serverTimestamp(),
+                likes: [] // مصفوفة فاضية عشان اللايكات بعدين
+            });
+
+            // نجاح
+            createPostModal.style.display = 'none';
+            postContentInput.value = ""; // فضي الخانة
+
+        } catch (error) {
+            alert("فشل النشر: " + error.message);
+        } finally {
+            publishPostBtn.innerText = "نشر";
+            publishPostBtn.disabled = false;
+        }
+    });
+}
