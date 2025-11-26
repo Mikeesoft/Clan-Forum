@@ -1,8 +1,8 @@
-/* main.js - منطق التطبيق الشامل (تم إصلاح عرض اليوزر) */
+/* main.js - النسخة النهائية والشاملة */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // إعدادات Firebase
 const firebaseConfig = {
@@ -31,18 +31,18 @@ navItems.forEach(item => {
         
         const targetId = item.getAttribute('data-target');
         pages.forEach(page => page.classList.remove('active'));
-        document.getElementById(targetId).classList.add('active');
+        
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) targetSection.classList.add('active');
         
         // إظهار الهيدر فقط في الرئيسية
-        if (targetId === 'feed-page') {
-            mainHeader.style.display = 'flex';
-        } else {
-            mainHeader.style.display = 'none';
+        if (mainHeader) {
+            mainHeader.style.display = (targetId === 'feed-page') ? 'flex' : 'none';
         }
     });
 });
 
-/* ====== 2. إدارة المستخدم (User & Menu) - تم التعديل هنا ✅ ====== */
+/* ====== 2. إدارة المستخدم والقائمة الجانبية (Realtime) ====== */
 const menuUserProfile = document.getElementById('menuUserProfile');
 const menuLogoutBtn = document.getElementById('menuLogoutBtn');
 const menuLoginBtnInternal = document.getElementById('menuLoginBtnInternal');
@@ -51,60 +51,116 @@ if (menuLoginBtnInternal) {
     menuLoginBtnInternal.onclick = () => signInWithPopup(auth, provider);
 }
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
         const userRef = doc(db, "users", user.uid);
         
-        // قيم افتراضية
-        let stars = 0;
-        let displayUsername = user.uid.substring(0, 8); // لو مفيش يوزر، يعرض جزء من الايدي مؤقتا
-        
-        try {
-            const snap = await getDoc(userRef);
-            if (snap.exists()) {
-                const data = snap.data();
+        // 🟢 تحديث فوري: أي تغيير في الداتابيز يسمع هنا علطول
+        onSnapshot(userRef, (docSnap) => {
+            let stars = 0;
+            let displayUsername = user.uid.substring(0, 8);
+            let displayName = user.displayName;
+            let bioText = "مستخدم جديد";
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
                 stars = data.stars || 0;
+                if (data.username) displayUsername = data.username;
+                if (data.fullName) displayName = data.fullName; // الاسم من الداتابيز أولويات
+                if (data.bio) bioText = data.bio;
                 
-                // 🟢 هنا التعديل: جلب اليوزر الحقيقي
-                if (data.username) {
-                    displayUsername = data.username;
-                }
+                // تحديث حقول صفحة "تعديل البروفايل" لو كنا واقفين عليها
+                fillEditProfileInputs(displayName, displayUsername, bioText);
             }
-        } catch (e) { console.error("Error fetching user data:", e); }
+
+            // تحديث القائمة الجانبية
+            if (menuUserProfile) {
+                menuUserProfile.innerHTML = `
+                    <img src="${user.photoURL}" style="width:60px; height:60px; border-radius:50%; border:2px solid #333; object-fit:cover;">
+                    <div style="flex:1;">
+                        <h3 style="color:#fff; margin:0; font-size:16px;">${displayName}</h3>
+                        <span style="color:#aaa; font-size:0.85rem; dir="ltr">@${displayUsername}</span>
+                        <div class="menu-stats">
+                            <div class="stat-tag"><i class="fas fa-star" style="color:#f1c40f"></i> ${stars}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (menuLogoutBtn) {
+            menuLogoutBtn.style.display = 'flex';
+            menuLogoutBtn.onclick = () => signOut(auth);
+        }
         
-        menuUserProfile.innerHTML = `
-            <img src="${user.photoURL}" style="width:60px; height:60px; border-radius:50%; border:2px solid #333;">
-            <div style="flex:1;">
-                <h3 style="color:#fff; margin:0;">${user.displayName}</h3>
-                <span style="color:#aaa; font-size:0.85rem; dir="ltr">@${displayUsername}</span>
-                <div class="menu-stats">
-                    <div class="stat-tag"><i class="fas fa-star" style="color:#f1c40f"></i> ${stars}</div>
-                    <div class="stat-tag"><i class="fas fa-gem" style="color:#3498db"></i> 0</div>
-                </div>
-            </div>
-            <a href="profile.html" style="color:#aaa;"><i class="fas fa-chevron-left"></i></a>
-        `;
-        menuLogoutBtn.style.display = 'flex';
-        menuLogoutBtn.onclick = () => signOut(auth);
-        
-        // تحميل البوستات
-        loadPosts();
-        
+        loadPosts(); // تحميل البوستات
+
     } else {
-        menuUserProfile.innerHTML = `
-             <div style="padding:20px; width:100%; text-align:center;">
-                 <p style="color:#aaa; margin-bottom:10px;">سجل دخولك لتتفاعل!</p>
-                 <button id="menuLoginBtnInternal2" class="app-btn" style="width:100%">تسجيل الدخول</button>
-            </div>
-        `;
-        const loginBtn2 = document.getElementById('menuLoginBtnInternal2');
-        if (loginBtn2) loginBtn2.onclick = () => signInWithPopup(auth, provider);
-        
-        menuLogoutBtn.style.display = 'none';
+        // حالة عدم تسجيل الدخول
+        if (menuUserProfile) {
+            menuUserProfile.innerHTML = `
+                 <div style="padding:20px; width:100%; text-align:center;">
+                     <p style="color:#aaa; margin-bottom:10px;">سجل دخولك لتتفاعل!</p>
+                     <button id="menuLoginBtnInternal2" class="app-btn" style="width:100%">تسجيل الدخول</button>
+                </div>
+            `;
+            setTimeout(() => {
+                const loginBtn2 = document.getElementById('menuLoginBtnInternal2');
+                if (loginBtn2) loginBtn2.onclick = () => signInWithPopup(auth, provider);
+            }, 100);
+        }
+        if (menuLogoutBtn) menuLogoutBtn.style.display = 'none';
     }
 });
 
-/* ====== 3. نشر البوستات (Posts System) ====== */
+/* ====== 3. وظيفة تعديل البروفايل (الجديد) ====== */
+// تأكد أن لديك Inputs بهذه الـ IDs في صفحة التعديل
+const editNameInput = document.getElementById('editNameInput');
+const editUsernameInput = document.getElementById('editUsernameInput');
+const editBioInput = document.getElementById('editBioInput');
+const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+// دالة لتعبئة الحقول تلقائياً عند فتح التطبيق
+function fillEditProfileInputs(name, username, bio) {
+    if (editNameInput) editNameInput.value = name;
+    if (editUsernameInput) editUsernameInput.value = username;
+    if (editBioInput) editBioInput.value = bio;
+}
+
+// زر الحفظ
+if (saveProfileBtn) {
+    saveProfileBtn.addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if (!user) return alert("يجب تسجيل الدخول!");
+
+        saveProfileBtn.textContent = "جاري الحفظ...";
+        saveProfileBtn.disabled = true;
+
+        try {
+            const userRef = doc(db, "users", user.uid);
+            
+            // البيانات المراد تحديثها
+            const updateData = {};
+            if (editNameInput && editNameInput.value) updateData.fullName = editNameInput.value;
+            if (editUsernameInput && editUsernameInput.value) updateData.username = editUsernameInput.value;
+            if (editBioInput) updateData.bio = editBioInput.value;
+
+            // إرسال لفايربيس (Merge: true للحفاظ على البيانات القديمة)
+            await updateDoc(userRef, updateData); // استخدمنا updateDoc بدلاً من setDoc للحفاظ على النجوم
+
+            alert("تم تحديث البيانات بنجاح ✅");
+            
+        } catch (error) {
+            console.error(error);
+            alert("حدث خطأ: " + error.message);
+        } finally {
+            saveProfileBtn.textContent = "حفظ التعديلات";
+            saveProfileBtn.disabled = false;
+        }
+    });
+}
+
+/* ====== 4. نشر البوستات (Posts System) ====== */
 const addPostFab = document.getElementById('addPostFab');
 const createPostModal = document.getElementById('createPostModal');
 const closePostModal = document.getElementById('closePostModal');
@@ -135,20 +191,22 @@ if (publishPostBtn) {
         publishPostBtn.textContent = "جاري النشر...";
         
         try {
-            // سنحاول جلب اليوزر نيم أيضاً لتخزينه مع البوست
             let authorUsername = "@user";
-            try {
-                const uSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-                if (uSnap.exists() && uSnap.data().username) {
-                    authorUsername = "@" + uSnap.data().username;
-                }
-            } catch (e) {}
+            let authorName = auth.currentUser.displayName;
+
+            // محاولة جلب الاسم واليوزر المحدثين من قاعدة البيانات بدلاً من Auth القديم
+            const uSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+            if (uSnap.exists()) {
+                const data = uSnap.data();
+                if (data.username) authorUsername = "@" + data.username;
+                if (data.fullName) authorName = data.fullName;
+            }
             
             await addDoc(collection(db, "posts"), {
                 text: text,
                 authorId: auth.currentUser.uid,
-                authorName: auth.currentUser.displayName,
-                authorUsername: authorUsername, // 🟢 تخزين اليوزر مع البوست
+                authorName: authorName,
+                authorUsername: authorUsername,
                 authorAvatar: auth.currentUser.photoURL,
                 createdAt: serverTimestamp(),
                 likes: 0
@@ -166,14 +224,17 @@ if (publishPostBtn) {
 
 // تحميل البوستات (Feed)
 function loadPosts() {
+    if (!postsContainer) return;
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(20));
+    
     onSnapshot(q, (snapshot) => {
         postsContainer.innerHTML = '';
         snapshot.forEach(doc => {
             const data = doc.data();
             const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'الآن';
-            const handle = data.authorUsername || "@user"; // عرض اليوزر في البوست
+            const handle = data.authorUsername || "@user";
             
+            // هنا تم استخدام كلاس post-card لإصلاح التصميم
             const postHTML = `
                 <div class="post-card">
                     <div class="post-header">
@@ -196,10 +257,8 @@ function loadPosts() {
         });
     });
 }
-// تحميل البوستات فوراً 
-loadPosts();
 
-/* ====== 4. نظام الشات (Chat System) ====== */
+/* ====== 5. نظام الشات (Chat System) ====== */
 const openChatBtn = document.getElementById('openChatBtn');
 const chatOverlay = document.getElementById('chatOverlay');
 const closeChatBtn = document.getElementById('closeChatBtn');
@@ -228,11 +287,21 @@ async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text || !auth.currentUser) return;
     chatInput.value = '';
+    
+    // جلب الاسم الحقيقي للمستخدم قبل الإرسال
+    let currentName = auth.currentUser.displayName;
+    try {
+        const uSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+        if (uSnap.exists() && uSnap.data().fullName) {
+            currentName = uSnap.data().fullName;
+        }
+    } catch(e) {}
+
     try {
         await addDoc(collection(db, "chats", "global", "messages"), {
             text: text,
             authorId: auth.currentUser.uid,
-            authorName: auth.currentUser.displayName,
+            authorName: currentName,
             avatar: auth.currentUser.photoURL,
             createdAt: serverTimestamp()
         });
@@ -245,6 +314,7 @@ function loadChatMessages() {
     if (chatUnsubscribe) return;
     const q = query(collection(db, "chats", "global", "messages"), orderBy("createdAt", "asc"), limit(50));
     chatUnsubscribe = onSnapshot(q, (snapshot) => {
+        if (!chatMessagesBox) return;
         chatMessagesBox.innerHTML = '';
         const currentUid = auth.currentUser?.uid;
         snapshot.forEach(doc => {

@@ -274,3 +274,28 @@ body {
 }
 .input-group input:focus { border-color: var(--primary); }
 .input-group .hint { display: block; font-size: 0.75rem; color: #777; margin-top: 5px; }
+/* تنسيق جسم الصفحة لضمان الخلفية السوداء */
+body {
+    background-color: #000000;
+    margin: 0;
+    font-family: 'Cairo', sans-serif; /* أو الخط الذي تستخدمه */
+}
+
+/* تنسيق كارت المنشور (Post) */
+.post-card {
+    background-color: #121212;  /* لون مختلف قليلاً عن الخلفية لتمييز البوست */
+    margin: 15px;               /* هذا هو الحل: يبعد البوست عن حواف الشاشة */
+    padding: 15px;              /* مسافة داخلية للكلام والصور */
+    border-radius: 16px;        /* تدوير الحواف ليصبح شكله حديثاً */
+    border: 1px solid #333;     /* حدود خفيفة جداً */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* ظل خفيف */
+    color: #ffffff;
+}
+
+/* تنسيق صورة البروفايل داخل المنشور */
+.post-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
