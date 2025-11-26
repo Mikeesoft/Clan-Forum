@@ -2,123 +2,134 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="منتدى العشيرة - منصة عربية للتواصل الهادف، تبادل الخبرات، والمشاركة في المجموعات المتخصصة. انضم إلينا الآن.">
-  <title>المنتدى - تواصل وشارك</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#121212">
+  <title>UniHub App</title>
   
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Poppins:wght@400;600&display=swap&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* إخفاء الأقسام غير الرئيسية افتراضيًا (يمكن نقلها لـ style.css لاحقاً) */
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-  </style>
 </head>
 <body>
-  <header class="main-header">
-    <nav class="navbar">
-      <div class="nav-right">
-        <a href="#home" class="nav-icon active" data-section="home" aria-label="الرئيسية"><i class="fas fa-home"></i><span>الرئيسية</span></a>
-        <a href="#members" class="nav-icon" data-section="members" aria-label="الأعضاء"><i class="fas fa-users"></i><span>الأعضاء</span></a>
-        <a href="#groups" class="nav-icon" data-section="groups" aria-label="المجموعات"><i class="fas fa-layer-group"></i><span>المجموعات</span></a>
-        <a href="#notifications" class="nav-icon" data-section="notifications" aria-label="الإشعارات"><i class="fas fa-bell"></i><span>الإشعارات</span></a>
-        <a href="#updates" class="nav-icon" data-section="updates" aria-label="التحديثات"><i class="fas fa-sync-alt"></i><span>التحديثات</span></a>
-      </div>
-      <div id="loginBtnContainer" class="nav-left">
-        <button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>
-      </div>
-    </nav>
+
+  <header id="mainHeader" class="app-header">
+    <div class="top-tabs">
+      <div class="tab-item">المتابعة</div>
+      <div class="tab-item">استكشف</div>
+      <div class="tab-item active">الرئيسية</div>
+    </div>
+    <div class="header-actions">
+      <i class="fas fa-search"></i>
+    </div>
   </header>
 
-  <main class="container">
-    <section id="home" class="page-section active">
-      <div class="admin-message-section">
-        <div class="message-card">
-          <h3>رسالة من إدارة المنتدى</h3> 
-          <p>
-          أهلاً وسهلاً بكم في منتدى العشيرة! هذا المكان مخصص للتواصل الهادف وتبادل الخبرات بين الأعضاء.  
-                نرجو من الجميع الالتزام بقوانين المنتدى واحترام الآخرين. نتمنى لكم وقتاً ممتعاً ومفيداً معنا.
-          </p>
-          <div class="message-actions">
-            <button id="likeBtn" class="action-btn like-btn" aria-label="أعجبني">
-              <i class="far fa-heart"></i> <span>إعجاب (<span id="likeCount">0</span>)</span>
-            </button>
-            <button id="commentBtn" class="action-btn comment-btn" aria-label="إضافة تعليق">
-              <i class="fas fa-comment"></i>
-              <span>تعليق</span>
-            </button>
-          </div>
-          <div id="commentsContainer" class="comments-section"></div>
+  <main class="app-content">
+    
+    <section id="feed-page" class="page-view active">
+      <div id="postsContainer">
+        <div class="post-card">
+            <div class="post-header">
+                <img src="https://via.placeholder.com/40" class="user-avatar">
+                <div class="post-info">
+                    <span class="user-name">الإدارة</span>
+                    <span class="post-handle">@admin</span>
+                    <span class="post-time">منذ دقيقتين</span>
+                </div>
+                <i class="fas fa-ellipsis-v more-options"></i>
+            </div>
+            <div class="post-body">
+                أهلاً بكم في النسخة الجديدة من التطبيق! 🚀
+                <br>تم تغيير التصميم بالكامل ليكون مناسباً للهواتف.
+            </div>
+            <div class="post-actions">
+                <div class="action"><i class="far fa-heart"></i> <span>0</span></div>
+                <div class="action"><i class="far fa-comment"></i> <span>0</span></div>
+                <div class="action"><i class="fas fa-share"></i></div>
+            </div>
         </div>
+      </div>
+      <div style="height: 80px;"></div>
+    </section>
+
+    <section id="members-page" class="page-view">
+      <div class="page-title"><h3>الأعضاء والسجل</h3></div>
+      <div class="content-placeholder">
+        <p>قائمة الأعضاء ستظهر هنا...</p>
       </div>
     </section>
 
-    <section id="members" class="page-section">
-      <h2>الأعضاء</h2>
-      <p>هنا هنعرض قائمة الأعضاء المسجلين.</p>
+    <section id="seasons-page" class="page-view">
+      <div class="page-title"><h3>المواسم والفعاليات</h3></div>
+      <div class="content-placeholder">
+        <p>التقويم الدراسي والفعاليات...</p>
+      </div>
     </section>
 
-    <section id="groups" class="page-section">
-      <h2>المجموعات</h2>
-      <p>هنا هنعرض المجموعات المتاحة.</p>
+    <section id="menu-page" class="page-view">
+      <div class="menu-user-header" id="menuUserProfile">
+        <div style="padding:20px; text-align:center;">
+             <button id="menuLoginBtn" class="app-btn">تسجيل الدخول</button>
+        </div>
+      </div>
+
+      <div class="menu-list">
+        <div class="menu-item">
+            <i class="fas fa-bell"></i> <span>التنبيهات</span> <i class="fas fa-chevron-left arrow"></i>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-envelope"></i> <span>الرسائل</span> <i class="fas fa-chevron-left arrow"></i>
+        </div>
+        <div class="divider"></div>
+        <div class="menu-item">
+            <i class="fas fa-clipboard-list"></i> <span>قائمتي</span> <i class="fas fa-chevron-left arrow"></i>
+        </div>
+        <div class="menu-item">
+            <i class="fas fa-heart"></i> <span>المفضلة</span> <i class="fas fa-chevron-left arrow"></i>
+        </div>
+        <div class="divider"></div>
+        <div class="menu-item text-danger" id="menuLogoutBtn" style="display:none;">
+            <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+        </div>
+      </div>
+       <div style="height: 80px;"></div>
     </section>
 
-    <section id="notifications" class="page-section">
-      <h2>الإشعارات</h2>
-      <p>هنا هتظهر إشعاراتك.</p>
-    </section>
-
-    <section id="updates" class="page-section">
-      <h2>التحديثات</h2>
-      <p>هنا هنكتب آخر التحديثات الخاصة بالموقع.</p>
-    </section>
   </main>
 
-  <button id="chatBtn" class="chat-fab" aria-label="فتح الدردشة العامة">
-    <i class="fas fa-globe"></i>
-  </button>
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-target="feed-page">
+        <i class="fas fa-home"></i>
+        <span>الرئيسية</span>
+    </div>
+    <div class="nav-item" data-target="members-page">
+        <i class="fas fa-list-ul"></i>
+        <span>السجل</span>
+    </div>
+    
+    <div class="nav-fab-container">
+        <button id="addPostFab" class="fab-btn"><i class="fas fa-plus"></i></button>
+    </div>
 
-  <div id="chatWindow" class="chat-window" aria-modal="true" role="dialog">
-    <div class="chat-header">
-      <span><i class="fas fa-comments"></i> المحادثة العامة</span>
-      <button id="closeChat" class="close-btn" aria-label="إغلاق نافذة الدردشة">&times;</button>
+    <div class="nav-item" data-target="seasons-page">
+        <i class="far fa-calendar-alt"></i>
+        <span>المواسم</span>
     </div>
-    <div id="chatMessages" class="chat-messages"></div>
-    <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="اكتب رسالة..." aria-label="رسالة الدردشة" />
-      <button id="sendMsg" class="send-btn" aria-label="إرسال الرسالة"><i class="fas fa-paper-plane"></i></button>
+    <div class="nav-item" data-target="menu-page">
+        <i class="fas fa-ellipsis-h"></i> <span>المزيد</span>
     </div>
+  </nav>
+
+  <div id="createPostModal" class="full-screen-modal">
+      <div class="modal-header">
+          <button id="closePostModal"><i class="fas fa-times"></i></button>
+          <span>منشور جديد</span>
+          <button id="publishPostBtn" class="publish-btn">نشر</button>
+      </div>
+      <div class="modal-body">
+          <textarea id="postContentInput" placeholder="ماذا يدور في ذهنك؟"></textarea>
+      </div>
   </div>
 
-  <footer class="main-footer">
-    <p>© 2025 المنتدى - جميع الحقوق محفوظة</p>
-  </footer>
-
   <script type="module" src="main.js"></script>
-  <script>
-    // التحكم في عرض الأقسام (Basic Navigation)
-    const navLinks = document.querySelectorAll('.nav-icon');
-    const sections = document.querySelectorAll('.page-section');
-
-    navLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        // إزالة active من الكل
-        navLinks.forEach(l => l.classList.remove('active'));
-        sections.forEach(s => s.classList.remove('active'));
-        
-        // تفعيل القسم المطلوب
-        link.classList.add('active');
-        const sectionId = link.getAttribute('data-section');
-        const targetSection = document.getElementById(sectionId);
-        if (targetSection) {
-            targetSection.classList.add('active');
-        }
-      });
-    });
-  </script>
 </body>
 </html>
