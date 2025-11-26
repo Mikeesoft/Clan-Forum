@@ -9,18 +9,20 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <style>
-  body {
-    background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71); 
-    background-size: 400% 400%;
-    animation: gradientAnimation 15s ease infinite;
-    margin: 0; font-family: 'Cairo', sans-serif;
-  }
-  @keyframes gradientAnimation {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  :root{
+  /* أضف هذا داخل <style> في profile.html لتوحيد الشكل */
+body {
+  /* ... بقية الخصائص ... */
+  background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71); /* نفس تدرج الصفحة الرئيسية */
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+    :root{
       --bg: linear-gradient(180deg,#071014 0%, #0b1416 100%);
       --card-bg: rgba(255,255,255,0.03);
       --muted: #bfc9cb;
@@ -28,124 +30,400 @@
       --gold: #f1c40f;
       --danger: #e74c3c;
       --success: #2ecc71;
-  }
-  *{box-sizing:border-box}
-  html,body{ height:100%; color:#e7eef0; direction: rtl; text-align: right; }
+      --max-frame-width: 1200px;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:'Cairo',system-ui,Arial;
+      background:var(--bg);
+      color:#e7eef0;
+      -webkit-font-smoothing:antialiased;
+      direction: rtl;
+      text-align: right;
+    }
 
-  .page-wrap { width:100%; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:28px 20px; }
+    /* General Layout */
+    .page-wrap {
+      width:100%;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding:28px 20px;
+    }
 
-  .frame {
-    width:100%; max-width:980px; border-radius:16px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-    box-shadow: 0 24px 80px rgba(0,0,0,0.65); position:relative; overflow:hidden;
-    padding:25px; display:flex; flex-direction: column; gap:20px;
-  }
+    .frame {
+      width:100%;
+      max-width:980px; 
+      border-radius:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+      box-shadow: 0 24px 80px rgba(0,0,0,0.65);
+      position:relative;
+      overflow:hidden;
+      padding:25px;
+      display:flex;
+      flex-direction: column;
+      gap:20px;
+    }
 
-  .divider { height:1px; background:rgba(255,255,255,0.08); margin:15px 0; border-radius:4px }
+    .divider { height:1px; background:rgba(255,255,255,0.08); margin:15px 0; border-radius:4px }
 
-  /* HERO CARD */
-  .profile-hero-card {
-      background: var(--card-bg); border-radius: 12px; padding: 25px 30px;
-      border: 1px solid rgba(255,255,255,0.03); box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; 
-  }
-  .profile-identity { display: flex; gap: 20px; align-items: center; flex: 1 1 50%; min-width: 300px; }
-  .avatar-wrap { position:relative; width:100px; height:100px; flex:0 0 100px }
-  .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--accent); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
-  .avatar-edit { position:absolute; right:0; bottom:0; background:var(--accent); color:#fff; width:30px; height:30px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid #000; font-size: 0.9em; transition:background 0.2s }
-  .avatar-edit:hover { background:#2980b9 }
+    /* 🟢 1. البطاقة الرئيسية (HERO CARD) */
+    .profile-hero-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 25px 30px;
+        border: 1px solid rgba(255,255,255,0.03);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap; 
+    }
+    .profile-identity {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex: 1 1 50%; 
+        min-width: 300px;
+    }
+    .avatar-wrap { position:relative; width:100px; height:100px; flex:0 0 100px }
+    .avatar-wrap img { width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--accent); box-shadow:0 8px 20px rgba(0,0,0,0.5) }
+    .avatar-edit { position:absolute; right:0; bottom:0; background:var(--accent); color:#fff; width:30px; height:30px; border-radius:50%; display:flex;align-items:center;justify-content:center; cursor:pointer; border:2px solid #000; font-size: 0.9em; transition:background 0.2s }
+    .avatar-edit:hover { background:#2980b9 }
 
-  .profile-info { display: flex; flex-direction: column; align-items: flex-start; }
-  .profile-info h2 { margin:0; font-size:1.8rem; color:#fff; display: flex; align-items: center; }
-  .profile-info .identity-line { margin: 5px 0 5px; font-size: 1rem; display: flex; align-items: center; color: var(--muted); flex-wrap: wrap; }
-  .username-tag { font-weight: 700; color: #fff; background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 4px; margin-inline-end: 10px; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.1); }
-  .email-text-muted { font-size: 0.95em; color: var(--muted); }
+    /* 🟢 تنسيق اليوزر والإيميل المُحسّن */
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; 
+    }
+    .profile-info h2 { 
+        margin:0; 
+        font-size:1.8rem; 
+        color:#fff;
+        display: flex; 
+        align-items: center;
+    }
+    .profile-info .identity-line {
+        margin: 5px 0 5px; 
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        color: var(--muted);
+        flex-wrap: wrap; 
+    }
+    .username-tag {
+        font-weight: 700;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-inline-end: 10px;
+        font-size: 0.9em;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .email-text-muted {
+        font-size: 0.95em;
+        color: var(--muted);
+    }
 
-  .level-box { display:inline-flex; align-items: center; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; font-weight: 700; color: var(--gold); }
-  .overall-progress-area { flex: 1 1 40%; min-width: 250px; align-self: flex-end; margin-top: 15px; }
-  .progress-label { font-size: 0.9em; color: var(--muted); margin-bottom: 8px; }
-  .small-progress { width:100%; height:10px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
-  #progressFill { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd57a,#ffb84f); transition: width 0.6s ease; }
+    .level-box { 
+        display:inline-flex; 
+        align-items: center; 
+        padding: 4px 10px; 
+        background: rgba(255,255,255,0.05); 
+        border-radius: 6px; 
+        font-weight: 700; 
+        color: var(--gold);
+    }
+    .overall-progress-area {
+        flex: 1 1 40%; 
+        min-width: 250px;
+        align-self: flex-end;
+        margin-top: 15px;
+    }
+    .progress-label { font-size: 0.9em; color: var(--muted); margin-bottom: 8px; }
+    .small-progress { width:100%; height:10px; background:rgba(0,0,0,0.25); border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.03) }
+    #progressFill { display:block; height:100%; width:0%; background:linear-gradient(90deg,#ffd57a,#ffb84f); transition: width 0.6s ease; }
 
-  /* CONTENT GRID */
-  .content-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
-  .section-card { background: var(--card-bg); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); padding: 20px; display: flex; flex-direction: column; height: 100%; min-height: 400px; }
-  .card-title { font-weight:700; font-size: 1.25rem; margin-bottom:15px; color: #fff; display: flex; align-items: center; gap: 10px; }
-  .card-content { flex-grow: 1; display: flex; flex-direction: column; }
-  
-  .reward-box { padding: 15px; border-radius: 8px; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.05)); border: 1px solid rgba(255,255,255,0.04); margin-bottom: 15px; display: flex; flex-direction: column; align-items: flex-start; }
-  .gift-btn { background: var(--gold); color: #111; padding: 10px 15px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform 0.15s ease, background-color 0.2s; cursor: pointer; }
-  .gift-btn:active { transform: translateY(1px); }
-  .reward-desc { font-size: 0.9em; color: var(--muted); margin: 8px 0 0; }
-  
-  .stat-group { padding: 5px 0; }
-  .stat-row { display:flex; justify-content:space-between; color:var(--muted); margin-top:10px; font-size: 1.05em; }
-  .stat-row strong { color: #fff; font-weight: 700; font-size: 1.1em; }
+    /* 🟢 2. شبكة المحتوى (CONTENT GRID) */
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+        gap: 20px;
+    }
+    .section-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.03);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 400px;
+    }
+    .card-title { font-weight:700; font-size: 1.25rem; margin-bottom:15px; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .card-content { flex-grow: 1; display: flex; flex-direction: column; }
+    
+    /* المكافأة والهدايا */
+    .reward-box {
+        padding: 15px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.05));
+        border: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .gift-btn {
+        background: var(--gold);
+        color: #111;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: transform 0.15s ease, background-color 0.2s;
+        cursor: pointer;
+    }
+    .gift-btn:active { transform: translateY(1px); }
+    .reward-desc { font-size: 0.9em; color: var(--muted); margin: 8px 0 0; }
+    
+    /* الإحصائيات (Stat Rows) */
+    .stat-group { padding: 5px 0; }
+    .stat-row { 
+        display:flex;
+        justify-content:space-between;
+        color:var(--muted);
+        margin-top:10px;
+        font-size: 1.05em;
+    }
+    .stat-row strong { color: #fff; font-weight: 700; font-size: 1.1em; }
 
-  .promo-area { display: flex; gap: 8px; margin-top: auto; padding-top: 15px; }
-  #promoInput { padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.1); color:#fff; outline:none; font-family:inherit; flex: 1; }
-  .apply-btn { background: var(--accent) !important; color:#fff !important; padding: 8px 12px; border-radius: 8px; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2); cursor: pointer; }
-  
-  .daily-progress-area { margin-bottom: 15px; }
-  .progress-bar-wrap { display: flex; align-items: center; gap: 15px; }
-  .progress-bar-wrap > div:first-child { flex-grow: 1; }
-  .minutes-count { font-weight: 700; color: var(--muted); width: 80px; text-align: center; }
-  .minutes-count strong { color: #fff; font-size: 1.1em; }
-  
-  .help-buttons-group { display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.08); }
-  .help-btn { background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; cursor:pointer; color:var(--muted); display:flex; align-items:center; gap:8px; transition:background 0.2s }
-  .help-btn:hover { background: rgba(255,255,255,0.05); color:#fff; }
-  .full-width-btn { width: 100%; justify-content: center; padding: 10px 15px; }
-  .danger-btn { background: var(--danger) !important; color: #fff !important; border-color: var(--danger) !important; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2); }
-  .danger-btn:hover { background: #c0392b !important; }
+    /* البرومو كود */
+    .promo-area { display: flex; gap: 8px; margin-top: auto; padding-top: 15px; }
+    #promoInput { 
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background:rgba(0,0,0,0.1);
+        color:#fff;
+        outline:none;
+        font-family:inherit;
+        flex: 1; 
+    }
+    .apply-btn {
+        background: var(--accent) !important; 
+        color:#fff !important; 
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+        cursor: pointer;
+    }
+    
+    /* شريط النشاط اليومي */
+    .daily-progress-area { margin-bottom: 15px; }
+    .progress-bar-wrap { display: flex; align-items: center; gap: 15px; }
+    .progress-bar-wrap > div:first-child { flex-grow: 1; }
+    .minutes-count { font-weight: 700; color: var(--muted); width: 80px; text-align: center; }
+    .minutes-count strong { color: #fff; font-size: 1.1em; }
+    
+    /* الأزرار المساعدة */
+    .help-buttons-group { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+        margin-top: auto; 
+        padding-top: 15px; 
+        border-top: 1px dashed rgba(255,255,255,0.08);
+    }
+    .help-btn { 
+        background: rgba(255,255,255,0.02); 
+        border:1px solid rgba(255,255,255,0.03); 
+        padding:8px 10px; 
+        border-radius:8px; 
+        cursor:pointer; 
+        color:var(--muted); 
+        display:flex; 
+        align-items:center; 
+        gap:8px; 
+        transition:background 0.2s 
+    }
+    .help-btn:hover { background: rgba(255,255,255,0.05); color:#fff; }
 
-  .verified-badge { color: #fff; background-color: var(--accent); border-radius: 50%; font-size: 0.7em; padding: 2px; height: 18px; width: 18px; display: inline-flex; align-items: center; justify-content: center; margin-inline-start: 8px; vertical-align: middle; animation: pulse-verify 1.5s infinite alternate; box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); }
-  @keyframes pulse-verify { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.05); opacity: 1; } }
+    .full-width-btn { width: 100%; justify-content: center; padding: 10px 15px; }
+    .danger-btn { 
+        background: var(--danger) !important; 
+        color: #fff !important; 
+        border-color: var(--danger) !important;
+        box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+    }
+    .danger-btn:hover { background: #c0392b !important; }
 
-  .admin-tools { position: absolute; top: 20px; right: 20px; z-index: 10; }
-  .admin-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: var(--accent); font-size: 1.2rem; transition: background 0.2s, transform 0.2s; cursor: pointer; }
-  .admin-btn:hover { background: rgba(255, 255, 255, 0.2); transform: rotate(90deg); }
+    /* 🟢 تنسيق أيقونة التوثيق */
+    .verified-badge {
+        color: #fff; 
+        background-color: var(--accent); 
+        border-radius: 50%;
+        font-size: 0.7em; 
+        padding: 2px; 
+        height: 18px;
+        width: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-inline-start: 8px;
+        vertical-align: middle;
+        animation: pulse-verify 1.5s infinite alternate;
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); 
+    }
+    @keyframes pulse-verify {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.05); opacity: 1; }
+    }
 
-  .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,var(--success),#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
-  .toast { position: fixed; bottom: 25px; right: 25px; padding: 12px 18px; color: #fff; background: #1c272a; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.7); z-index: 10000; opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease; transform: translateX(100%); font-weight: 600; min-width: 200px; text-align: right; border-right: 4px solid #fff; }
-  .toast.show { opacity: 1; transform: translateX(0); }
-  
-  .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; }
-  .modal.show { display: flex; }
-  .modal-content { background: #1c272a; margin: auto; padding: 30px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); animation: fadeIn 0.3s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-  .modal-content h2 { color: var(--accent); margin-top: 0; font-size: 1.6rem; }
-  .modal-content p { color: var(--muted); margin-bottom: 20px; }
-  #usernameInput { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(0, 0, 0, 0.2); color: #fff; font-size: 1.1em; outline: none; text-align: center; }
-  #usernameInput:focus { border-color: var(--gold); }
-  #saveUsernameBtn { background: var(--accent); color: #fff; padding: 12px 25px; border-radius: 8px; font-weight: 700; font-size: 1.1em; cursor: pointer; transition: background 0.2s, transform 0.2s; }
-  #saveUsernameBtn:hover { background: #2980b9; transform: translateY(-2px); }
-  .feedback-text { margin-top: 15px; font-size: 0.95em; color: var(--gold); }
+    /* 🟢 تنسيق أدوات الإدارة */
+    .admin-tools {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+    }
 
-  @media (max-width: 980px) {
-      .frame { max-width: 100%; }
-      .profile-hero-card { flex-direction: column; align-items: center; text-align: center; }
-      .profile-identity { flex-direction: column; align-items: center; text-align: center; min-width: unset; }
-      .profile-info h2 { margin-top: 10px; }
-      .profile-info .identity-line { justify-content: center; } 
-      .overall-progress-area { align-self: center; width: 100%; margin-top: 20px; }
-      .content-grid { grid-template-columns: 1fr; } 
-      .section-card { min-height: initial; }
-      .admin-tools { position: relative; top: 0; right: 0; margin-top: 10px; align-self: flex-start; }
-  }
-  @media (max-width: 480px) {
-      .frame { padding: 15px; gap: 15px; }
-      .profile-hero-card { padding: 15px; }
-      .avatar-wrap { width: 80px; height: 80px; flex: 0 0 80px; }
-      .avatar-wrap img { border-width: 2px; }
-      .avatar-edit { width: 26px; height: 26px; font-size: 0.8em; }
-      .profile-info h2 { font-size: 1.4rem; }
-      .profile-info .identity-line { font-size: 0.9rem; }
-      .username-tag { margin-inline-end: 8px; padding: 1px 6px; }
-      .content-grid { grid-template-columns: 1fr; }
-      .content-grid > div { min-width: unset; }
-      .minutes-count { width: 60px; }
-  }
+    .admin-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--accent);
+        font-size: 1.2rem;
+        transition: background 0.2s, transform 0.2s;
+        cursor: pointer;
+    }
+
+    .admin-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    /* Toast & Alerts */
+    .claim-alert { position:absolute; top:20px; right:20px; background: linear-gradient(180deg,var(--success),#27ae60); padding:10px 14px; color:#fff; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.45); display:none; z-index:9999 }
+    .toast {
+      position: fixed; bottom: 25px; right: 25px; padding: 12px 18px; color: #fff;
+      background: #1c272a; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+      z-index: 10000; opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: translateX(100%); font-weight: 600; min-width: 200px; text-align: right;
+      border-right: 4px solid #fff; 
+    }
+    .toast.show { opacity: 1; transform: translateX(0); }
+    
+    /* ======= Modal Styles (لاختيار اليوزر) ======= */
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        justify-content: center;
+        align-items: center;
+    }
+    .modal.show { display: flex; }
+
+    .modal-content {
+        background: #1c272a; 
+        margin: auto;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .modal-content h2 { color: var(--accent); margin-top: 0; font-size: 1.6rem; }
+    .modal-content p { color: var(--muted); margin-bottom: 20px; }
+
+    #usernameInput {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        font-size: 1.1em;
+        outline: none;
+        text-align: center;
+    }
+    #usernameInput:focus { border-color: var(--gold); }
+
+    #saveUsernameBtn {
+        background: var(--accent);
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+    }
+    #saveUsernameBtn:hover { background: #2980b9; transform: translateY(-2px); }
+
+    .feedback-text {
+        margin-top: 15px;
+        font-size: 0.95em;
+        color: var(--gold); 
+    }
+
+    /* Media Queries */
+    @media (max-width: 980px) {
+        .frame { max-width: 100%; }
+        .profile-hero-card { flex-direction: column; align-items: center; text-align: center; }
+        .profile-identity { flex-direction: column; align-items: center; text-align: center; min-width: unset; }
+        .profile-info h2 { margin-top: 10px; }
+        .profile-info .identity-line { justify-content: center; } 
+        .overall-progress-area { align-self: center; width: 100%; margin-top: 20px; }
+        .content-grid { grid-template-columns: 1fr; } 
+        .section-card { min-height: initial; }
+        
+        .admin-tools {
+            position: relative; 
+            top: 0; 
+            right: 0;
+            margin-top: 10px;
+            align-self: flex-start; 
+        }
+    }
+    @media (max-width: 480px) {
+        .frame { padding: 15px; gap: 15px; }
+        .profile-hero-card { padding: 15px; }
+        .avatar-wrap { width: 80px; height: 80px; flex: 0 0 80px; }
+        .avatar-wrap img { border-width: 2px; }
+        .avatar-edit { width: 26px; height: 26px; font-size: 0.8em; }
+        .profile-info h2 { font-size: 1.4rem; }
+        .profile-info .identity-line { font-size: 0.9rem; }
+        .username-tag { margin-inline-end: 8px; padding: 1px 6px; }
+        .content-grid { grid-template-columns: 1fr; }
+        .content-grid > div { min-width: unset; }
+        .minutes-count { width: 60px; }
+    }
   </style>
 </head>
 <body>
@@ -167,16 +445,19 @@
           </div>
           <div class="profile-info">
             <h2 id="displayNameContainer">اسم المستخدم</h2> 
-            <div id="identityLine" class="identity-line"></div>
+            
+            <div id="identityLine" class="identity-line">
+                </div>
+            
             <div class="level-box">
                 <span style="font-size:0.9em; margin-inline-end: 4px;">المستوى</span>
                 <strong id="levelNum">0</strong>
-            </div>
+                <span style="color:var(--muted)">/100</span> </div>
           </div>
         </div>
 
         <div class="overall-progress-area">
-          <div class="progress-label">تقدم المستوى</div>
+          <div class="progress-label">تقدم المستوى الكلي (<span id="starsNum">0</span> نجمة)</div>
           <div class="small-progress" aria-hidden><span id="progressFill"></span></div>
         </div>
       </section>
@@ -187,6 +468,7 @@
             <div class="card-title"><i class="fa-solid fa-star"></i> المكافآت والنجوم</div>
             
             <div class="card-content">
+                
                 <div class="reward-box" style="--reward-color: #f1c40f;">
                     <button id="giftBtn" class="gift-btn" title="استلام الهدية اليومية">
                         <i class="fa-solid fa-gift"></i> استلام الهدية اليومية
@@ -265,25 +547,28 @@
   </div>
 
   <script type="module">
-    // 1. استيراد الأدوات المركزية من ملف config.js
-    // لاحظ: استوردنا calculateUserRank لحساب المستويات بنفس طريقة الموقع كله
-    import { auth, db, calculateUserRank } from "./config.js"; 
-    
-    // 2. استيراد دوال Auth و Firestore اللازمة فقط
+    // ===== Firebase imports (v11 modular) =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { 
-        signInWithPopup, 
-        GoogleAuthProvider, 
-        onAuthStateChanged, 
-        signOut, 
-        updateProfile 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    
-    import { 
-        doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction,
+        getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, runTransaction,
         collection, query, where, getDocs, increment
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+    // ====== config ======
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ لا تنسَ استبدال هذا بـ API Key الحقيقي
+      authDomain: "clan-forum.firebaseapp.com",
+      projectId: "clan-forum",
+      storageBucket: "clan-forum.firebasestorage.app",
+      messagingSenderId: "1011903491894",
+      appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
 
     // DOM refs
     const displayNameContainer = document.getElementById('displayNameContainer');
@@ -301,6 +586,7 @@
     const giftBtn = document.getElementById('giftBtn');
     const claimNotification = document.getElementById('claimNotification');
     
+    // الأزرار
     const helpBtn = document.getElementById('helpBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const applyPromo = document.getElementById('applyPromo');
@@ -312,6 +598,7 @@
     const adminTools = document.getElementById('adminTools');
     const mainContentFrame = document.getElementById('mainContentFrame');
     
+    // DOM refs لـ Username Modal
     const usernameModal = document.getElementById('usernameModal');
     const usernameInput = document.getElementById('usernameInput');
     const saveUsernameBtn = document.getElementById('saveUsernameBtn');
@@ -319,13 +606,19 @@
 
 
     // Constants
-    const ACTIVITY_UPDATE_INTERVAL = 5 * 60; 
-    const LOCAL_UPDATE_INTERVAL = 30; 
+    const ACTIVITY_UPDATE_INTERVAL = 5 * 60; // 300 ثانية = 5 دقائق (فاصل زمني للكتابة على Firebase)
+    const LOCAL_UPDATE_INTERVAL = 30; // 30 ثانية (فاصل زمني لتحديث العداد المحلي)
     const STAR_PER_5MIN = 1;
     const SECONDS_PER_STAR = 5 * 60;
+    const STARS_PER_LEVEL = 50;
+    const MAX_LEVEL = 100; 
+    const STARS_FOR_PRESTIGE = 500; // كل 500 نجمة إضافية بعد المستوى 100 تعتبر رتبة فخرية
     const DAILY_MINS_GOAL = 30;
+
+    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ']; // 6 رموز
     
     const DEFAULT_AVATAR_PLACEHOLDER = 'https://via.placeholder.com/300x300/1C272A/FFFFFF?text=U';
+
 
     // state
     let currentUser = null;
@@ -337,9 +630,11 @@
     function showToast(msg, color = '#2ecc71') {
       const t = document.createElement('div');
       t.className = 'toast';
+      
       t.style.borderColor = color; 
       t.textContent = msg;
       document.body.appendChild(t);
+      
       setTimeout(()=> t.classList.add('show'), 20);
       setTimeout(()=> { 
         t.classList.remove('show'); 
@@ -352,11 +647,45 @@
     }
     function userDocRef(uid){ return doc(db,'users', uid); }
     const usernamesCol = collection(db, 'usernames');
+    const promosCol = collection(db, 'promos'); 
+
+    // Levels Calculation: دالة واحدة لحساب المستوى والرتب والتقدم (معدلة)
+    function computeRanks(stars) { 
+        const MAX_STARS_BEFORE_PRESTIGE = MAX_LEVEL * STARS_PER_LEVEL; // 5000 نجمة
+
+        // 1. حساب المستوى الأساسي (المستوى المرئي من 0 إلى 100)
+        const baseLevel = Math.min(Math.floor(stars / STARS_PER_LEVEL), MAX_LEVEL);
+
+        // 2. حساب الرتبة الفخرية (Prestige Rank)
+        let prestigeRankIndex = 0;
+        let starsInLevelCycle = stars;
+
+        if (stars >= MAX_STARS_BEFORE_PRESTIGE) {
+            const starsBeyondMaxLevel = stars - MAX_STARS_BEFORE_PRESTIGE;
+            const prestigeCycleCount = Math.floor(starsBeyondMaxLevel / STARS_FOR_PRESTIGE);
+            prestigeRankIndex = Math.min(prestigeCycleCount, PRESTIGE_SYMBOLS.length - 1);
+            starsInLevelCycle = starsBeyondMaxLevel % STARS_FOR_PRESTIGE;
+        } else {
+             starsInLevelCycle = stars;
+        }
+
+        // 3. حساب التقدم ضمن المستوى الحالي (لشريط الملء)
+        const starsInCurrentLevel = starsInLevelCycle % STARS_PER_LEVEL;
+        const progressPercent = (starsInCurrentLevel / STARS_PER_LEVEL) * 100;
+
+        return { 
+            level: baseLevel, 
+            prestigeRank: prestigeRankIndex, 
+            progressPercent: progressPercent,
+            starsInLevelCycle: starsInLevelCycle 
+        };
+    }
 
     // دالة تحديث حالة زر الهدية 
     function updateGiftButtonState(lastGiftDate) {
       if (!giftBtn) return;
       const today = todayDateStr();
+      
       if (lastGiftDate === today) {
         giftBtn.disabled = true;
         giftBtn.style.backgroundColor = 'var(--success)';
@@ -370,34 +699,48 @@
       }
     }
 
+    // دالة التحقق وحفظ اليوزر
     async function handleUsernameSelection(user) {
         usernameModal.classList.add('show');
         usernameModal.style.display = 'flex'; 
+
         saveUsernameBtn.onclick = async () => {
             const username = usernameInput.value.trim().toLowerCase();
+            
             if (!/^[a-z0-9]{3,16}$/.test(username)) {
                 usernameFeedback.textContent = 'يجب أن يكون اليوزر بين 3 و 16 حرفًا أو رقمًا (بالإنجليزية فقط).';
                 return;
             }
+            
             saveUsernameBtn.disabled = true;
             usernameFeedback.textContent = 'جارٍ التحقق...';
+
             try {
+                // 2. التحقق من التوفر في مجموعة usernames
                 const q = query(usernamesCol, where('username', '==', username));
                 const snap = await getDocs(q);
+                
                 if (!snap.empty) {
                     usernameFeedback.textContent = `يوزر المستخدم (${username}) غير متاح. الرجاء اختيار يوزر آخر.`;
                     return;
                 }
+                
+                // 3. اليوزر متاح، الآن نحفظه
                 const uref = userDocRef(user.uid);
+                
                 await runTransaction(db, async (tx) => {
                     tx.update(uref, { username: username });
+
                     const unameRef = doc(db, 'usernames', username);
                     tx.set(unameRef, { uid: user.uid, createdAt: serverTimestamp() });
                 });
+
+                // 4. إغلاق النافذة وتحديث الواجهة
                 usernameModal.classList.remove('show');
                 usernameModal.style.display = 'none';
                 showToast(`تم حفظ يوزر المستخدم بنجاح: ${username}`, '#2ecc71');
                 refreshUserDoc();
+                
             } catch (e) {
                 console.error('Username save error', e);
                 usernameFeedback.textContent = 'حدث خطأ غير متوقع أثناء الحفظ.';
@@ -407,70 +750,93 @@
         };
     }
 
-    // UI updater - يستخدم الآن الدالة المركزية calculateUserRank
+    // UI updater - 🟢 تم تطبيق زر اقتراح اليوزر
     function updateUIFromData(data) {
       const stars = data?.stars || 0;
       const isAdmin = data?.isAdmin === true; 
       const username = data?.username || null; 
       const lastGiftDate = data?.lastGiftDate || null; 
       
-      // ✅ هنا التغيير الجوهري: استخدام الدالة الموحدة
-      const ranks = calculateUserRank(stars); 
-      
+      const ranks = computeRanks(stars); 
       const level = ranks.level;
-      const prestigeSymbol = ranks.prestigeSymbol;
+      const prestigeRankIndex = ranks.prestigeRank;
       const progressPercent = ranks.progressPercent;
-      const nextTarget = ranks.nextTarget;
-      const isPrestige = ranks.isPrestige;
+      const starsInLevelCycle = ranks.starsInLevelCycle;
 
       if (adminTools) adminTools.style.display = isAdmin ? 'flex' : 'none';
       
+      // 1. تحديث الاسم وشارة التوثيق
       const name = currentUser.displayName || 'مستخدم';
       let nameHTML = name;
-      if (isAdmin) nameHTML += `<i class="fas fa-check-circle verified-badge" title="مسؤول موثق"></i>`;
+      if (isAdmin) {
+          nameHTML += `<i class="fas fa-check-circle verified-badge" title="مسؤول موثق"></i>`;
+      }
       displayNameContainer.innerHTML = nameHTML;
       
+      // 2. تحديث سطر الهوية (اليوزر والإيميل)
       if (username) {
-        identityLineEl.innerHTML = `<span class="username-tag">@${username}</span> <span class="email-text-muted">${currentUser.email || ''}</span>`;
+        identityLineEl.innerHTML = `
+            <span class="username-tag">@${username}</span> 
+            <span class="email-text-muted">${currentUser.email || ''}</span>
+        `;
       } else {
-        identityLineEl.innerHTML = `<span class="email-text-muted">${currentUser.email || ''}</span><button id="chooseUsernameHint" class="help-btn" style="padding: 4px 8px; font-size: 0.85em; margin-inline-start: 10px;"><i class="fas fa-edit"></i> اختر يوزر المستخدم</button>`;
+        // 💡 إظهار خيار لتعيين اليوزر
+        identityLineEl.innerHTML = `
+            <span class="email-text-muted">${currentUser.email || ''}</span>
+            <button id="chooseUsernameHint" class="help-btn" style="padding: 4px 8px; font-size: 0.85em; margin-inline-start: 10px;">
+                <i class="fas fa-edit"></i> اختر يوزر المستخدم
+            </button>
+        `;
+        // ربط الزر بفتح الـ Modal بعد 100ms لضمان إنشاء العنصر
         setTimeout(() => {
             const hintBtn = document.getElementById('chooseUsernameHint');
             if (hintBtn) hintBtn.onclick = () => handleUsernameSelection(currentUser);
         }, 100);
       }
       
+      // 3. تحديث حالة زر الهدية
       updateGiftButtonState(lastGiftDate);
 
+      // 4. تحديث المستوى والرتب الفخرية
       const formattedStars = stars.toLocaleString('en-US'); 
       starsNumEl.textContent = formattedStars;
       statStars.textContent = formattedStars;
 
-      progressFill.style.width = `${progressPercent}%`; 
+      progressFill.style.width = `${Math.min(progressPercent, 100)}%`; 
 
+      let rankSymbol = PRESTIGE_SYMBOLS[prestigeRankIndex] || PRESTIGE_SYMBOLS[0];
       let displayLevel = level;
-      if (isPrestige) {
-        levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${prestigeSymbol} ${displayLevel}</span>`;
-        statLevel.innerHTML = `<span style="font-size:1.1em;">${prestigeSymbol} ${displayLevel}</span>`;
+      
+      if (prestigeRankIndex > 0) {
+        levelNumEl.innerHTML = `<span style="font-size:1.1em; color:var(--gold);">${rankSymbol} ${displayLevel}</span>`;
+        statLevel.innerHTML = `<span style="font-size:1.1em;">${rankSymbol} ${displayLevel}</span>`;
       } else {
         levelNumEl.textContent = displayLevel;
         statLevel.textContent = displayLevel;
       }
       
+      // 5. تحديث تسمية شريط التقدم الكلي
       if (overallProgressLabel) {
           let nextMilestone = '';
-          if (nextTarget > 0) {
-              nextMilestone = `متبقي ${nextTarget} نجمة للترقية`;
+          const starsNeededForNextLevel = STARS_PER_LEVEL - (starsInLevelCycle % STARS_PER_LEVEL);
+          
+          if (level < MAX_LEVEL) {
+              nextMilestone = `النجوم المتبقية للمستوى ${level + 1} هي ${starsNeededForNextLevel}`;
+          } else if (prestigeRankIndex < PRESTIGE_SYMBOLS.length - 1) {
+               const starsNeededForNextPrestige = STARS_FOR_PRESTIGE - starsInLevelCycle;
+               nextMilestone = `النجوم المتبقية للرتبة ${PRESTIGE_SYMBOLS[prestigeRankIndex + 1]} هي ${starsNeededForNextPrestige}`;
           } else {
-              nextMilestone = `أقصى مستوى! 🎉`;
+              nextMilestone = `وصلت لأعلى رتبة فخرية! 🎉`;
           }
-          overallProgressLabel.innerHTML = `تقدم المستوى (<strong>${formattedStars}</strong> نجمة): ${nextMilestone}`;
+          overallProgressLabel.innerHTML = `تقدم المستوى الكلي (<strong>${formattedStars}</strong> نجمة): ${nextMilestone}`;
       }
 
+      // 6. تحديث النشاط
       if (typeof data.dailySeconds === 'number') {
         const totalSeconds = (data.dailySeconds || 0) + localSecondsSinceLastUpdate;
         const mins = Math.floor(totalSeconds / 60);
         todayMinutesEl.textContent = mins;
+        
         const dailyPercent = Math.min((mins / DAILY_MINS_GOAL) * 100, 100);
         dailyBar.style.width = `${dailyPercent}%`;
       } else {
@@ -479,24 +845,30 @@
       }
     }
     
+    // دالة تحديث العرض المحلي للدقائق فقط (تستدعى كل 30 ثانية)
     function updateLocalMinutesDisplay() {
         if (!userLastFetchedData) return;
         const data = userLastFetchedData; 
+        
         if (typeof data.dailySeconds === 'number') {
             const totalSeconds = (data.dailySeconds || 0) + localSecondsSinceLastUpdate;
             const mins = Math.floor(totalSeconds / 60);
             todayMinutesEl.textContent = mins;
+            
             const dailyPercent = Math.min((mins / DAILY_MINS_GOAL) * 100, 100);
             dailyBar.style.width = `${dailyPercent}%`;
         }
     }
 
+
     // auth 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        try { await signInWithPopup(auth, provider); }
+        try { 
+          await signInWithPopup(auth, provider); 
+        }
         catch (e) { 
-          console.error('auth cancelled', e); 
+          console.error('auth popup cancelled', e); 
           showToast('يرجى تسجيل الدخول للمتابعة', '#e67e22'); 
           setTimeout(() => location.href = 'index.html', 2000);
           return; 
@@ -512,80 +884,127 @@
       let initialData;
       
       if (!snap.exists()) {
-        initialData = { stars:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null, username: null }; 
+        initialData = { stars:0, level:0, prestigeRank:0, isAdmin: false, lastGiftDate:null, dailySeconds:0, lastActiveDate: todayDateStr(), photoURL: currentUser.photoURL || null, username: null }; 
         await setDoc(uref, initialData);
+        
         profileImageEl.src = currentUser.photoURL || DEFAULT_AVATAR_PLACEHOLDER; 
-        userLastFetchedData = initialData;
+        
+        userLastFetchedData = initialData; // حفظ البيانات
         updateUIFromData(initialData); 
         handleUsernameSelection(currentUser);
         return; 
       } else {
         initialData = snap.data();
-        let photoSource = initialData?.photoURL || currentUser.photoURL;
+        
+        // منطق ترتيب جلب الصورة:
+        let photoSource = null;
+        if (initialData?.photoURL) {
+            photoSource = initialData.photoURL;
+        } else if (currentUser.photoURL) {
+            photoSource = currentUser.photoURL;
+        }
+        
         profileImageEl.src = photoSource || DEFAULT_AVATAR_PLACEHOLDER; 
-        userLastFetchedData = initialData; 
+        
+        userLastFetchedData = initialData; // حفظ البيانات
+        
         if (!initialData.username) {
             updateUIFromData(initialData); 
             handleUsernameSelection(currentUser);
             return; 
         }
       }
+      
       updateUIFromData(initialData);
       startSessionTimer();
     });
 
+    // Upload avatar WITHOUT Firebase Storage (uses DataURL)
     if (fileInput) {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file || !currentUser) return;
-        if (file.size > 300 * 1024) return showToast('صورة كبيرة جداً', '#f39c12');
-        
+        const MAX_BYTES = 300 * 1024; // 300KB limit
+        if (file.size > MAX_BYTES) {
+          showToast('صورة كبيرة جدًا — يجب أن تكون أقل من 300KB', '#f39c12');
+          return;
+        }
         const reader = new FileReader();
         reader.onload = async (ev) => {
           const base64 = ev.target.result;
           try {
             profileImageEl.src = base64;
             await setDoc(userDocRef(currentUser.uid), { photoURL: base64 }, { merge: true });
-            try { await updateProfile(currentUser, { photoURL: base64 }); } catch {}
+            try { await updateProfile(currentUser, { photoURL: base64 }); } catch (err) { /* ignore auth update errors */ }
             showToast('تم تحديث الصورة');
-          } catch { showToast('فشل حفظ الصورة', '#e74c3c'); }
+          } catch (err) {
+            console.error('save photo', err);
+            showToast('فشل حفظ الصورة', '#e74c3c');
+          }
         };
         reader.readAsDataURL(file);
       });
-      document.querySelector('.avatar-edit')?.addEventListener('click', () => fileInput.click());
+
+      const camLabel = document.querySelector('.avatar-edit');
+      if (camLabel) camLabel.addEventListener('click', () => fileInput.click());
     }
 
-    // Gift (daily claim)
+    // Gift (daily claim) - 🟢 (مُحسَّن)
     if (giftBtn) {
       giftBtn.addEventListener('click', async () => {
-        if (!currentUser) return showToast('يجب تسجيل الدخول', '#e67e22');
+        if (!currentUser) return showToast('يجب تسجيل الدخول أولاً', '#e67e22');
         const uref = userDocRef(currentUser.uid);
-        const currentData = userLastFetchedData || {};
         
-        if (!currentData.username) return showToast('اختر يوزر المستخدم أولاً.', '#f39c12');
+        const currentSnap = await getDoc(uref);
+        const currentData = currentSnap.data() || {};
+        
+        // 💡 التحقق السريع من اليوزر قبل الـ Transaction
+        if (!currentData.username) return showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
+        
         giftBtn.disabled = true;
-        updateGiftButtonState(todayDateStr());
+        updateGiftButtonState(todayDateStr()); // تحديث فوري (افتراضي)
 
         try {
           await runTransaction(db, async (tx) => {
+            
             const snap = await tx.get(uref);
             if (!snap.exists()) throw new Error("no-doc");
+
             const data = snap.data();
-            if (data.lastGiftDate === todayDateStr()) throw new Error('claimed');
             
-            // ✅ لا داعي لحساب المستوى هنا، فقط حدث النجوم والـ UI سيتولى الباقي
+            // التحقق من الاستلام
+            const last = data.lastGiftDate || null;
+            if (last === todayDateStr()) throw new Error('claimed');
+            
+            // تنفيذ التحديث
+            const newStars = (data.stars || 0) + 5;
+            const ranks = computeRanks(newStars); 
+
             tx.update(uref, { 
-                stars: (data.stars || 0) + 5, 
-                lastGiftDate: todayDateStr() 
+                stars: newStars, 
+                lastGiftDate: todayDateStr(), 
+                level: ranks.level,
+                prestigeRank: ranks.prestigeRank 
             });
           });
+          
+          // في حالة النجاح
           claimAnimation();
+          
         } catch (e) {
+          // إعادة ضبط حالة الزر في حالة الفشل
           updateGiftButtonState(currentData.lastGiftDate || null);
-          if (e?.message === 'claimed') showToast('تم الاستلام بالفعل', '#f39c12');
-          else showToast('فشل الاستلام', '#e74c3c'); 
+          
+          if (e?.message === 'claimed') showToast('لقد استلمت الهدية اليوم بالفعل', '#f39c12');
+          else { 
+            console.error('claim err (transaction failed)', e); 
+            showToast('فشل استلام الهدية. (يرجى مراجعة قواعد الأمان)', '#e74c3c'); 
+          }
         } finally {
-            if(giftBtn.style.backgroundColor !== 'var(--success)') giftBtn.disabled = false;
+            // يتم فتح الزر فقط إذا كان الفشل ليس بسبب 'claimed'
+            if(giftBtn.style.backgroundColor !== 'var(--success)') {
+                 giftBtn.disabled = false;
+            }
         }
       });
     }
@@ -594,152 +1013,244 @@
       claimNotification.style.display = 'block';
       setTimeout(()=> claimNotification.style.display = 'none', 2500);
       showToast('تم استلام 5 نجوم! 🎉');
-      try { window.launchConfetti(); } catch {}
+      if (typeof window.launchConfetti === 'function') {
+        try { window.launchConfetti(); } catch (e) { console.warn('confetti failed', e); }
+      }
       refreshUserDoc();
     }
 
+    // Session timer awarding stars
     async function updateActivity() {
       if (!currentUser) return;
+      
       const uref = userDocRef(currentUser.uid);
       try {
         await runTransaction(db, async (tx) => {
           const snap = await tx.get(uref);
           const data = snap.exists() ? snap.data() : {};
+          
           if (!data.username) return; 
 
           const lastDate = data.lastActiveDate || '';
           let dailySec = data.dailySeconds || 0;
+          
+          // إذا كان يوم جديد، صفر عدد الثواني اليومية
           if (lastDate !== todayDateStr()) dailySec = 0;
           
+          // 💡 إضافة الثواني المحلية التي تم تجميعها
           dailySec = (dailySec || 0) + localSecondsSinceLastUpdate;
+          
+          // حساب النجوم المستحقة
           let starsToAdd = 0;
           while (dailySec >= SECONDS_PER_STAR) { 
               starsToAdd += STAR_PER_5MIN; 
               dailySec -= SECONDS_PER_STAR; 
           }
           
-          // تحديث النجوم والوقت فقط
+          const currentStars = data.stars || 0;
+          const newStars = currentStars + starsToAdd;
+          const ranks = computeRanks(newStars); 
+          
           tx.update(uref, { 
-              stars: (data.stars || 0) + starsToAdd, 
+              stars: newStars, 
               dailySeconds: dailySec, 
-              lastActiveDate: todayDateStr()
+              lastActiveDate: todayDateStr(), 
+              level: ranks.level,
+              prestigeRank: ranks.prestigeRank 
           });
+          
           if (starsToAdd > 0) refreshUserDoc();
+
         });
+        
+        // 💡 تصفير المؤقت المحلي بعد الكتابة الناجحة
         localSecondsSinceLastUpdate = 0;
-      } catch (e) { console.error('session err', e); }
+        
+      } catch (e) { console.error('session update err', e); }
     }
+
 
     function startSessionTimer() {
       if (sessionTimer) return;
+      
+      const FIREBASE_WRITE_INTERVAL = ACTIVITY_UPDATE_INTERVAL; 
+
       sessionTimer = setInterval(() => {
         localSecondsSinceLastUpdate += LOCAL_UPDATE_INTERVAL;
+        
+        // 🟢 تحديث العرض المحلي للدقائق دون قراءة من Firestore
         if (currentUser) updateLocalMinutesDisplay(); 
-        if (localSecondsSinceLastUpdate >= ACTIVITY_UPDATE_INTERVAL) updateActivity();
+
+        // الكتابة إلى Firestore فقط عند الوصول للفاصل الزمني (5 دقائق)
+        if (localSecondsSinceLastUpdate >= FIREBASE_WRITE_INTERVAL) {
+            updateActivity();
+        }
+        
       }, LOCAL_UPDATE_INTERVAL * 1000);
     }
     
+    // 💡 حفظ النشاط عند مغادرة الصفحة
     window.addEventListener('beforeunload', () => { 
-        if (localSecondsSinceLastUpdate > 0) updateActivity();
+        if (localSecondsSinceLastUpdate > 0) {
+             updateActivity();
+        }
         if (sessionTimer) clearInterval(sessionTimer); 
     });
+
+
     window.addEventListener('blur', () => { 
+        // 💡 حفظ النشاط عند فقدان التركيز
         if (localSecondsSinceLastUpdate > 0) updateActivity();
         if (sessionTimer) clearInterval(sessionTimer); sessionTimer = null; 
     });
     window.addEventListener('focus', () => { 
+        // 💡 استئناف المؤقت عند العودة
         if (!sessionTimer && currentUser) startSessionTimer(); 
     });
 
+
+    // refresh user doc data into UI
     async function refreshUserDoc() {
       if (!currentUser) return;
       const snap = await getDoc(userDocRef(currentUser.uid));
       if (!snap.exists()) return;
       const data = snap.data();
+      
+      // 🟢 تحديث البيانات المجلوبة الأخيرة
       userLastFetchedData = data;
+      
       updateUIFromData(data);
     }
+    // تحديث إضافي كل 60 ثانية للتأكد من المزامنة
     setInterval(()=> refreshUserDoc(), 60000); 
 
+    // promo code (💡 تم التصحيح لضمان عمله)
     if (applyPromo) applyPromo.addEventListener('click', async () => {
-      const code = promoInput.value.trim().toUpperCase();
-      if (!code) return showToast('أدخل الكود', '#f39c12');
-      if (!currentUser) return showToast('سجل دخولك', '#e67e22');
+      const code = promoInput.value.trim().toUpperCase(); // التأكد من أنه UPPERCASE
+      if (!code) return showToast('الرجاء إدخال Promo Code صالح.', '#f39c12');
+      if (!currentUser) return showToast('يجب تسجيل الدخول لاستخدام Promo Code.', '#e67e22');
       
       const uref = userDocRef(currentUser.uid);
-      const promoRef = doc(db, 'promos', code); 
+      const promoRef = doc(db, 'promos', code); // البحث باستخدام الكود كـ Doc ID
       applyPromo.disabled = true;
+
+      let starsToAdd = 0;
 
       try {
         await runTransaction(db, async (tx) => {
           const userSnap = await tx.get(uref);
           const promoSnap = await tx.get(promoRef);
-          const userData = userSnap.data();
+          
+          const userData = userSnap.exists() ? userSnap.data() : {};
           
           if (!userData.username) throw new Error("no-username");
+          
+          // 🚨 التحقق من وجود الكود أولاً
           if (!promoSnap.exists()) throw new Error('CodeNotFound'); 
 
           const promoData = promoSnap.data();
-          if (userData.activatedPromos?.includes(code)) throw new Error('CodeAlreadyUsed');
-          if (promoData.maxUses > 0 && promoData.uses >= promoData.maxUses) throw new Error('CodeExpired');
+          starsToAdd = promoData.stars || 0; 
           
-          // زيادة النجوم فقط، دون الحاجة لحساب المستويات داخل الترانزكشن
-          const newStars = (userData.stars || 0) + (promoData.stars || 0);
-          const activatedPromos = [...(userData.activatedPromos || []), code];
+          // التحقق من الاستخدام المسبق
+          if (userData.activatedPromos?.includes(code)) {
+            throw new Error('CodeAlreadyUsed');
+          }
+          
+          // التحقق من عدد مرات الاستخدام الأقصى
+          if (promoData.maxUses > 0 && promoData.uses >= promoData.maxUses) {
+              throw new Error('CodeExpired');
+          }
+          
+          const currentStars = userData.stars || 0;
+          const newStars = currentStars + starsToAdd;
+          const ranks = computeRanks(newStars);
+          
+          // 1. تحديث مستند المستخدم
+          const activatedPromos = Array.isArray(userData.activatedPromos) ? [...userData.activatedPromos] : [];
+          activatedPromos.push(code);
           
           tx.update(uref, { 
             stars: newStars, 
+            level: ranks.level,
+            prestigeRank: ranks.prestigeRank,
             activatedPromos: activatedPromos,
             lastPromoActivated: code,
             promoActivatedAt: serverTimestamp() 
           });
+          
+          // 2. تحديث مستند البرومو كود (زيادة عدد مرات الاستخدام)
           tx.update(promoRef, { uses: increment(1) });
+
         });
-        showToast(`تم التفعيل بنجاح!`, '#3498db');
+        
+        showToast(`تمت إضافة ${starsToAdd.toLocaleString('en-US')} نجمة! Promo Code مفعل.`, '#3498db');
         refreshUserDoc();
         promoInput.value = '';
       }
       catch (e) { 
-        if (e.message === 'CodeAlreadyUsed') showToast('تم استخدام الكود سابقاً', '#f39c12');
-        else if (e.message === 'CodeNotFound') showToast('كود خاطئ', '#e74c3c'); 
-        else if (e.message === 'CodeExpired') showToast('انتهى الكود', '#e74c3c');
-        else if (e.message === 'no-username') showToast('اختر يوزر أولاً', '#f39c12');
-        else showToast('فشل التفعيل', '#e74c3c'); 
+        if (e.message === 'CodeAlreadyUsed') {
+            showToast('هذا الـ Promo Code تم استخدامه سابقاً.', '#f39c12');
+        } else if (e.message === 'CodeNotFound') {
+            // 🚨 إذا ظهر هذا الخطأ، فالمشكلة في الـ Doc ID أو قاعدة الأمان.
+            showToast('Promo Code غير صحيح أو لم يعد متاحًا.', '#e74c3c'); 
+        } else if (e.message === 'CodeExpired') {
+            showToast('انتهى العدد الأقصى لاستخدام هذا الكود.', '#e74c3c');
+        } else if (e?.message === 'no-username') {
+             showToast('يجب عليك اختيار يوزر المستخدم أولاً.', '#f39c12');
+        }
+        else {
+            console.error('Promo error:', e); 
+            showToast('فشل تفعيل الـ Promo Code.', '#e74c3c'); 
+        }
       } finally {
         applyPromo.disabled = false;
       }
     });
 
+    // signout
     if (signOutBtn) signOutBtn.addEventListener('click', async () => { 
+        // 💡 حفظ النشاط عند الخروج
         if (localSecondsSinceLastUpdate > 0) await updateActivity();
         try { 
             await signOut(auth); 
-            showToast('تم الخروج', '#3498db'); 
+            showToast('تم تسجيل الخروج', '#3498db'); 
             setTimeout(() => location.href = 'index.html', 1000);
-        } catch {} 
+        } catch (e){ 
+            console.error(e); 
+        } 
     });
 
+    // claim history (display last claim date)
     if (claimHistoryBtn) claimHistoryBtn.addEventListener('click', async () => {
-      if (!currentUser) return;
-      showToast(`آخر هدية: ${userLastFetchedData?.lastGiftDate || 'لا يوجد'}`, '#3498db');
+      if (!currentUser) return showToast('سجّل الدخول أولاً', '#e67e22');
+      const snap = await getDoc(userDocRef(currentUser.uid));
+      const data = snap.exists() ? snap.data() : {};
+
+      const lastGift = data.lastGiftDate || 'لم يتم الاستلام بعد';
+      const promoUsedCount = Array.isArray(data.activatedPromos) ? data.activatedPromos.length : 0;
+      
+      showToast(`آخر استلام هدية: ${lastGift}. تم تفعيل ${promoUsedCount} Promo Codes.`, '#3498db');
     });
     
+    // Help button
     if (helpBtn) helpBtn.addEventListener('click', () => {
-        showToast('كل 50 نجمة مستوى. بعد 100 مستوى، تبدأ الرتب الفخرية كل 500 نجمة.', '#3498db');
+        showToast('شرح المستويات: المستوى الأقصى هو 100. كل 50 نجمة ترفعك مستوى. كل 500 نجمة إضافية بعد المستوى 100 تمنحك رتبة فخرية (Prestige Rank).', '#3498db');
     });
 
+    // initial load refresh
     window.addEventListener('load', () => setTimeout(()=> refreshUserDoc(), 1200));
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
+    // Confetti Helper
     window.launchConfetti = function() {
       var duration = 2 * 1000; var end = Date.now() + duration;
       (function frame() {
         try {
           confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
           confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-        } catch (e) {}
+        } catch (e) { console.warn('confetti lib error', e); }
         if (Date.now() < end) requestAnimationFrame(frame);
       }());
     };

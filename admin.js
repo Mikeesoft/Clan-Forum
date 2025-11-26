@@ -1,14 +1,14 @@
-// admin.js (النسخة النهائية والموحدة)
+// admin.js (النسخة النهائية والمُصححة)
 
-// 1. استيراد الأدوات من config.js
-import { auth, db, calculateUserRank } from "./config.js";
-
-// 2. استيراد دوال Auth و Firestore اللازمة
+// ====== Firebase imports (v11 modular) ======
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
+    getAuth, 
     onAuthStateChanged,
     signOut 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { 
+    getFirestore, 
     doc, 
     getDoc, 
     updateDoc, 
@@ -20,9 +20,23 @@ import {
     serverTimestamp,
     setDoc,
     increment,
+    // 💡 تم إضافة limit هنا لتصحيح خطأ "limit is not defined"
     limit
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// ====== config (يجب استبدالها ببيانات مشروعك الحقيقية) ======
+const firebaseConfig = {
+    apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", 
+    authDomain: "clan-forum.firebaseapp.com",
+    projectId: "clan-forum",
+    storageBucket: "clan-forum.firebasestorage.app",
+    messagingSenderId: "1011903491894",
+    appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // ====== DOM Refs ======
 const authCheck = document.getElementById('authCheck');
@@ -90,12 +104,35 @@ function formatTimestamp(ts) {
     return ts.toDate().toLocaleString('ar-EG');
 }
 
+// دالة حساب المستويات (لضمان التناسق مع profile.html)
+function computeRanks(stars) { 
+    const STARS_PER_LEVEL = 50;
+    const MAX_LEVEL = 100; 
+    const STARS_FOR_PRESTIGE = 500; 
+    const MAX_STARS = MAX_LEVEL * STARS_PER_LEVEL; 
+    const PRESTIGE_SYMBOLS = ['⭐', 'Σ', 'Δ', 'Ω', 'Ψ', 'Φ'];
+
+    const baseLevel = Math.min(Math.floor(stars / STARS_PER_LEVEL), MAX_LEVEL);
+
+    let prestigeRank = 0;
+    if (stars >= MAX_STARS) {
+        const starsAboveMax = stars - MAX_STARS;
+        const rank = Math.floor(starsAboveMax / STARS_FOR_PRESTIGE); 
+        prestigeRank = Math.min(rank + 1, PRESTIGE_SYMBOLS.length - 1);
+    }
+    const rankSymbol = PRESTIGE_SYMBOLS[prestigeRank] || PRESTIGE_SYMBOLS[0];
+
+    return { 
+        level: baseLevel, 
+        prestigeSymbol: rankSymbol, 
+    };
+}
+
+
 // ====== User Profile Display ======
 function renderUserProfile(userData, uid) {
     currentTargetUser = { ...userData, uid };
-    
-    // ✅ استخدام الدالة الموحدة لحساب الرتبة للعرض
-    const rankInfo = calculateUserRank(userData.stars || 0);
+    const { level, prestigeSymbol } = computeRanks(userData.stars || 0);
 
     const bannedUntil = userData.bannedUntil?.toDate ? userData.bannedUntil.toDate() : null;
     const isBanned = bannedUntil && bannedUntil > new Date() || userData.isBannedPermanent === true;
@@ -110,12 +147,6 @@ function renderUserProfile(userData, uid) {
         banDetails = `باند نهائي.`;
     } else if (isBanned) {
         banDetails = `حتى: ${formatTimestamp(userData.bannedUntil)}.`;
-    }
-    
-    // تنسيق عرض المستوى
-    let levelDisplay = `${rankInfo.level}`;
-    if (rankInfo.isPrestige) {
-        levelDisplay += ` <span style="color:var(--gold)">(${rankInfo.prestigeSymbol} رتبة فخرية)</span>`;
     }
 
     userProfileDisplay.style.display = 'block';
@@ -146,7 +177,7 @@ function renderUserProfile(userData, uid) {
                 ${banDetails}
             </p>
             <p style="margin:5px 0; color:#fff;"><strong>النجوم الحالية:</strong> ${userData.stars?.toLocaleString('en-US') || 0}</p>
-            <p style="margin:5px 0;"><strong>المستوى:</strong> ${levelDisplay}</p>
+            <p style="margin:5px 0;"><strong>المستوى/الرتبة:</strong> ${level} ${prestigeSymbol}</p>
             <p style="margin:5px 0;"><strong>آخر نشاط:</strong> ${userData.lastActiveDate || 'N/A'}</p>
             <p style="margin:5px 0;"><strong>سبب الحظر:</strong> ${banReason}</p>
         </div>
@@ -175,6 +206,7 @@ searchUserBtn.addEventListener('click', async () => {
             userDocSnap = await getDoc(doc(db, 'users', targetUID));
         } 
         else {
+            // الآن limit مُعرَّف وجاهز للاستخدام
             const q = query(usersCol, where('username', '==', term), limit(1));
             const snap = await getDocs(q);
             if (!snap.empty) {
@@ -201,6 +233,7 @@ searchUserBtn.addEventListener('click', async () => {
 });
 
 /* 2. إجراءات الحظر/الباند */
+
 tempBanBtn.addEventListener('click', async () => {
     if (!currentTargetUser) return showToast('ابحث عن مستخدم أولاً.', 'var(--gold)');
     const days = parseInt(banDurationInput.value);
@@ -267,7 +300,8 @@ unbanBtn.addEventListener('click', async () => {
 });
 
 
-/* 3. إجراءات التحكم بالنجوم (Stars) - ✅ تم التحديث */
+/* 3. إجراءات التحكم بالنجوم (Stars) */
+
 async function updateStars(action, amount) {
     if (!currentTargetUser) return showToast('ابحث عن مستخدم أولاً.', 'var(--gold)');
     if (isNaN(amount) || amount < 0) return showToast('أدخل قيمة صحيحة وموجبة للنجوم.', 'var(--gold)');
@@ -289,13 +323,12 @@ async function updateStars(action, amount) {
                 newStars = amount;
             }
 
-            // ✅ استخدام الدالة الموحدة لحساب القيم الجديدة قبل الحفظ
-            const rankInfo = calculateUserRank(newStars);
+            const { level, prestigeSymbol } = computeRanks(newStars);
             
             tx.update(uRef, { 
                 stars: newStars,
-                level: rankInfo.level, 
-                prestigeRank: rankInfo.prestigeSymbol // حفظ الرمز للتناسق مع القديم
+                level: level, 
+                prestigeRank: prestigeSymbol 
             });
         });
         
@@ -316,6 +349,7 @@ setStarsBtn.addEventListener('click', () => updateStars('set', parseInt(starsAmo
 /* 4. الإحصائيات العامة */
 async function loadStats() {
     try {
+        // 💡 تم تبسيط الكود لحل مشكلة الإحصائيات، باستخدام getDocs لجلب البيانات
         const q = query(usersCol); 
         const snap = await getDocs(q); 
         
@@ -335,10 +369,11 @@ async function loadStats() {
         totalStarsCount.textContent = 'خطأ';
     }
 }
-setInterval(loadStats, 60000); 
+setInterval(loadStats, 60000); // تحديث الإحصائيات كل دقيقة
 
 
 /* 5. الأدوات الشاملة (Global Tools) */
+
 distributeStarsBtn.addEventListener('click', async () => {
     const amount = parseInt(globalStarsAmount.value);
     if (isNaN(amount) || amount <= 0) return showToast('الرجاء إدخال عدد نجوم صالح للإضافة.', 'var(--gold)');
@@ -353,8 +388,6 @@ distributeStarsBtn.addEventListener('click', async () => {
         
         let successCount = 0;
         
-        // ملاحظة: التوزيع الجماعي هنا يحدث النجوم فقط، وسيتم تحديث المستوى تلقائياً عند دخول المستخدم لملفه الشخصي
-        // أو يمكنك إضافة منطق الحساب هنا، لكن لتسريع العملية سنكتفي بـ increment
         for (const userDoc of snapshot.docs) {
             const uRef = doc(db, 'users', userDoc.id);
             try {
@@ -440,7 +473,8 @@ onAuthStateChanged(auth, async (user) => {
     if (userData.isAdmin === true) {
         authCheck.style.display = 'none';
         adminDashboard.style.display = 'grid';
-        loadStats(); 
+        
+        loadStats(); // تحميل الإحصائيات
     } else {
         authStatus.textContent = 'غير مصرح لك بالوصول إلى لوحة التحكم هذه.';
         authIcon.className = 'fas fa-lock';

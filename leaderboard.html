@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,9 +7,12 @@
   <title>لوحة الأساطير - المتصدرون</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
   <style>
+    /* =========================================
+       1. الإعدادات العامة والخلفية (نفس ستايل الموقع)
+       ========================================= */
     :root {
       --gold: #ffd700;
       --silver: #c0c0c0;
@@ -18,7 +22,9 @@
       --text-color: #ffffff;
       --accent: #3498db;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Cairo', sans-serif;
       background: linear-gradient(135deg, #3498db, #8e44ad, #2ecc71);
@@ -26,43 +32,174 @@
       animation: gradientAnimation 15s ease infinite;
       color: var(--text-color);
       min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
     }
+
     @keyframes gradientAnimation {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
+
     a { text-decoration: none; color: inherit; }
-    .container { width: 100%; max-width: 800px; margin-top: 20px; }
-    .header-box { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid var(--glass-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); animation: slideDown 0.8s ease-out; }
+
+    /* =========================================
+       2. الهيكل الرئيسي (Container)
+       ========================================= */
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 20px;
+    }
+
+    /* رأس الصفحة */
+    .header-box {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      animation: slideDown 0.8s ease-out;
+    }
+
     .header-box h1 { font-size: 2.5rem; margin-bottom: 5px; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
     .header-box p { color: #ddd; font-size: 1.1rem; }
-    .back-btn { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.1); padding: 10px 15px; border-radius: 50px; color: white; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+
+    /* زر العودة */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      border-radius: 50px;
+      color: white;
+      font-weight: bold;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .back-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateX(-5px); }
-    .leaderboard-list { display: flex; flex-direction: column; gap: 15px; }
-    .user-card { display: flex; align-items: center; background: var(--glass-bg); backdrop-filter: blur(8px); padding: 15px 20px; border-radius: 16px; border: 1px solid var(--glass-border); transition: transform 0.3s, background 0.3s; opacity: 0; transform: translateY(20px); }
-    .user-card:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.02); }
-    .rank-num { font-size: 1.5rem; font-weight: 900; width: 40px; text-align: center; margin-left: 15px; color: rgba(255, 255, 255, 0.5); }
-    .avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); margin-left: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+    /* =========================================
+       3. قائمة المتصدرين (List)
+       ========================================= */
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      padding: 15px 20px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      transition: transform 0.3s, background 0.3s;
+      opacity: 0;
+      transform: translateY(20px);
+      /* حركة الدخول ستتم عبر JS */
+    }
+
+    .user-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+
+    /* الترتيب (الرقم) */
+    .rank-num {
+      font-size: 1.5rem;
+      font-weight: 900;
+      width: 40px;
+      text-align: center;
+      margin-left: 15px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* الصورة */
+    .avatar {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.2);
+      margin-left: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* المعلومات */
     .info { flex: 1; }
     .info h3 { font-size: 1.1rem; margin-bottom: 2px; display: flex; align-items: center; gap: 5px; }
     .info p { font-size: 0.9rem; color: #ccc; }
-    .stars-box { background: rgba(0, 0, 0, 0.3); padding: 8px 15px; border-radius: 20px; font-weight: bold; color: var(--gold); display: flex; align-items: center; gap: 6px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); }
-    .user-card.rank-1 { background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(0,0,0,0)); border: 1px solid rgba(255, 215, 0, 0.5); box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
+    
+    /* النجوم */
+    .stars-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* =========================================
+       4. تمييز الثلاثة الأوائل (Top 3 Styles)
+       ========================================= */
+    /* المركز الأول 🥇 */
+    .user-card.rank-1 {
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(0,0,0,0));
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+    }
     .rank-1 .rank-num { color: var(--gold); text-shadow: 0 0 10px var(--gold); font-size: 2rem; }
     .rank-1 .avatar { border-color: var(--gold); }
-    .user-card.rank-2 { background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), rgba(0,0,0,0)); border: 1px solid rgba(192, 192, 192, 0.5); }
+    
+    /* المركز الثاني 🥈 */
+    .user-card.rank-2 {
+      background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), rgba(0,0,0,0));
+      border: 1px solid rgba(192, 192, 192, 0.5);
+    }
     .rank-2 .rank-num { color: var(--silver); text-shadow: 0 0 10px var(--silver); }
-    .user-card.rank-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.15), rgba(0,0,0,0)); border: 1px solid rgba(205, 127, 50, 0.5); }
+    
+    /* المركز الثالث 🥉 */
+    .user-card.rank-3 {
+      background: linear-gradient(90deg, rgba(205, 127, 50, 0.15), rgba(0,0,0,0));
+      border: 1px solid rgba(205, 127, 50, 0.5);
+    }
     .rank-3 .rank-num { color: var(--bronze); text-shadow: 0 0 10px var(--bronze); }
+
+    /* أيقونات التيجان */
     .crown-icon { font-size: 1rem; }
     .rank-1 .crown-icon { color: var(--gold); }
     .rank-2 .crown-icon { color: var(--silver); }
     .rank-3 .crown-icon { color: var(--bronze); }
-    .loader { text-align: center; margin-top: 50px; font-size: 1.2rem; color: #fff; }
+
+    /* شاشة التحميل */
+    .loader {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 1.2rem;
+      color: #fff;
+    }
+
+    /* حركات */
     @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes fadeInUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* تجاوب */
     @media (max-width: 600px) {
       .header-box h1 { font-size: 1.8rem; }
       .user-card { padding: 10px; }
@@ -88,23 +225,48 @@
       <i class="fas fa-circle-notch fa-spin"></i> جاري تحميل الأبطال...
     </div>
 
-    <div id="leaderboardList" class="leaderboard-list"></div>
+    <div id="leaderboardList" class="leaderboard-list">
+      </div>
   </div>
 
   <script type="module">
-    // 1. استيراد الدالة المركزية
-    import { calculateUserRank, db } from "./config.js"; 
-    import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    // 1. استيراد Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // 2. إعدادات المشروع (نفس اللي في الملفات السابقة)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", 
+      authDomain: "clan-forum.firebaseapp.com",
+      projectId: "clan-forum",
+      storageBucket: "clan-forum.firebasestorage.app",
+      messagingSenderId: "1011903491894",
+      appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const listContainer = document.getElementById('leaderboardList');
     const loader = document.getElementById('loader');
 
+    // دالة مساعدة لحساب المستوى (لتكون متطابقة مع profile.html)
+    function getLevel(stars) {
+      return Math.floor(stars / 50); // كل 50 نجمة مستوى
+    }
+
     async function loadLeaderboard() {
       try {
-        const q = query(collection(db, "users"), orderBy("stars", "desc"), limit(20));
+        // 3. جلب أعلى 20 مستخدم مرتبين بالنجوم تنازلياً
+        const q = query(
+          collection(db, "users"),
+          orderBy("stars", "desc"),
+          limit(20)
+        );
+
         const snapshot = await getDocs(q);
         
-        loader.style.display = 'none'; 
+        loader.style.display = 'none'; // إخفاء التحميل
 
         if (snapshot.empty) {
           listContainer.innerHTML = '<p style="text-align:center; opacity:0.7;">لا يوجد أعضاء حتى الآن!</p>';
@@ -115,27 +277,22 @@
         snapshot.forEach((doc) => {
           const data = doc.data();
           const stars = data.stars || 0;
-          
-          // ✅ استخدام الدالة الموحدة
-          const rankInfo = calculateUserRank(stars);
-          
-          // تنسيق عرض المستوى (عادي أو أسطوري)
-          let levelDisplay = `المستوى ${rankInfo.level}`;
-          if (rankInfo.isPrestige) {
-              levelDisplay = `<span style="color:var(--gold); font-weight:bold;">${rankInfo.prestigeSymbol} ${rankInfo.level}</span>`;
-          }
-
-          const name = data.username || data.displayName || "مستخدم مجهول";
+          const level = getLevel(stars);
+          const name = data.username || data.displayName || "مستخدم مجهول"; // الأولوية لليوزر
           const avatar = data.photoURL || "https://via.placeholder.com/60/3498db/ffffff?text=" + name.charAt(0);
           
+          // تحديد كلاس مميز للثلاثة الأوائل
           let rankClass = '';
           let iconHTML = '';
+          
           if (rank === 1) { rankClass = 'rank-1'; iconHTML = '<i class="fas fa-crown crown-icon"></i>'; }
           else if (rank === 2) { rankClass = 'rank-2'; iconHTML = '<i class="fas fa-medal crown-icon"></i>'; }
           else if (rank === 3) { rankClass = 'rank-3'; iconHTML = '<i class="fas fa-medal crown-icon"></i>'; }
 
+          // إنشاء كارت المستخدم
           const card = document.createElement('div');
           card.className = `user-card ${rankClass}`;
+          // إضافة تأخير بسيط للحركة (Staggered Animation)
           card.style.animation = `fadeInUp 0.5s ease forwards ${rank * 0.1}s`;
 
           card.innerHTML = `
@@ -143,7 +300,8 @@
             <img src="${avatar}" alt="${name}" class="avatar" loading="lazy">
             <div class="info">
               <h3>${name} ${iconHTML}</h3>
-              <p>${levelDisplay}</p> </div>
+              <p>المستوى ${level}</p>
+            </div>
             <div class="stars-box">
               <span>${stars.toLocaleString()}</span> <i class="fas fa-star"></i>
             </div>
@@ -158,6 +316,8 @@
         loader.innerHTML = '<p style="color:#ff6b6b">حدث خطأ أثناء تحميل البيانات :(</p>';
       }
     }
+
+    // تشغيل الدالة
     loadLeaderboard();
   </script>
 </body>
