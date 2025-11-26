@@ -1,4 +1,4 @@
-/* main.js - منطق التطبيق الشامل */
+/* main.js - منطق التطبيق الشامل (تم إصلاح عرض اليوزر) */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -42,7 +42,7 @@ navItems.forEach(item => {
     });
 });
 
-/* ====== 2. إدارة المستخدم (User & Menu) ====== */
+/* ====== 2. إدارة المستخدم (User & Menu) - تم التعديل هنا ✅ ====== */
 const menuUserProfile = document.getElementById('menuUserProfile');
 const menuLogoutBtn = document.getElementById('menuLogoutBtn');
 const menuLoginBtnInternal = document.getElementById('menuLoginBtnInternal');
@@ -54,17 +54,29 @@ if (menuLoginBtnInternal) {
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         const userRef = doc(db, "users", user.uid);
+        
+        // قيم افتراضية
         let stars = 0;
+        let displayUsername = user.uid.substring(0, 8); // لو مفيش يوزر، يعرض جزء من الايدي مؤقتا
+        
         try {
             const snap = await getDoc(userRef);
-            if (snap.exists()) stars = snap.data().stars || 0;
-        } catch (e) {}
+            if (snap.exists()) {
+                const data = snap.data();
+                stars = data.stars || 0;
+                
+                // 🟢 هنا التعديل: جلب اليوزر الحقيقي
+                if (data.username) {
+                    displayUsername = data.username;
+                }
+            }
+        } catch (e) { console.error("Error fetching user data:", e); }
         
         menuUserProfile.innerHTML = `
             <img src="${user.photoURL}" style="width:60px; height:60px; border-radius:50%; border:2px solid #333;">
             <div style="flex:1;">
                 <h3 style="color:#fff; margin:0;">${user.displayName}</h3>
-                <span style="color:#aaa; font-size:0.85rem;">@${user.uid.substring(0,8)}...</span>
+                <span style="color:#aaa; font-size:0.85rem; dir="ltr">@${displayUsername}</span>
                 <div class="menu-stats">
                     <div class="stat-tag"><i class="fas fa-star" style="color:#f1c40f"></i> ${stars}</div>
                     <div class="stat-tag"><i class="fas fa-gem" style="color:#3498db"></i> 0</div>
@@ -75,7 +87,7 @@ onAuthStateChanged(auth, async (user) => {
         menuLogoutBtn.style.display = 'flex';
         menuLogoutBtn.onclick = () => signOut(auth);
         
-        // تحميل البوستات بعد الدخول (اختياري، يمكن تحميلها للكل)
+        // تحميل البوستات
         loadPosts();
         
     } else {
@@ -85,7 +97,9 @@ onAuthStateChanged(auth, async (user) => {
                  <button id="menuLoginBtnInternal2" class="app-btn" style="width:100%">تسجيل الدخول</button>
             </div>
         `;
-        document.getElementById('menuLoginBtnInternal2').onclick = () => signInWithPopup(auth, provider);
+        const loginBtn2 = document.getElementById('menuLoginBtnInternal2');
+        if (loginBtn2) loginBtn2.onclick = () => signInWithPopup(auth, provider);
+        
         menuLogoutBtn.style.display = 'none';
     }
 });
@@ -98,41 +112,57 @@ const publishPostBtn = document.getElementById('publishPostBtn');
 const postContentInput = document.getElementById('postContentInput');
 const postsContainer = document.getElementById('postsContainer');
 
-addPostFab.addEventListener('click', () => {
-    if (!auth.currentUser) return alert("يجب تسجيل الدخول للنشر!");
-    createPostModal.style.display = 'flex';
-    postContentInput.focus();
-});
+if (addPostFab) {
+    addPostFab.addEventListener('click', () => {
+        if (!auth.currentUser) return alert("يجب تسجيل الدخول للنشر!");
+        createPostModal.style.display = 'flex';
+        postContentInput.focus();
+    });
+}
 
-closePostModal.addEventListener('click', () => {
-    createPostModal.style.display = 'none';
-});
-
-publishPostBtn.addEventListener('click', async () => {
-    const text = postContentInput.value.trim();
-    if (!text) return;
-    
-    publishPostBtn.disabled = true;
-    publishPostBtn.textContent = "جاري النشر...";
-    
-    try {
-        await addDoc(collection(db, "posts"), {
-            text: text,
-            authorId: auth.currentUser.uid,
-            authorName: auth.currentUser.displayName,
-            authorAvatar: auth.currentUser.photoURL,
-            createdAt: serverTimestamp(),
-            likes: 0
-        });
+if (closePostModal) {
+    closePostModal.addEventListener('click', () => {
         createPostModal.style.display = 'none';
-        postContentInput.value = "";
-    } catch (e) {
-        alert("فشل النشر: " + e.message);
-    } finally {
-        publishPostBtn.disabled = false;
-        publishPostBtn.textContent = "نشر";
-    }
-});
+    });
+}
+
+if (publishPostBtn) {
+    publishPostBtn.addEventListener('click', async () => {
+        const text = postContentInput.value.trim();
+        if (!text) return;
+        
+        publishPostBtn.disabled = true;
+        publishPostBtn.textContent = "جاري النشر...";
+        
+        try {
+            // سنحاول جلب اليوزر نيم أيضاً لتخزينه مع البوست
+            let authorUsername = "@user";
+            try {
+                const uSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+                if (uSnap.exists() && uSnap.data().username) {
+                    authorUsername = "@" + uSnap.data().username;
+                }
+            } catch (e) {}
+            
+            await addDoc(collection(db, "posts"), {
+                text: text,
+                authorId: auth.currentUser.uid,
+                authorName: auth.currentUser.displayName,
+                authorUsername: authorUsername, // 🟢 تخزين اليوزر مع البوست
+                authorAvatar: auth.currentUser.photoURL,
+                createdAt: serverTimestamp(),
+                likes: 0
+            });
+            createPostModal.style.display = 'none';
+            postContentInput.value = "";
+        } catch (e) {
+            alert("فشل النشر: " + e.message);
+        } finally {
+            publishPostBtn.disabled = false;
+            publishPostBtn.textContent = "نشر";
+        }
+    });
+}
 
 // تحميل البوستات (Feed)
 function loadPosts() {
@@ -142,6 +172,7 @@ function loadPosts() {
         snapshot.forEach(doc => {
             const data = doc.data();
             const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'الآن';
+            const handle = data.authorUsername || "@user"; // عرض اليوزر في البوست
             
             const postHTML = `
                 <div class="post-card">
@@ -149,6 +180,7 @@ function loadPosts() {
                         <img src="${data.authorAvatar}" class="user-avatar">
                         <div class="post-info">
                             <span class="user-name">${data.authorName}</span>
+                            <span class="post-handle">${handle}</span>
                             <span class="post-time">${date}</span>
                         </div>
                     </div>
@@ -164,7 +196,7 @@ function loadPosts() {
         });
     });
 }
-// تحميل البوستات فوراً (للزوار والمشتركين)
+// تحميل البوستات فوراً 
 loadPosts();
 
 /* ====== 4. نظام الشات (Chat System) ====== */
@@ -182,11 +214,15 @@ if (openChatBtn) {
     });
 }
 
-closeChatBtn.addEventListener('click', () => {
-    chatOverlay.style.display = 'none';
-});
+if (closeChatBtn) {
+    closeChatBtn.addEventListener('click', () => {
+        chatOverlay.style.display = 'none';
+    });
+}
 
-sendChatBtn.addEventListener('click', sendMessage);
+if (sendChatBtn) {
+    sendChatBtn.addEventListener('click', sendMessage);
+}
 
 async function sendMessage() {
     const text = chatInput.value.trim();
