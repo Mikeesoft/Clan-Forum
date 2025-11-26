@@ -1,5 +1,4 @@
-
-/* main.js (النسخة النهائية والمُدمجة والمُحسَّنة) */
+/* main.js (النسخة النهائية والمُحسَّنة) */
 
 // استيراد Firebase (v11 modular)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -21,15 +20,16 @@ import {
   query,
   orderBy,
   limit,
+  limitToLast, // ✅ تمت الإضافة: لجلب آخر الرسائل فقط
   startAfter,
   onSnapshot,
   serverTimestamp,
   getDocs 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ====== تكوين Firebase (ضع هنا بيانات مشروعك الحقيقية) ====== */
+/* ====== تكوين Firebase ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ استبدل هذا بـ API Key الحقيقي
+  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ تأكد من أن هذا هو المفتاح الصحيح
   authDomain: "clan-forum.firebaseapp.com",
   projectId: "clan-forum",
   storageBucket: "clan-forum.firebasestorage.app",
@@ -115,7 +115,12 @@ function formatTime(ts) {
 async function ensureDoc() {
   const snap = await getDoc(postRef);
   if (!snap.exists()) {
-    await setDoc(postRef, { likes: 0, likedBy: [] });
+    // لن يعمل هذا إلا إذا كان المستخدم Admin، لكنه إجراء وقائي جيد
+    try {
+        await setDoc(postRef, { likes: 0, likedBy: [] });
+    } catch (e) {
+        console.log("Document creation skipped (permission denied or exists).");
+    }
   }
 }
 
@@ -127,13 +132,16 @@ function listenPost() {
     likeCountSpan.textContent = data.likes ?? 0;
 
     const user = auth.currentUser;
-    // التحقق من حالة الإعجاب للمستخدم الحالي
     if (user && Array.isArray(data.likedBy) && data.likedBy.includes(user.uid)) {
       likeBtn.classList.add("liked");
+      likeBtn.querySelector("i").className = "fas fa-heart"; // قلب ممتلئ
     } else {
       likeBtn.classList.remove("liked");
+      likeBtn.querySelector("i").className = "far fa-heart"; // قلب فارغ
     }
-  }, () => showToast("فشل استلام تحديثات اللايكات"));
+  }, (error) => {
+      console.warn("Realtime listener warning:", error.code);
+  });
 }
 
 /* ====== Toggle Like (Transaction) ====== */
@@ -151,8 +159,9 @@ if (likeBtn) {
       await runTransaction(db, async (tx) => {
         const snap = await tx.get(postRef);
         if (!snap.exists()) {
-          tx.set(postRef, { likes: 1, likedBy: [user.uid] });
-          return;
+           // في حال عدم وجود المستند، نحاول إنشاؤه (قد يفشل إذا لم يكن أدمن)
+           tx.set(postRef, { likes: 1, likedBy: [user.uid] });
+           return;
         }
         const data = snap.data();
         const likedBy = Array.isArray(data.likedBy) ? [...data.likedBy] : [];
@@ -162,7 +171,7 @@ if (likeBtn) {
             likedBy: likedBy.filter(id => id !== user.uid),
             likes: Math.max((data.likes || 1) - 1, 0)
           });
-          showToast("تم إلغاء الإعجاب.", "error");
+          showToast("تم إلغاء الإعجاب.", "warning"); // لون أصفر للتراجع
         } else {
           // إضافة الإعجاب
           likedBy.push(user.uid);
@@ -170,12 +179,12 @@ if (likeBtn) {
             likedBy,
             likes: (data.likes || 0) + 1
           });
-          showToast("تم الإعجاب بالرسالة بنجاح! ❤️", "success");
+          showToast("تم الإعجاب بالرسالة! ❤️", "success");
         }
       });
     } catch (e) {
       console.error(e);
-      showToast("خطأ أثناء تحديث الإعجاب.");
+      showToast("حدث خطأ. تأكد من اتصالك بالإنترنت.");
     } finally {
       likeBtn.disabled = false;
     }
@@ -183,41 +192,36 @@ if (likeBtn) {
 }
 
 // =========================================================
-// ====== التعليقات (Load More) - وظيفة مُحسَّنة للـ DOM ======
+// ====== التعليقات (Load More) ======
 // =========================================================
 let lastVisible = null;
 const COMMENTS_LIMIT = 3;
 
-/**
- * دالة لإنشاء عنصر التعليق في DOM
- */
 function createCommentElement(docData) {
     const div = document.createElement("div");
     div.classList.add("comment");
     const author = docData.authorName || "عضو";
     let created = "";
-    // نستخدم toDate() فقط إذا كانت موجودة (لبيانات Firestore)
     if (docData.createdAt?.toDate) {
       created = docData.createdAt.toDate().toLocaleString();
     } else if (docData.createdAt instanceof Date) {
       created = docData.createdAt.toLocaleString();
     }
-    
 
     div.innerHTML = `
-        <div class="comment-author">${escapeHtml(author)} ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}</div>
+        <div class="comment-author">
+            <i class="fas fa-user-circle"></i> ${escapeHtml(author)} 
+            ${created ? `<span class="comment-time">• ${escapeHtml(created)}</span>` : ""}
+        </div>
         <div class="comment-text">${linkify(escapeHtml(docData.text))}</div>
     `;
     return div;
 }
 
-
 async function loadComments(initial = false) {
-  // 1. البحث عن زر "عرض المزيد" وإزالته
   const existingLoadBtn = commentsContainer.querySelector(".load-more-btn");
   if (existingLoadBtn) existingLoadBtn.remove();
   
-  // ⚠️ إذا كانت أول عملية تحميل، نفرغ الحاوية
   if (initial) commentsContainer.innerHTML = "";
 
   let q = query(commentsCol, orderBy("createdAt", "asc"), limit(COMMENTS_LIMIT));
@@ -228,24 +232,17 @@ async function loadComments(initial = false) {
   try {
     const snapshot = await getDocs(q);
     
-    // 2. إضافة التعليقات الجديدة إلى الواجهة
     snapshot.forEach(docSnap => {
-        // تحديث آخر عنصر مرئي فقط إذا كنا نحمل من جديد وليس في أول عملية
         if (!initial) lastVisible = docSnap; 
-        
         const item = docSnap.data();
         const el = createCommentElement(item);
-        
         commentsContainer.appendChild(el); 
     });
 
-    // 3. إعادة إضافة زر "عرض المزيد" إذا كانت النتائج بحجم الحد الأقصى
     if (snapshot.size === COMMENTS_LIMIT) {
-        // نحدث lastVisible ليكون آخر مستند تم عرضه
         lastVisible = snapshot.docs[snapshot.docs.length - 1]; 
-        
         const loadBtn = document.createElement("button");
-        loadBtn.textContent = "عرض المزيد من التعليقات";
+        loadBtn.innerHTML = '<i class="fas fa-chevron-down"></i> عرض المزيد';
         loadBtn.className = "load-more-btn";
         loadBtn.onclick = () => loadComments(false);
         commentsContainer.appendChild(loadBtn);
@@ -255,25 +252,18 @@ async function loadComments(initial = false) {
 
   } catch (error) {
      console.error("Error loading comments:", error);
-     showToast("فشل في تحميل التعليقات", "error");
   }
 }
 
-/* ====== منع تكرار صندوق التعليق وإرساله ====== */
 commentBtn.addEventListener("click", async () => {
   if (!auth.currentUser) {
     try { 
-      await signInWithPopup(auth, provider).catch(() => {
-          throw new Error("Login failed");
-      });
-    } catch (e) { 
-      if (e.message === "Login failed") {
-        return showToast("يجب تسجيل الدخول للتعليق."); 
-      }
+      await signInWithPopup(auth, provider);
+    } catch {
+       return showToast("يجب تسجيل الدخول للتعليق."); 
     }
   }
 
-  // إذا كان صندوق الإدخال موجوداً بالفعل، نركز عليه ونخرج
   const existingInput = document.getElementById("newCommentInput");
   if (existingInput) {
     existingInput.focus();
@@ -283,10 +273,9 @@ commentBtn.addEventListener("click", async () => {
   const inputArea = document.createElement("div");
   inputArea.className = "comment-input-area";
   inputArea.innerHTML = `
-    <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." />
-    <button id="addCommentBtn">إضافة تعليق</button>
+    <input type="text" id="newCommentInput" placeholder="اكتب تعليقك هنا..." autocomplete="off"/>
+    <button id="addCommentBtn"><i class="fas fa-paper-plane"></i></button>
   `;
-  // نضع صندوق التعليق في بداية الحاوية
   commentsContainer.insertAdjacentElement("afterbegin", inputArea);
   document.getElementById("newCommentInput").focus();
 
@@ -302,78 +291,69 @@ commentBtn.addEventListener("click", async () => {
       inputField.disabled = true;
       sendButton.disabled = true;
       
-      const newDocRef = await addDoc(commentsCol, {
+      await addDoc(commentsCol, {
         authorName: user?.displayName || "عضو",
         authorId: user?.uid || null,
         text: txt,
         createdAt: serverTimestamp()
       });
       
-      // 💡 تحديث واجهة المستخدم فوراً (بدون انتظار تحميل Firestore)
       const newCommentEl = createCommentElement({
           authorName: user?.displayName || "عضو",
           text: txt,
-          createdAt: new Date() // وقت محلي مؤقت
+          createdAt: new Date()
       });
       
-      // نضع التعليق الجديد قبل صندوق الإدخال (لأنه في الأعلى)
       commentsContainer.insertBefore(newCommentEl, inputArea);
-      
-      // إزالة صندوق الإدخال بعد الإرسال الناجح
       inputArea.remove();
-      
       showToast("تمت إضافة التعليق", "success");
       
     } catch (e) {
-      console.error("Error adding comment:", e);
+      console.error(e);
       showToast("فشل إرسال التعليق");
     } finally {
-      inputField.disabled = false;
-      sendButton.disabled = false;
+      if(inputField) inputField.disabled = false;
+      if(sendButton) sendButton.disabled = false;
     }
   };
 });
 
-/* ====== Auth UI (تسجيل الدخول/الخروج) ====== */
+/* ====== Auth UI ====== */
 function bindAuthUI() {
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // المستخدم مسجل دخوله
       const name = escapeHtml(user.displayName || "مستخدم");
       const photo = user.photoURL
-        ? `<img src="${user.photoURL}" alt="${name}" loading="lazy">` 
-        : `<i class="fas fa-user-circle" style="margin-inline-end:8px; font-size: 28px;"></i>`;
+        ? `<img src="${user.photoURL}" alt="${name}" class="profile-pic">` 
+        : `<i class="fas fa-user-circle" style="font-size: 24px;"></i>`;
+        
       loginContainer.innerHTML = `
-        <a href="profile.html" class="nav-icon profile-icon" title="ملفي الشخصي">
-          ${photo}<span>${name.split(' ')[0]}</span>
-        </a>
-        <button id="signOutBtn" class="auth-btn">خروج</button>
+        <div class="user-menu" style="display: flex; align-items: center; gap: 10px;">
+            <a href="#profile" class="nav-icon profile-link" title="ملفي الشخصي">
+            ${photo} <span class="username-display">${name.split(' ')[0]}</span>
+            </a>
+            <button id="signOutBtn" class="auth-btn logout" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
       `;
       document.getElementById("signOutBtn").onclick = () => {
          signOut(auth);
-         showToast("تم تسجيل الخروج بنجاح", "success");
+         showToast("إلى اللقاء! 👋", "success");
       }
     } else {
-      // المستخدم غير مسجل دخوله
-      loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> تسجيل الدخول</button>`;
-      
+      loginContainer.innerHTML = `<button id="googleLoginBtn" class="auth-btn"><i class="fab fa-google"></i> دخول</button>`;
       document.getElementById("googleLoginBtn").onclick = () => {
-        signInWithPopup(auth, provider).then(() => {
-            showToast("تم تسجيل الدخول بنجاح", "success");
-        })
-        .catch((error) => {
-            console.error("Authentication Error:", error);
-            showToast("فشل تسجيل الدخول. (رمز الخطأ: " + (error.code || "غير معروف") + ")", "error");
+        signInWithPopup(auth, provider).catch((error) => {
+            console.error(error);
+            showToast("فشل تسجيل الدخول.", "error");
         });
       };
     }
-    // تحديث حالة زر الإعجاب عند تغيير المستخدم
     listenPost(); 
   });
 }
 
 // =========================================================
-// ====== Chat: حفظ وعرض الرسائل في Firestore (Realtime) ======
+// ====== Chat: Realtime ======
 // =========================================================
 
 let unsubscribeChat = null;
@@ -381,28 +361,27 @@ let unsubscribeChat = null;
 function renderMessage(docData, currentUid, docId) {
   const authorId = docData.authorId || null;
   const isMe = currentUid && authorId === currentUid;
-  const avatar = docData.avatar || (isMe ? "https://via.placeholder.com/36/3498db/ffffff?text=Me" : "https://via.placeholder.com/36/7f8c8d/ffffff?text=U");
+  const avatar = docData.avatar || "https://via.placeholder.com/36/cccccc/ffffff?text=User";
   const name = docData.authorName || "عضو";
   const time = formatTime(docData.createdAt);
   const textHtml = linkify(escapeHtml(docData.text || ""));
 
   const msg = document.createElement("div");
   msg.className = `msg ${isMe ? "sent" : "received"}`;
-  msg.setAttribute('data-doc-id', docId); // لسهولة العثور عليها وحذفها/تعديلها
+  msg.setAttribute('data-doc-id', docId);
   
-  // بناء الرسالة بناءً على ما إذا كانت مُرسَلة أو مُستلَمة
   msg.innerHTML = `
     ${isMe ? `
       <div class="bubble">
-        <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span><span class="msg-time">${escapeHtml(time)}</span></div>
         <div class="msg-text">${textHtml}</div>
+        <div class="msg-meta"><span class="msg-time">${escapeHtml(time)}</span></div>
       </div>
-      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" loading="lazy"></div>
     ` : `
-      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" loading="lazy"></div>
+      <div class="avatar"><img src="${escapeHtml(avatar)}" alt="img" loading="lazy"></div>
       <div class="bubble">
-        <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span><span class="msg-time">${escapeHtml(time)}</span></div>
+        <div class="msg-meta"><span class="msg-author">${escapeHtml(name)}</span></div>
         <div class="msg-text">${textHtml}</div>
+        <div class="msg-meta" style="text-align:left"><span class="msg-time">${escapeHtml(time)}</span></div>
       </div>
     `}
   `;
@@ -410,24 +389,19 @@ function renderMessage(docData, currentUid, docId) {
 }
 
 function scrollChatToBottom() {
-  setTimeout(() => {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }, 100);
+  if(chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 async function bindChatRealtime() {
-  // افصل أي مستمع قديم
   if (unsubscribeChat) unsubscribeChat();
 
-  const q = query(chatMessagesCol, orderBy("createdAt", "asc"));
-  // 💡 استخدام snapshot.docChanges() لتحسين الأداء
+  // ✅ التحسين: جلب آخر 50 رسالة فقط مرتبة زمنياً
+  const q = query(chatMessagesCol, orderBy("createdAt", "asc"), limitToLast(50));
+  
   unsubscribeChat = onSnapshot(q, (snapshot) => {
-    
-    // التحقق من التمرير للأسفل (قبل المعالجة)
-    const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop < chatMessages.clientHeight + 100;
-
     const user = auth.currentUser;
     const currentUid = user?.uid;
+    const isAtBottom = (chatMessages.scrollHeight - chatMessages.scrollTop) <= (chatMessages.clientHeight + 150);
 
     snapshot.docChanges().forEach((change) => {
       const data = change.doc.data();
@@ -435,45 +409,34 @@ async function bindChatRealtime() {
       const existingEl = chatMessages.querySelector(`[data-doc-id="${docId}"]`);
 
       if (change.type === "added") {
-        // إضافة رسالة جديدة
         const el = renderMessage(data, currentUid, docId);
-        
         chatMessages.appendChild(el);
-        
-        // التمرير للأسفل إذا كانت رسالة جديدة وأنت قريب من الأسفل
-        if (shouldScroll || change.doc.isEqual(snapshot.docs[snapshot.docs.length - 1])) {
-            scrollChatToBottom();
-        }
-        
-      } else if (change.type === "modified") {
-        // تحديث رسالة موجودة
-        if (existingEl) {
-          const newEl = renderMessage(data, currentUid, docId);
-          chatMessages.replaceChild(newEl, existingEl);
-        }
-      } else if (change.type === "removed") {
-        // حذف رسالة
-        if (existingEl) {
-          existingEl.remove();
-        }
+      } else if (change.type === "modified" && existingEl) {
+        const newEl = renderMessage(data, currentUid, docId);
+        chatMessages.replaceChild(newEl, existingEl);
+      } else if (change.type === "removed" && existingEl) {
+        existingEl.remove();
       }
     });
 
+    // تمرير تلقائي إذا كانت الرسالة جديدة أو المستخدم في الأسفل
+    if (isAtBottom || snapshot.docChanges().some(c => c.type === 'added')) {
+        scrollChatToBottom();
+    }
+
   }, (err) => {
-    console.error("chat snapshot error", err);
-    showToast("فشل جلب محادثات الشات");
+    console.error("Chat Error:", err);
+    // تجاهل أخطاء الصلاحيات الصامتة لتجنب إزعاج المستخدم
+    if (err.code !== 'permission-denied') {
+        showToast("فشل الاتصال بالشات");
+    }
   });
 }
 
-/* ارسال رسالة الى Firestore */
 async function sendChatMessage(text) {
   if (!text) return;
   if (!auth.currentUser) {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch {
-      return showToast("يجب تسجيل الدخول لإرسال رسالة.");
-    }
+    try { await signInWithPopup(auth, provider); } catch { return; }
   }
   const user = auth.currentUser;
   if (!user) return;
@@ -490,11 +453,11 @@ async function sendChatMessage(text) {
     sendMsg.disabled = true;
     chatInput.disabled = true;
     await addDoc(chatMessagesCol, payload);
-    // مسح حقل الإدخال مباشرةً
     chatInput.value = ""; 
+    chatInput.focus();
   } catch (e) {
-    console.error("send msg error", e);
-    showToast("فشل إرسال الرسالة");
+    console.error(e);
+    showToast("فشل الإرسال");
   } finally {
     sendMsg.disabled = false;
     chatInput.disabled = false;
@@ -502,41 +465,26 @@ async function sendChatMessage(text) {
   }
 }
 
-/* ====== واجهة Chat: فتح/قفل + ربط الاحداث ====== */
-
-// فتح/غلق النافذة (toggle)
+/* ====== Chat UI Events ====== */
 chatBtn.addEventListener("click", () => {
-  const isVisible = chatWindow.style.display === "flex";
-  
-  if (!isVisible) {
-    // لو فتحنا الشات
-    chatWindow.style.display = "flex";
-    bindChatRealtime();
-    chatInput.focus();
-    chatBtn.style.display = 'none';
-  } else {
-    // لو أغلقنا الشات
-    chatWindow.style.display = "none";
-    if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
-    chatBtn.style.display = 'flex';
-  }
+  chatWindow.style.display = "flex";
+  chatBtn.style.display = 'none';
+  bindChatRealtime();
+  setTimeout(scrollChatToBottom, 200); // تمرير بعد فتح النافذة
 });
 
-// غلق النافذة بزر ×
 closeChat.addEventListener("click", () => {
   chatWindow.style.display = "none";
-  if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
   chatBtn.style.display = 'flex';
+  if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
 });
 
-// إرسال رسالة بالزر
 sendMsg.addEventListener("click", async () => {
   const txt = chatInput.value.trim();
   if (!txt) return;
   await sendChatMessage(txt);
 });
 
-// إرسال رسالة بالـ Enter
 chatInput.addEventListener("keydown", async (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -546,10 +494,9 @@ chatInput.addEventListener("keydown", async (e) => {
   }
 });
 
-/* ====== init ====== */
+/* ====== التشغيل (Init) ====== */
 (async function init() {
   await ensureDoc();
   bindAuthUI();
-  // تحميل أول مجموعة من التعليقات
   loadComments(true); 
 })();
