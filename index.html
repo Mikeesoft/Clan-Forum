@@ -31,20 +31,14 @@
             <div class="post-header">
                 <img src="https://via.placeholder.com/40" class="user-avatar">
                 <div class="post-info">
-                    <span class="user-name">الإدارة</span>
-                    <span class="post-handle">@admin</span>
-                    <span class="post-time">منذ دقيقتين</span>
+                    <span class="user-name">UniHub Team</span>
+                    <span class="post-handle">@system</span>
+                    <span class="post-time">الآن</span>
                 </div>
-                <i class="fas fa-ellipsis-v more-options"></i>
             </div>
             <div class="post-body">
-                أهلاً بكم في النسخة الجديدة من التطبيق! 🚀
-                <br>تم تغيير التصميم بالكامل ليكون مناسباً للهواتف.
-            </div>
-            <div class="post-actions">
-                <div class="action"><i class="far fa-heart"></i> <span>0</span></div>
-                <div class="action"><i class="far fa-comment"></i> <span>0</span></div>
-                <div class="action"><i class="fas fa-share"></i></div>
+                أهلاً بكم في النسخة الجديدة! 🚀
+                <br>تم تحديث التصميم ليصبح مثل تطبيقات الموبايل.
             </div>
         </div>
       </div>
@@ -52,23 +46,23 @@
     </section>
 
     <section id="members-page" class="page-view">
-      <div class="page-title"><h3>الأعضاء والسجل</h3></div>
-      <div class="content-placeholder">
-        <p>قائمة الأعضاء ستظهر هنا...</p>
+      <div class="page-title" style="padding: 20px;"><h3><i class="fas fa-list"></i> السجل والأعضاء</h3></div>
+      <div style="text-align: center; color: #777; margin-top: 50px;">
+        <i class="fas fa-hammer fa-3x"></i><br><br>قريباً...
       </div>
     </section>
 
     <section id="seasons-page" class="page-view">
-      <div class="page-title"><h3>المواسم والفعاليات</h3></div>
-      <div class="content-placeholder">
-        <p>التقويم الدراسي والفعاليات...</p>
+      <div class="page-title" style="padding: 20px;"><h3><i class="far fa-calendar-alt"></i> المواسم والفعاليات</h3></div>
+      <div style="text-align: center; color: #777; margin-top: 50px;">
+        <i class="fas fa-calendar-check fa-3x"></i><br><br>قريباً...
       </div>
     </section>
 
     <section id="menu-page" class="page-view">
       <div class="menu-user-header" id="menuUserProfile">
-        <div style="padding:20px; text-align:center;">
-             <button id="menuLoginBtn" class="app-btn">تسجيل الدخول</button>
+        <div style="padding:20px; text-align:center; width: 100%;">
+             <button id="menuLoginBtnInternal" class="app-btn" style="width:100%">تسجيل الدخول</button>
         </div>
       </div>
 
@@ -76,9 +70,11 @@
         <div class="menu-item">
             <i class="fas fa-bell"></i> <span>التنبيهات</span> <i class="fas fa-chevron-left arrow"></i>
         </div>
-        <div class="menu-item">
+        
+        <div class="menu-item" id="openChatBtn">
             <i class="fas fa-envelope"></i> <span>الرسائل</span> <i class="fas fa-chevron-left arrow"></i>
         </div>
+        
         <div class="divider"></div>
         <div class="menu-item">
             <i class="fas fa-clipboard-list"></i> <span>قائمتي</span> <i class="fas fa-chevron-left arrow"></i>
@@ -115,7 +111,8 @@
         <span>المواسم</span>
     </div>
     <div class="nav-item" data-target="menu-page">
-        <i class="fas fa-ellipsis-h"></i> <span>المزيد</span>
+        <i class="fas fa-ellipsis-h"></i>
+        <span>المزيد</span>
     </div>
   </nav>
 
@@ -128,6 +125,24 @@
       <div class="modal-body">
           <textarea id="postContentInput" placeholder="ماذا يدور في ذهنك؟"></textarea>
       </div>
+  </div>
+
+  <div id="chatOverlay" class="chat-overlay">
+    <div class="chat-box">
+      <div class="chat-header-dark">
+        <button id="closeChatBtn"><i class="fas fa-arrow-right"></i></button>
+        <span>المحادثة العامة</span>
+        <i class="fas fa-ellipsis-v"></i>
+      </div>
+      
+      <div id="chatMessages" class="chat-body-dark">
+        </div>
+
+      <div class="chat-footer-dark">
+        <input type="text" id="chatInput" placeholder="اكتب رسالة...">
+        <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="main.js"></script>

@@ -1,13 +1,12 @@
 /* style.css - تصميم التطبيق المظلم (Dark App Theme) */
 
 :root {
-  /* ألوان التطبيق بناءً على الصور */
-  --bg-app: #121212;         /* خلفية سوداء */
-  --bg-surface: #1e1e1e;     /* خلفية الكروت والقوائم */
-  --bg-nav: #181818;         /* خلفية الناف بار */
+  --bg-app: #121212;         
+  --bg-surface: #1e1e1e;     
+  --bg-nav: #181818;         
   
-  --primary: #3498db;        /* الأزرق الرئيسي */
-  --accent: #f1c40f;         /* الذهبي للنجوم */
+  --primary: #3498db;        
+  --accent: #f1c40f;         
   
   --text-main: #ffffff;
   --text-secondary: #aaaaaa;
@@ -22,10 +21,10 @@ body {
   background-color: var(--bg-app);
   color: var(--text-main);
   direction: rtl;
-  overflow: hidden; /* لمنع السكرول المزدوج، المحتوى فقط هو اللي بيعمل سكرول */
+  overflow: hidden; 
 }
 
-/* ================= Header (Top Bar) ================= */
+/* ================= Header ================= */
 .app-header {
   position: fixed; top: 0; left: 0; width: 100%; height: 50px;
   background: var(--bg-app);
@@ -34,33 +33,21 @@ body {
   border-bottom: 1px solid var(--border-color);
 }
 
-.top-tabs {
-  display: flex; gap: 20px; font-weight: 700; font-size: 0.95rem;
-}
-
-.tab-item {
-  color: var(--text-secondary);
-  position: relative;
-  cursor: pointer;
-  padding: 10px 0;
-}
-
-.tab-item.active {
-  color: #fff;
-}
+.top-tabs { display: flex; gap: 20px; font-weight: 700; font-size: 0.95rem; }
+.tab-item { color: var(--text-secondary); position: relative; cursor: pointer; padding: 10px 0; }
+.tab-item.active { color: #fff; }
 .tab-item.active::after {
   content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
   background: #fff; border-radius: 2px;
 }
-
 .header-actions i { font-size: 1.2rem; color: #fff; }
 
-/* ================= Content Area ================= */
+/* ================= Content ================= */
 .app-content {
   height: 100vh;
-  padding-top: 50px; /* مساحة للهيدر */
-  padding-bottom: 70px; /* مساحة للناف بار */
-  overflow-y: auto; /* السماح بالسكرول */
+  padding-top: 50px; 
+  padding-bottom: 70px; 
+  overflow-y: auto; 
 }
 
 .page-view { display: none; animation: fadeIn 0.3s; }
@@ -68,11 +55,10 @@ body {
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ================= Post Card Style (زي الصور) ================= */
+/* ================= Post Card ================= */
 .post-card {
   background: var(--bg-surface);
-  margin-bottom: 10px;
-  padding: 15px;
+  margin-bottom: 10px; padding: 15px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -92,14 +78,13 @@ body {
 .action { color: var(--text-secondary); display: flex; gap: 5px; align-items: center; font-size: 0.9rem; cursor: pointer; }
 .action:hover { color: var(--primary); }
 
-/* ================= Bottom Navigation ================= */
+/* ================= Bottom Nav ================= */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
   background: var(--bg-nav);
   border-top: 1px solid var(--border-color);
   display: flex; justify-content: space-around; align-items: center;
-  z-index: 1000;
-  padding-bottom: 5px; /* عشان الايفون */
+  z-index: 1000; padding-bottom: 5px;
 }
 
 .nav-item {
@@ -109,21 +94,16 @@ body {
 .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
 .nav-item.active { color: #fff; }
 
-/* زر الإضافة العائم في النص */
-.nav-fab-container {
-  position: relative; top: -20px;
-}
+.nav-fab-container { position: relative; top: -20px; }
 .fab-btn {
-  width: 55px; height: 55px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: #fff; border: none; font-size: 1.5rem;
+  width: 55px; height: 55px; border-radius: 50%;
+  background: var(--primary); color: #fff; border: none; font-size: 1.5rem;
   box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
   display: flex; align-items: center; justify-content: center;
-  border: 4px solid var(--bg-app); /* عشان يفصل عن الخلفية */
+  border: 4px solid var(--bg-app);
 }
 
-/* ================= Menu Page (صفحة المزيد) ================= */
+/* ================= Menu Page ================= */
 .menu-user-header {
   background: var(--bg-surface); padding: 20px; margin-bottom: 15px;
   display: flex; align-items: center; gap: 15px;
@@ -144,7 +124,7 @@ body {
 .app-btn { background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; }
 .text-danger { color: #e74c3c !important; } .text-danger i { color: #e74c3c !important; }
 
-/* ================= Modal (نافذة النشر) ================= */
+/* ================= Modal (Post) ================= */
 .full-screen-modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--bg-app); z-index: 2000;
@@ -160,3 +140,50 @@ body {
     width: 100%; height: 200px; background: transparent; border: none; color: #fff;
     font-size: 1.2rem; font-family: inherit; resize: none; outline: none;
 }
+
+/* ================= Chat Overlay (Dark App Style) ================= */
+.chat-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg-app); z-index: 3000;
+  display: none; flex-direction: column;
+}
+.chat-box { display: flex; flex-direction: column; height: 100%; }
+.chat-header-dark {
+  padding: 15px; display: flex; align-items: center; gap: 15px;
+  background: var(--bg-nav); border-bottom: 1px solid var(--border-color);
+  color: #fff; font-weight: bold; font-size: 1.1rem;
+}
+.chat-header-dark button { background: none; color: #fff; font-size: 1.2rem; }
+
+.chat-body-dark {
+  flex: 1; padding: 15px; overflow-y: auto;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 0h20L0 20z'/%3E%3C/g%3E%3C/svg%3E");
+  display: flex; flex-direction: column; gap: 15px;
+}
+
+.chat-footer-dark {
+  padding: 10px; background: var(--bg-nav); border-top: 1px solid var(--border-color);
+  display: flex; gap: 10px;
+}
+.chat-footer-dark input {
+  flex: 1; padding: 12px; border-radius: 25px; border: none;
+  background: var(--bg-surface); color: #fff; outline: none;
+}
+.chat-footer-dark button {
+  width: 45px; height: 45px; border-radius: 50%; background: var(--primary);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+}
+
+/* Chat Bubbles */
+.chat-msg { display: flex; gap: 10px; max-width: 85%; }
+.chat-msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+.chat-msg.others { align-self: flex-start; }
+
+.chat-bubble {
+  padding: 10px 15px; border-radius: 15px; font-size: 0.95rem; line-height: 1.4; position: relative;
+}
+.chat-msg.mine .chat-bubble { background: var(--primary); color: #fff; border-bottom-left-radius: 2px; }
+.chat-msg.others .chat-bubble { background: var(--bg-surface); color: #ddd; border-bottom-right-radius: 2px; }
+
+.chat-info { font-size: 0.75rem; margin-top: 4px; opacity: 0.7; display: flex; gap: 5px; }
+.chat-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
