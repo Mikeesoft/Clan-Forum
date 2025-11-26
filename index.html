@@ -5,22 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#000000">
   <title>UniHub App</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  
-  <style>
-      /* تنسيقات إضافية لضمان ظهور العناصر */
-      body { background-color: #000; color: #fff; }
-      .full-screen-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; flex-direction: column; }
-      .modal-header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-      .modal-body { padding: 20px; }
-      .input-group { margin-bottom: 15px; }
-      .input-group label { display: block; color: #888; margin-bottom: 5px; }
-      .input-group input, .input-group textarea { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; outline: none; }
-      .app-btn { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-  </style>
 </head>
 <body>
 
@@ -30,9 +17,6 @@
       <div class="tab-item">استكشف</div>
       <div class="tab-item active">الرئيسية</div>
     </div>
-    <div class="header-actions">
-      <i class="fas fa-search"></i>
-    </div>
   </header>
 
   <main class="app-content">
@@ -40,53 +24,40 @@
     <section id="feed-page" class="page-view active">
       <div id="postsContainer">
         </div>
-      <div style="height: 80px;"></div>
-    </section>
+      <div style="height: 80px;"></div> </section>
 
     <section id="members-page" class="page-view">
-      <div class="page-title" style="padding: 20px;"><h3><i class="fas fa-list"></i> السجل والأعضاء</h3></div>
-      <div style="text-align: center; color: #777; margin-top: 50px;">
-        <i class="fas fa-hammer fa-3x"></i><br><br>قريباً...
+      <div class="placeholder-content">
+        <i class="fas fa-hammer fa-3x"></i><br>قريباً...
       </div>
     </section>
 
     <section id="seasons-page" class="page-view">
-      <div class="page-title" style="padding: 20px;"><h3><i class="far fa-calendar-alt"></i> المواسم والفعاليات</h3></div>
-      <div style="text-align: center; color: #777; margin-top: 50px;">
-        <i class="fas fa-calendar-check fa-3x"></i><br><br>قريباً...
+      <div class="placeholder-content">
+        <i class="far fa-calendar-alt fa-3x"></i><br>قريباً...
       </div>
     </section>
 
     <section id="menu-page" class="page-view">
-      
-      <div id="menuUserProfile" style="display: flex; align-items: center; gap: 15px; padding: 20px; border-bottom: 1px solid #333; background: #111;">
-        <div style="width: 100%; text-align: center;">
-             <p style="color: #777;">جاري التحميل...</p>
-        </div>
-      </div>
-
-      <div class="menu-list">
-        <div class="menu-item" onclick="document.getElementById('editProfileModal').style.display='flex'">
-            <i class="fas fa-user-edit"></i> <span>تعديل الملف الشخصي</span> <i class="fas fa-chevron-left arrow"></i>
+      <div class="menu-container">
+        
+        <div id="menuUserProfile" class="profile-card">
+           <p>جاري التحميل...</p>
         </div>
 
-        <div class="menu-item">
-            <i class="fas fa-bell"></i> <span>التنبيهات</span> <i class="fas fa-chevron-left arrow"></i>
+        <div class="menu-list">
+          <div class="menu-item" id="openEditProfileBtn">
+              <i class="fas fa-user-edit"></i> <span>تعديل الملف الشخصي</span> <i class="fas fa-chevron-left arrow"></i>
+          </div>
+          <div class="menu-item">
+              <i class="fas fa-bell"></i> <span>التنبيهات</span> <i class="fas fa-chevron-left arrow"></i>
+          </div>
+          <div class="menu-item text-danger" id="menuLogoutBtn" style="display:none;">
+              <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+          </div>
+           <button id="menuLoginBtnInternal" class="app-btn" style="display:none; width:100%; margin-top:10px;">تسجيل الدخول</button>
         </div>
-        
-        <div class="menu-item" id="openChatBtn">
-            <i class="fas fa-envelope"></i> <span>الرسائل العامة</span> <i class="fas fa-chevron-left arrow"></i>
-        </div>
-        
-        <div class="divider"></div>
-        <div class="menu-item">
-            <i class="fas fa-heart"></i> <span>المفضلة</span> <i class="fas fa-chevron-left arrow"></i>
-        </div>
-        <div class="divider"></div>
-        
-        <div class="menu-item text-danger" id="menuLogoutBtn" style="display:none; color: #e74c3c;">
-            <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
-        </div>
+
       </div>
        <div style="height: 80px;"></div>
     </section>
@@ -94,74 +65,48 @@
   </main>
 
   <nav class="bottom-nav">
-    <div class="nav-item active" data-target="feed-page">
-        <i class="fas fa-home"></i>
-        <span>الرئيسية</span>
-    </div>
-    <div class="nav-item" data-target="members-page">
-        <i class="fas fa-list-ul"></i>
-        <span>السجل</span>
-    </div>
+    <div class="nav-item active" data-target="feed-page"><i class="fas fa-home"></i><span>الرئيسية</span></div>
+    <div class="nav-item" data-target="members-page"><i class="fas fa-list-ul"></i><span>السجل</span></div>
     
     <div class="nav-fab-container">
         <button id="addPostFab" class="fab-btn"><i class="fas fa-plus"></i></button>
     </div>
 
-    <div class="nav-item" data-target="seasons-page">
-        <i class="far fa-calendar-alt"></i>
-        <span>المواسم</span>
-    </div>
-    <div class="nav-item" data-target="menu-page">
-        <i class="fas fa-user"></i> <span>حسابي</span>
-    </div>
+    <div class="nav-item" data-target="seasons-page"><i class="far fa-calendar-alt"></i><span>المواسم</span></div>
+    <div class="nav-item" data-target="menu-page"><i class="fas fa-user"></i><span>حسابي</span></div>
   </nav>
-
-  <div id="createPostModal" class="full-screen-modal">
-      <div class="modal-header">
-          <button id="closePostModal" style="background:none; border:none; color:white; font-size:18px;"><i class="fas fa-times"></i></button>
-          <span>منشور جديد</span>
-          <button id="publishPostBtn" class="app-btn">نشر</button>
-      </div>
-      <div class="modal-body">
-          <textarea id="postContentInput" placeholder="ماذا يدور في ذهنك؟" style="width:100%; height:150px; background:transparent; border:none; color:white; font-size:18px; outline:none; resize:none;"></textarea>
-      </div>
-  </div>
 
   <div id="editProfileModal" class="full-screen-modal">
       <div class="modal-header">
-          <button onclick="document.getElementById('editProfileModal').style.display='none'" style="background:none; border:none; color:white; font-size:18px;"><i class="fas fa-times"></i></button>
+          <button id="closeEditProfileBtn" class="icon-btn"><i class="fas fa-times"></i></button>
           <span>تعديل الملف الشخصي</span>
-          <button id="saveProfileBtn" class="app-btn">حفظ</button>
+          <button id="saveProfileBtn" class="text-btn">حفظ</button>
       </div>
       <div class="modal-body">
           <div class="input-group">
-              <label>الاسم الكامل</label>
-              <input type="text" id="editNameInput" placeholder="الاسم الظاهر">
+              <label>الاسم الظاهر</label>
+              <input type="text" id="editNameInput">
           </div>
           <div class="input-group">
-              <label>اسم المستخدم (بدون @)</label>
-              <input type="text" id="editUsernameInput" placeholder="username">
+              <label>اسم المستخدم (@)</label>
+              <input type="text" id="editUsernameInput">
           </div>
           <div class="input-group">
-              <label>نبذة تعريفية</label>
-              <textarea id="editBioInput" rows="3" placeholder="اكتب شيئاً عنك..."></textarea>
+              <label>نبذة عنك</label>
+              <textarea id="editBioInput" rows="3"></textarea>
           </div>
       </div>
   </div>
 
-  <div id="chatOverlay" class="chat-overlay">
-    <div class="chat-box">
-      <div class="chat-header-dark">
-        <button id="closeChatBtn"><i class="fas fa-arrow-right"></i></button>
-        <span>المحادثة العامة</span>
-        <i class="fas fa-ellipsis-v"></i>
+  <div id="createPostModal" class="full-screen-modal">
+      <div class="modal-header">
+          <button id="closePostModal" class="icon-btn"><i class="fas fa-times"></i></button>
+          <span>منشور جديد</span>
+          <button id="publishPostBtn" class="text-btn">نشر</button>
       </div>
-      <div id="chatMessages" class="chat-body-dark"></div>
-      <div class="chat-footer-dark">
-        <input type="text" id="chatInput" placeholder="اكتب رسالة...">
-        <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+      <div class="modal-body">
+          <textarea id="postContentInput" placeholder="اكتب هنا..."></textarea>
       </div>
-    </div>
   </div>
 
   <script type="module" src="main.js"></script>

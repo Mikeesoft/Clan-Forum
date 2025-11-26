@@ -1,10 +1,8 @@
-/* main.js - النسخة النهائية والشاملة */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, setDoc, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// إعدادات Firebase
+// 1. إعدادات فايربيس (تأكد إن دي إعدادات مشروعك)
 const firebaseConfig = {
     apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
     authDomain: "clan-forum.firebaseapp.com",
@@ -19,318 +17,149 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-/* ====== 1. التحكم في التنقل (Navigation) ====== */
-const navItems = document.querySelectorAll('.nav-item');
-const pages = document.querySelectorAll('.page-view');
-const mainHeader = document.getElementById('mainHeader');
-
-navItems.forEach(item => {
-    item.addEventListener('click', () => {
-        navItems.forEach(nav => nav.classList.remove('active'));
-        item.classList.add('active');
-        
-        const targetId = item.getAttribute('data-target');
-        pages.forEach(page => page.classList.remove('active'));
-        
-        const targetSection = document.getElementById(targetId);
-        if (targetSection) targetSection.classList.add('active');
-        
-        // إظهار الهيدر فقط في الرئيسية
-        if (mainHeader) {
-            mainHeader.style.display = (targetId === 'feed-page') ? 'flex' : 'none';
-        }
-    });
-});
-
-/* ====== 2. إدارة المستخدم والقائمة الجانبية (Realtime) ====== */
+// ============ 2. إدارة المستخدم (Login & Profile) ============
 const menuUserProfile = document.getElementById('menuUserProfile');
 const menuLogoutBtn = document.getElementById('menuLogoutBtn');
 const menuLoginBtnInternal = document.getElementById('menuLoginBtnInternal');
 
-if (menuLoginBtnInternal) {
-    menuLoginBtnInternal.onclick = () => signInWithPopup(auth, provider);
+// زرار تسجيل الدخول
+if(menuLoginBtnInternal) {
+    menuLoginBtnInternal.addEventListener('click', () => signInWithPopup(auth, provider));
 }
 
-onAuthStateChanged(auth, (user) => {
+// مراقب حالة المستخدم (أهم جزء)
+onAuthStateChanged(auth, async (user) => {
     if (user) {
+        // لو المستخدم مسجل دخول
         const userRef = doc(db, "users", user.uid);
         
-        // 🟢 تحديث فوري: أي تغيير في الداتابيز يسمع هنا علطول
+        // استماع لأي تغيير في بيانات المستخدم (Realtime)
         onSnapshot(userRef, (docSnap) => {
-            let stars = 0;
-            let displayUsername = user.uid.substring(0, 8);
-            let displayName = user.displayName;
-            let bioText = "مستخدم جديد";
+            let userData = docSnap.exists() ? docSnap.data() : {};
+            
+            // تجهيز البيانات للعرض
+            const displayName = userData.fullName || user.displayName;
+            const displayHandle = userData.username ? `@${userData.username}` : "@user";
+            const photo = user.photoURL;
 
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                stars = data.stars || 0;
-                if (data.username) displayUsername = data.username;
-                if (data.fullName) displayName = data.fullName; // الاسم من الداتابيز أولويات
-                if (data.bio) bioText = data.bio;
-                
-                // تحديث حقول صفحة "تعديل البروفايل" لو كنا واقفين عليها
-                fillEditProfileInputs(displayName, displayUsername, bioText);
-            }
-
-            // تحديث القائمة الجانبية
-            if (menuUserProfile) {
-                menuUserProfile.innerHTML = `
-                    <img src="${user.photoURL}" style="width:60px; height:60px; border-radius:50%; border:2px solid #333; object-fit:cover;">
-                    <div style="flex:1;">
-                        <h3 style="color:#fff; margin:0; font-size:16px;">${displayName}</h3>
-                        <span style="color:#aaa; font-size:0.85rem; dir="ltr">@${displayUsername}</span>
-                        <div class="menu-stats">
-                            <div class="stat-tag"><i class="fas fa-star" style="color:#f1c40f"></i> ${stars}</div>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-
-        if (menuLogoutBtn) {
-            menuLogoutBtn.style.display = 'flex';
-            menuLogoutBtn.onclick = () => signOut(auth);
-        }
-        
-        loadPosts(); // تحميل البوستات
-
-    } else {
-        // حالة عدم تسجيل الدخول
-        if (menuUserProfile) {
+            // تحديث كارت البروفايل في القائمة
             menuUserProfile.innerHTML = `
-                 <div style="padding:20px; width:100%; text-align:center;">
-                     <p style="color:#aaa; margin-bottom:10px;">سجل دخولك لتتفاعل!</p>
-                     <button id="menuLoginBtnInternal2" class="app-btn" style="width:100%">تسجيل الدخول</button>
+                <img src="${photo}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
+                <div style="flex:1;">
+                    <h3 style="margin:0; font-size:16px; color:white;">${displayName}</h3>
+                    <p style="margin:0; font-size:12px; color:#aaa;">${displayHandle}</p>
                 </div>
             `;
-            setTimeout(() => {
-                const loginBtn2 = document.getElementById('menuLoginBtnInternal2');
-                if (loginBtn2) loginBtn2.onclick = () => signInWithPopup(auth, provider);
-            }, 100);
-        }
-        if (menuLogoutBtn) menuLogoutBtn.style.display = 'none';
+
+            // ملء حقول التعديل بالبيانات الحالية
+            document.getElementById('editNameInput').value = userData.fullName || "";
+            document.getElementById('editUsernameInput').value = userData.username || "";
+            document.getElementById('editBioInput').value = userData.bio || "";
+        });
+
+        menuLogoutBtn.style.display = 'flex';
+        menuLogoutBtn.onclick = () => signOut(auth);
+        if(menuLoginBtnInternal) menuLoginBtnInternal.style.display = 'none';
+
+        // تحميل البوستات
+        loadPosts();
+
+    } else {
+        // لو مش مسجل دخول
+        menuUserProfile.innerHTML = `<p style="color:#777; text-align:center; width:100%;">أنت زائر</p>`;
+        menuLogoutBtn.style.display = 'none';
+        if(menuLoginBtnInternal) menuLoginBtnInternal.style.display = 'block';
     }
 });
 
-/* ====== 3. وظيفة تعديل البروفايل (الجديد) ====== */
-// تأكد أن لديك Inputs بهذه الـ IDs في صفحة التعديل
-const editNameInput = document.getElementById('editNameInput');
-const editUsernameInput = document.getElementById('editUsernameInput');
-const editBioInput = document.getElementById('editBioInput');
+// ============ 3. تعديل البروفايل (المنطق) ============
+const editProfileModal = document.getElementById('editProfileModal');
+const openEditProfileBtn = document.getElementById('openEditProfileBtn');
+const closeEditProfileBtn = document.getElementById('closeEditProfileBtn');
 const saveProfileBtn = document.getElementById('saveProfileBtn');
 
-// دالة لتعبئة الحقول تلقائياً عند فتح التطبيق
-function fillEditProfileInputs(name, username, bio) {
-    if (editNameInput) editNameInput.value = name;
-    if (editUsernameInput) editUsernameInput.value = username;
-    if (editBioInput) editBioInput.value = bio;
+// فتح النافذة
+if(openEditProfileBtn) {
+    openEditProfileBtn.addEventListener('click', () => {
+        if(!auth.currentUser) return alert("سجل دخول الأول!");
+        editProfileModal.style.display = 'flex';
+    });
 }
 
-// زر الحفظ
-if (saveProfileBtn) {
+// غلق النافذة
+if(closeEditProfileBtn) {
+    closeEditProfileBtn.addEventListener('click', () => editProfileModal.style.display = 'none');
+}
+
+// حفظ البيانات (Core Logic)
+if(saveProfileBtn) {
     saveProfileBtn.addEventListener('click', async () => {
         const user = auth.currentUser;
-        if (!user) return alert("يجب تسجيل الدخول!");
+        if (!user) return;
 
-        saveProfileBtn.textContent = "جاري الحفظ...";
-        saveProfileBtn.disabled = true;
+        saveProfileBtn.innerText = "جاري الحفظ...";
+        
+        const newName = document.getElementById('editNameInput').value;
+        const newUsername = document.getElementById('editUsernameInput').value;
+        const newBio = document.getElementById('editBioInput').value;
 
         try {
-            const userRef = doc(db, "users", user.uid);
-            
-            // البيانات المراد تحديثها
-            const updateData = {};
-            if (editNameInput && editNameInput.value) updateData.fullName = editNameInput.value;
-            if (editUsernameInput && editUsernameInput.value) updateData.username = editUsernameInput.value;
-            if (editBioInput) updateData.bio = editBioInput.value;
+            // استخدام setDoc مع merge عشان لو المستند مش موجود ينشئه
+            await setDoc(doc(db, "users", user.uid), {
+                fullName: newName,
+                username: newUsername,
+                bio: newBio,
+                email: user.email
+            }, { merge: true });
 
-            // إرسال لفايربيس (Merge: true للحفاظ على البيانات القديمة)
-            await updateDoc(userRef, updateData); // استخدمنا updateDoc بدلاً من setDoc للحفاظ على النجوم
-
-            alert("تم تحديث البيانات بنجاح ✅");
-            
+            alert("تم التحديث بنجاح! ✅");
+            editProfileModal.style.display = 'none';
         } catch (error) {
             console.error(error);
             alert("حدث خطأ: " + error.message);
         } finally {
-            saveProfileBtn.textContent = "حفظ التعديلات";
-            saveProfileBtn.disabled = false;
+            saveProfileBtn.innerText = "حفظ";
         }
     });
 }
 
-/* ====== 4. نشر البوستات (Posts System) ====== */
-const addPostFab = document.getElementById('addPostFab');
-const createPostModal = document.getElementById('createPostModal');
-const closePostModal = document.getElementById('closePostModal');
-const publishPostBtn = document.getElementById('publishPostBtn');
-const postContentInput = document.getElementById('postContentInput');
+// ============ 4. البوستات (Logic) ============
 const postsContainer = document.getElementById('postsContainer');
 
-if (addPostFab) {
-    addPostFab.addEventListener('click', () => {
-        if (!auth.currentUser) return alert("يجب تسجيل الدخول للنشر!");
-        createPostModal.style.display = 'flex';
-        postContentInput.focus();
-    });
-}
-
-if (closePostModal) {
-    closePostModal.addEventListener('click', () => {
-        createPostModal.style.display = 'none';
-    });
-}
-
-if (publishPostBtn) {
-    publishPostBtn.addEventListener('click', async () => {
-        const text = postContentInput.value.trim();
-        if (!text) return;
-        
-        publishPostBtn.disabled = true;
-        publishPostBtn.textContent = "جاري النشر...";
-        
-        try {
-            let authorUsername = "@user";
-            let authorName = auth.currentUser.displayName;
-
-            // محاولة جلب الاسم واليوزر المحدثين من قاعدة البيانات بدلاً من Auth القديم
-            const uSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-            if (uSnap.exists()) {
-                const data = uSnap.data();
-                if (data.username) authorUsername = "@" + data.username;
-                if (data.fullName) authorName = data.fullName;
-            }
-            
-            await addDoc(collection(db, "posts"), {
-                text: text,
-                authorId: auth.currentUser.uid,
-                authorName: authorName,
-                authorUsername: authorUsername,
-                authorAvatar: auth.currentUser.photoURL,
-                createdAt: serverTimestamp(),
-                likes: 0
-            });
-            createPostModal.style.display = 'none';
-            postContentInput.value = "";
-        } catch (e) {
-            alert("فشل النشر: " + e.message);
-        } finally {
-            publishPostBtn.disabled = false;
-            publishPostBtn.textContent = "نشر";
-        }
-    });
-}
-
-// تحميل البوستات (Feed)
 function loadPosts() {
-    if (!postsContainer) return;
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(20));
     
     onSnapshot(q, (snapshot) => {
         postsContainer.innerHTML = '';
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const date = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'الآن';
-            const handle = data.authorUsername || "@user";
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const time = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}) : 'الآن';
             
-            // هنا تم استخدام كلاس post-card لإصلاح التصميم
             const postHTML = `
                 <div class="post-card">
                     <div class="post-header">
-                        <img src="${data.authorAvatar}" class="user-avatar">
-                        <div class="post-info">
-                            <span class="user-name">${data.authorName}</span>
-                            <span class="post-handle">${handle}</span>
-                            <span class="post-time">${date}</span>
+                        <img src="${data.authorAvatar || 'https://via.placeholder.com/40'}" class="user-avatar">
+                        <div>
+                            <div style="font-weight:bold;">${data.authorName || 'مستخدم'}</div>
+                            <div style="font-size:12px; color:#777;">${data.authorUsername || '@user'} • ${time}</div>
                         </div>
                     </div>
                     <div class="post-body">${data.text}</div>
-                    <div class="post-actions">
-                        <div class="action"><i class="far fa-heart"></i></div>
-                        <div class="action"><i class="far fa-comment"></i></div>
-                        <div class="action"><i class="fas fa-share"></i></div>
-                    </div>
                 </div>
             `;
-            postsContainer.insertAdjacentHTML('beforeend', postHTML);
+            postsContainer.innerHTML += postHTML;
         });
     });
 }
 
-/* ====== 5. نظام الشات (Chat System) ====== */
-const openChatBtn = document.getElementById('openChatBtn');
-const chatOverlay = document.getElementById('chatOverlay');
-const closeChatBtn = document.getElementById('closeChatBtn');
-const chatInput = document.getElementById('chatInput');
-const sendChatBtn = document.getElementById('sendChatBtn');
-const chatMessagesBox = document.getElementById('chatMessages');
-
-if (openChatBtn) {
-    openChatBtn.addEventListener('click', () => {
-        chatOverlay.style.display = 'flex';
-        loadChatMessages();
+// ============ 5. التنقل (Tabs) ============
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        
+        const targetId = item.getAttribute('data-target');
+        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
     });
-}
-
-if (closeChatBtn) {
-    closeChatBtn.addEventListener('click', () => {
-        chatOverlay.style.display = 'none';
-    });
-}
-
-if (sendChatBtn) {
-    sendChatBtn.addEventListener('click', sendMessage);
-}
-
-async function sendMessage() {
-    const text = chatInput.value.trim();
-    if (!text || !auth.currentUser) return;
-    chatInput.value = '';
-    
-    // جلب الاسم الحقيقي للمستخدم قبل الإرسال
-    let currentName = auth.currentUser.displayName;
-    try {
-        const uSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (uSnap.exists() && uSnap.data().fullName) {
-            currentName = uSnap.data().fullName;
-        }
-    } catch(e) {}
-
-    try {
-        await addDoc(collection(db, "chats", "global", "messages"), {
-            text: text,
-            authorId: auth.currentUser.uid,
-            authorName: currentName,
-            avatar: auth.currentUser.photoURL,
-            createdAt: serverTimestamp()
-        });
-    } catch (e) { console.error(e); }
-}
-
-let chatUnsubscribe = null;
-
-function loadChatMessages() {
-    if (chatUnsubscribe) return;
-    const q = query(collection(db, "chats", "global", "messages"), orderBy("createdAt", "asc"), limit(50));
-    chatUnsubscribe = onSnapshot(q, (snapshot) => {
-        if (!chatMessagesBox) return;
-        chatMessagesBox.innerHTML = '';
-        const currentUid = auth.currentUser?.uid;
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const isMe = data.authorId === currentUid;
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-msg ${isMe ? 'mine' : 'others'}`;
-            msgDiv.innerHTML = `
-                <img src="${data.avatar}" class="chat-avatar">
-                <div>
-                    <div class="chat-bubble">${data.text}</div>
-                    <div class="chat-info"><span>${data.authorName}</span></div>
-                </div>
-            `;
-            chatMessagesBox.appendChild(msgDiv);
-        });
-        chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
-    });
-}
+});
