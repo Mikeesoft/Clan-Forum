@@ -329,7 +329,7 @@ function bindAuthUI() {
         
       loginContainer.innerHTML = `
         <div class="user-menu" style="display: flex; align-items: center; gap: 10px;">
-            <a href="#profile" class="nav-icon profile-link" title="ملفي الشخصي">
+            <a href="profile.html" class="nav-icon profile-link" title="ملفي الشخصي">
             ${photo} <span class="username-display">${name.split(' ')[0]}</span>
             </a>
             <button id="signOutBtn" class="auth-btn logout" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>
