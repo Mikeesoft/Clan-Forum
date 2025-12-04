@@ -1,8 +1,6 @@
-
-/* main.js (النسخة النهائية والمُدمجة والمُحسَّنة) */
-
-// استيراد Firebase (v11 modular)
+// استيراد Firebase و App Check
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js"; // 👈 استيراد جديد
 import {
   getAuth,
   GoogleAuthProvider,
@@ -10,26 +8,11 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  runTransaction,
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  limit,
-  startAfter,
-  onSnapshot,
-  serverTimestamp,
-  getDocs 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+// ... باقي الـ imports كما هي ...
 
-/* ====== تكوين Firebase (ضع هنا بيانات مشروعك الحقيقية) ====== */
+/* ====== تكوين Firebase ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg", // ⚠️ استبدل هذا بـ API Key الحقيقي
+  apiKey: "AIzaSyBo_O8EKeS6jYM-ee12oYrIlT575oaU2Pg",
   authDomain: "clan-forum.firebaseapp.com",
   projectId: "clan-forum",
   storageBucket: "clan-forum.firebasestorage.app",
@@ -37,6 +20,18 @@ const firebaseConfig = {
   appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
 };
 
+/* ====== تهيئة Firebase ====== */
+const app = initializeApp(firebaseConfig);
+
+// 👇👇👇 إضافة كود تفعيل App Check هنا 👇👇👇
+// استخدمنا مفتاح الموقع (Site Key) من صورتك
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6LejEyesAAAAABQwxNg_Bz_zg4nZm4MznKjSuGJ3'),
+  isTokenAutoRefreshEnabled: true
+});
+
+const auth = getAuth(app);
+// ... باقي الكود كما هو ...
 /* ====== تهيئة Firebase ====== */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
