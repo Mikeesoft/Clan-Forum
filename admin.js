@@ -515,4 +515,3 @@ onAuthStateChanged(auth, async (user) => {
         authIcon.className = 'fas fa-lock';
         authIcon.style.color = 'var(--danger)';
     }
-});
