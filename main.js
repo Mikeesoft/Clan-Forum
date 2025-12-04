@@ -1,6 +1,7 @@
 // استيراد Firebase و App Check
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js"; // 👈 استيراد جديد
+// 👇 هذا السطر الجديد الضروري
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -8,7 +9,24 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-// ... باقي الـ imports كما هي ...
+// ... باقي الاستيرادات (Firestore) اتركها كما هي ...
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  onSnapshot,
+  serverTimestamp,
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 
 /* ====== تكوين Firebase ====== */
 const firebaseConfig = {
@@ -20,19 +38,18 @@ const firebaseConfig = {
   appId: "1:1011903491894:web:f1bc46a549e74b3717cd97"
 };
 
-/* ====== تهيئة Firebase ====== */
+/* ====== تهيئة Firebase مع الحماية ====== */
 const app = initializeApp(firebaseConfig);
 
-// 👇👇👇 إضافة كود تفعيل App Check هنا 👇👇👇
-// استخدمنا مفتاح الموقع (Site Key) من صورتك
+// 👇 تفعيل App Check باستخدام المفتاح من الصورة الأولى 👇
 const appCheck = initializeAppCheck(app, {
   provider: new ReCaptchaV3Provider('6LejEyesAAAAABQwxNg_Bz_zg4nZm4MznKjSuGJ3'),
   isTokenAutoRefreshEnabled: true
 });
 
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
 /* ====== عناصر DOM ====== */
 const loginContainer = document.getElementById("loginBtnContainer");
