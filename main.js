@@ -31,10 +31,6 @@ const appCheck = initializeAppCheck(app, {
 });
 
 const auth = getAuth(app);
-// ... باقي الكود كما هو ...
-/* ====== تهيئة Firebase ====== */
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
 
