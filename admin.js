@@ -1,4 +1,4 @@
-// admin.js (النسخة النهائية والمُصححة)
+// admin.js (النسخة النهائية والمُصححة والآمنة)
 
 // ====== Firebase imports (v11 modular) ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -20,7 +20,6 @@ import {
     serverTimestamp,
     setDoc,
     increment,
-    // 💡 تم إضافة limit هنا لتصحيح خطأ "limit is not defined"
     limit
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -104,7 +103,7 @@ function formatTimestamp(ts) {
     return ts.toDate().toLocaleString('ar-EG');
 }
 
-// دالة حساب المستويات (لضمان التناسق مع profile.html)
+// دالة حساب المستويات
 function computeRanks(stars) { 
     const STARS_PER_LEVEL = 50;
     const MAX_LEVEL = 100; 
@@ -206,7 +205,6 @@ searchUserBtn.addEventListener('click', async () => {
             userDocSnap = await getDoc(doc(db, 'users', targetUID));
         } 
         else {
-            // الآن limit مُعرَّف وجاهز للاستخدام
             const q = query(usersCol, where('username', '==', term), limit(1));
             const snap = await getDocs(q);
             if (!snap.empty) {
@@ -233,7 +231,6 @@ searchUserBtn.addEventListener('click', async () => {
 });
 
 /* 2. إجراءات الحظر/الباند */
-
 tempBanBtn.addEventListener('click', async () => {
     if (!currentTargetUser) return showToast('ابحث عن مستخدم أولاً.', 'var(--gold)');
     const days = parseInt(banDurationInput.value);
@@ -301,7 +298,6 @@ unbanBtn.addEventListener('click', async () => {
 
 
 /* 3. إجراءات التحكم بالنجوم (Stars) */
-
 async function updateStars(action, amount) {
     if (!currentTargetUser) return showToast('ابحث عن مستخدم أولاً.', 'var(--gold)');
     if (isNaN(amount) || amount < 0) return showToast('أدخل قيمة صحيحة وموجبة للنجوم.', 'var(--gold)');
@@ -349,7 +345,6 @@ setStarsBtn.addEventListener('click', () => updateStars('set', parseInt(starsAmo
 /* 4. الإحصائيات العامة */
 async function loadStats() {
     try {
-        // 💡 تم تبسيط الكود لحل مشكلة الإحصائيات، باستخدام getDocs لجلب البيانات
         const q = query(usersCol); 
         const snap = await getDocs(q); 
         
@@ -369,11 +364,10 @@ async function loadStats() {
         totalStarsCount.textContent = 'خطأ';
     }
 }
-setInterval(loadStats, 60000); // تحديث الإحصائيات كل دقيقة
+setInterval(loadStats, 60000); 
 
 
 /* 5. الأدوات الشاملة (Global Tools) */
-
 distributeStarsBtn.addEventListener('click', async () => {
     const amount = parseInt(globalStarsAmount.value);
     if (isNaN(amount) || amount <= 0) return showToast('الرجاء إدخال عدد نجوم صالح للإضافة.', 'var(--gold)');
@@ -447,52 +441,20 @@ generatePromoBtn.addEventListener('click', async () => {
     }
 });
 
+
 // ====== التهيئة والتحقق الأولي (On Load) ======
+// ✅ هذا هو الجزء الذي تم تعديله لإصلاح الخطأ ومنع غير الأدمن
 onAuthStateChanged(auth, async (user) => {
-    // 1. لو المستخدم أصلاً مش مسجل دخول
+    // 1. إذا لم يكن مسجلاً
     if (!user) {
         authStatus.textContent = 'يرجى تسجيل الدخول أولاً.';
         authIcon.className = 'fas fa-times-circle';
         authIcon.style.color = 'var(--danger)';
-        // طرد بعد ثانيتين
         setTimeout(() => window.location.replace('index.html'), 2000);
-        return;
+        return; // ✅ هذا الـ return صحيح هنا لأنه داخل الدالة
     }
 
-    // 2. فحص بيانات المستخدم من قاعدة البيانات
-    const userDocRef = doc(db, 'users', user.uid);
-    const snap = await getDoc(userDocRef);
-
-    if (!snap.exists()) {
-        authStatus.textContent = 'المستخدم غير مسجل.';
-        return;
-    }
-
-    const userData = snap.data();
-    
-    // 3. التحقق هل هو أدمن؟
-    if (userData.isAdmin === true) {
-        // ✅ هو أدمن: اخفِ شاشة التحميل واعرض اللوحة
-        authCheck.style.display = 'none';
-        adminDashboard.style.display = 'grid';
-        
-        loadStats(); // ابدأ تحميل البيانات
-    } else {
-        // ⛔ ليس أدمن: اطـرده فوراً
-        authStatus.textContent = 'غير مصرح لك! جاري تحويلك...';
-        authIcon.className = 'fas fa-ban';
-        authIcon.style.color = 'var(--danger)';
-        
-        // عرض رسالة خطأ صغيرة
-        showToast('محاولة دخول غير مصرحة 🚫', '#c0392b');
-        
-        // تحويل للصفحة الرئيسية بعد ثانية ونصف
-        setTimeout(() => {
-            window.location.replace("index.html"); 
-        }, 1500);
-    }
-});
-
+    // 2. جلب بيانات المستخدم
     const userDocRef = doc(db, 'users', user.uid);
     const snap = await getDoc(userDocRef);
 
@@ -505,13 +467,23 @@ onAuthStateChanged(auth, async (user) => {
 
     const userData = snap.data();
     
+    // 3. التحقق هل هو أدمن؟
     if (userData.isAdmin === true) {
+        // ✅ هو أدمن: اعرض اللوحة
         authCheck.style.display = 'none';
         adminDashboard.style.display = 'grid';
-        
-        loadStats(); // تحميل الإحصائيات
+        loadStats(); 
     } else {
-        authStatus.textContent = 'غير مصرح لك بالوصول إلى لوحة التحكم هذه.';
-        authIcon.className = 'fas fa-lock';
+        // ⛔ ليس أدمن: اطرده فوراً
+        authStatus.textContent = 'غير مصرح لك! جاري تحويلك...';
+        authIcon.className = 'fas fa-ban';
         authIcon.style.color = 'var(--danger)';
+        
+        showToast('محاولة دخول غير مصرحة 🚫', '#c0392b');
+        
+        // الطرد (Redirect)
+        setTimeout(() => {
+            window.location.replace("index.html"); 
+        }, 1500);
     }
+});
