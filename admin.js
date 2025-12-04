@@ -447,16 +447,51 @@ generatePromoBtn.addEventListener('click', async () => {
     }
 });
 
-
 // ====== التهيئة والتحقق الأولي (On Load) ======
 onAuthStateChanged(auth, async (user) => {
+    // 1. لو المستخدم أصلاً مش مسجل دخول
     if (!user) {
         authStatus.textContent = 'يرجى تسجيل الدخول أولاً.';
         authIcon.className = 'fas fa-times-circle';
         authIcon.style.color = 'var(--danger)';
-        setTimeout(() => location.href = 'index.html', 2000);
+        // طرد بعد ثانيتين
+        setTimeout(() => window.location.replace('index.html'), 2000);
         return;
     }
+
+    // 2. فحص بيانات المستخدم من قاعدة البيانات
+    const userDocRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userDocRef);
+
+    if (!snap.exists()) {
+        authStatus.textContent = 'المستخدم غير مسجل.';
+        return;
+    }
+
+    const userData = snap.data();
+    
+    // 3. التحقق هل هو أدمن؟
+    if (userData.isAdmin === true) {
+        // ✅ هو أدمن: اخفِ شاشة التحميل واعرض اللوحة
+        authCheck.style.display = 'none';
+        adminDashboard.style.display = 'grid';
+        
+        loadStats(); // ابدأ تحميل البيانات
+    } else {
+        // ⛔ ليس أدمن: اطـرده فوراً
+        authStatus.textContent = 'غير مصرح لك! جاري تحويلك...';
+        authIcon.className = 'fas fa-ban';
+        authIcon.style.color = 'var(--danger)';
+        
+        // عرض رسالة خطأ صغيرة
+        showToast('محاولة دخول غير مصرحة 🚫', '#c0392b');
+        
+        // تحويل للصفحة الرئيسية بعد ثانية ونصف
+        setTimeout(() => {
+            window.location.replace("index.html"); 
+        }, 1500);
+    }
+});
 
     const userDocRef = doc(db, 'users', user.uid);
     const snap = await getDoc(userDocRef);
