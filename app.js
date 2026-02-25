@@ -96,9 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const deleteBtnHTML = isCurrentUserAdmin ? `
-          <button class="delete-news-btn" data-id="${newsId}" title="حذف الإعلان">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
+          <button class="delete-news-btn" data-id="${newsId}" title="حذف الإعلان"><i class="fa-solid fa-trash-can"></i></button>
         ` : '';
 
         const newsCard = document.createElement('div');
@@ -120,24 +118,167 @@ document.addEventListener('DOMContentLoaded', () => {
           btn.addEventListener('click', async (e) => {
             const newsId = e.currentTarget.getAttribute('data-id');
             if (confirm('هل أنت متأكد يا نقيب أنك تريد حذف هذا الإعلان؟ 🗑️')) {
-              try {
-                await deleteDoc(doc(db, "news", newsId));
-                showToast('تم حذف الإعلان بنجاح!', 'fa-solid fa-trash-can');
-              } catch (error) {
-                showToast('فشل الحذف. تأكد من صلاحياتك!', 'fa-solid fa-circle-xmark');
-              }
+              try { await deleteDoc(doc(db, "news", newsId)); showToast('تم حذف الإعلان بنجاح!', 'fa-solid fa-trash-can'); } 
+              catch (error) { showToast('فشل الحذف. تأكد من صلاحياتك!', 'fa-solid fa-circle-xmark'); }
             }
           });
         });
       }
-
-    }, (error) => {
-      console.error("News error:", error);
-    });
+    }, (error) => { console.error("News error:", error); });
   }
 
   // ==========================================
-  // === 4. تسجيل الدخول وتحديث الواجهة ===
+  // === 4. نظام المهام (اليومي + المؤقت) ⚔️ ===
+  // ==========================================
+  const dailyQuestBtn = document.getElementById('daily-quest-btn');
+  const questsContainer = document.getElementById('quests-container');
+  const homeQuestsContainer = document.getElementById('home-quests-container');
+  const questsCol = collection(db, "quests");
+
+  function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
+
+  // 🔴 4.1 المهمة اليومية (الثابتة)
+  function checkDailyQuestStatus(userData) {
+    if (!dailyQuestBtn) return;
+    const today = getTodayDate();
+    if (userData && userData.lastClaimDate === today) {
+      dailyQuestBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> تمت المهمة';
+      dailyQuestBtn.style.background = 'rgba(255,255,255,0.1)'; dailyQuestBtn.style.color = 'var(--text-muted)'; dailyQuestBtn.disabled = true;
+    } else {
+      dailyQuestBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام 5';
+      dailyQuestBtn.style.background = 'var(--accent)'; dailyQuestBtn.style.color = '#fff'; dailyQuestBtn.disabled = false;
+    }
+  }
+
+  if (dailyQuestBtn) {
+    dailyQuestBtn.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) return showToast('يجب تسجيل الدخول لاستلام المهمة اليومية!', 'fa-solid fa-lock');
+
+      dailyQuestBtn.disabled = true; dailyQuestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      const userRef = doc(db, 'users', user.uid);
+      
+      try {
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const today = getTodayDate();
+
+        if (data.lastClaimDate === today) {
+          showToast('لقد استلمت مهمة اليوم بالفعل!', 'fa-solid fa-circle-info');
+          checkDailyQuestStatus(data); return;
+        }
+
+        const newStars = (data.stars || 0) + 5;
+        const newLevel = Math.floor(newStars / 50);
+
+        await setDoc(userRef, { stars: newStars, level: newLevel, lastClaimDate: today }, { merge: true });
+        showToast(`دخول يومي ناجح! حصلت على 5 نجوم 🌟`, 'fa-solid fa-calendar-check');
+        checkDailyQuestStatus({ lastClaimDate: today });
+        updateUI(user, { ...data, stars: newStars, level: newLevel, lastClaimDate: today });
+      } catch (error) { showToast('حدث خلل سحري!', 'fa-solid fa-bug'); dailyQuestBtn.disabled = false; dailyQuestBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام 5'; }
+    });
+  }
+
+  // 🔴 4.2 المهام الديناميكية (المؤقتة)
+  function initQuests(user, userData) {
+    if (!questsContainer) return;
+    const q = query(questsCol, orderBy("createdAt", "desc"));
+    
+    onSnapshot(q, (snapshot) => {
+      questsContainer.innerHTML = '';
+      if (homeQuestsContainer) homeQuestsContainer.innerHTML = '';
+      
+      let claimedQuests = userData?.claimedQuests || [];
+      const now = new Date();
+      let activeQuestsCount = 0;
+
+      snapshot.forEach((docSnap) => {
+        const quest = docSnap.data();
+        const questId = docSnap.id;
+        
+        if (!quest.expiresAt) return;
+        const expiryDate = quest.expiresAt.toDate();
+        if (now > expiryDate) return; // إخفاء المهمة إذا انتهى وقتها
+
+        const timeLeftMs = expiryDate - now;
+        const hoursLeft = Math.floor(timeLeftMs / (1000 * 60 * 60));
+        const timeText = hoursLeft > 0 ? `ينتهي بعد ${hoursLeft} ساعة` : 'ينتهي قريباً جداً!';
+        const isClaimed = claimedQuests.includes(questId);
+        
+        const questCard = document.createElement('div');
+        questCard.className = 'glass-card quest-card';
+        questCard.innerHTML = `
+          <div class="quest-info" style="flex: 1;">
+            <h3 style="color: ${isClaimed ? 'var(--text-muted)' : 'var(--text-main)'};">
+              ${isClaimed ? '<i class="fa-solid fa-check-double" style="color: var(--gold);"></i>' : ''} ${quest.title}
+            </h3>
+            <p class="text-muted" style="font-size: 0.85rem; margin-top: 5px;">${quest.desc}</p>
+            <span class="date-badge" style="color: var(--danger); border: 1px solid var(--danger); background: rgba(239, 68, 68, 0.1);"><i class="fa-solid fa-hourglass-half"></i> ${timeText}</span>
+          </div>
+          <button class="btn-primary claim-btn" data-id="${questId}" data-reward="${quest.reward}" ${isClaimed ? 'disabled style="background: rgba(255,255,255,0.1); color: var(--text-muted);"' : ''}>
+            ${isClaimed ? 'مكتملة' : `<i class="fa-solid fa-star"></i> استلام ${quest.reward}`}
+          </button>
+        `;
+
+        questsContainer.appendChild(questCard);
+        
+        // عرض مهمتين فقط في الرئيسية
+        if (homeQuestsContainer && activeQuestsCount < 2) {
+          homeQuestsContainer.appendChild(questCard.cloneNode(true));
+        }
+        activeQuestsCount++;
+      });
+
+      if (activeQuestsCount === 0) {
+        questsContainer.innerHTML = '<p class="text-muted text-center" style="margin-top: 30px;">لا توجد مهام إضافية نشطة. استرح يا بطل! ☕</p>';
+        if (homeQuestsContainer) homeQuestsContainer.innerHTML = '<p class="text-muted" style="font-size: 0.85rem;">لا توجد مهام عاجلة.</p>';
+      }
+
+      // تفعيل زر استلام المهمة المؤقتة
+      document.querySelectorAll('.claim-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          if (!user) return showToast('يجب تسجيل الدخول لاستلام المهام!', 'fa-solid fa-lock');
+          
+          const targetBtn = e.currentTarget;
+          const qId = targetBtn.getAttribute('data-id');
+          const reward = parseInt(targetBtn.getAttribute('data-reward'));
+
+          targetBtn.disabled = true; targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+          try {
+            const freshUserSnap = await getDoc(doc(db, 'users', user.uid));
+            const freshData = freshUserSnap.data();
+            const currentClaimed = freshData.claimedQuests || [];
+
+            if (currentClaimed.includes(qId)) {
+              showToast('لقد استلمت هذه المهمة بالفعل!', 'fa-solid fa-circle-info'); return;
+            }
+
+            currentClaimed.push(qId);
+            const newStars = (freshData.stars || 0) + reward;
+            const newLevel = Math.floor(newStars / 50);
+
+            await setDoc(doc(db, 'users', user.uid), {
+              stars: newStars, level: newLevel, claimedQuests: currentClaimed
+            }, { merge: true });
+
+            showToast(`عاش! أنجزت المهمة وحصلت على ${reward} نجمة 🌟`, 'fa-solid fa-khanda');
+            
+            // تحديث بيانات الواجهة فوراً
+            freshData.claimedQuests = currentClaimed; freshData.stars = newStars; freshData.level = newLevel;
+            updateUI(user, freshData);
+            initQuests(user, freshData);
+
+          } catch (error) { showToast('حدث خلل سحري أثناء الاستلام!', 'fa-solid fa-bug'); targetBtn.disabled = false; targetBtn.innerHTML = `<i class="fa-solid fa-star"></i> استلام ${reward}`; }
+        });
+      });
+    });
+  }
+
+
+  // ==========================================
+  // === 5. تسجيل الدخول وتحديث الواجهة ===
   // ==========================================
   const profileContent = document.getElementById('profile-content');
   const welcomeText = document.getElementById('welcome-text');
@@ -151,10 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const rank = getRank(stars);
       const isAdmin = userData?.isAdmin === true;
 
-      myCurrentAvatar = photo;
-      myCurrentUsername = customName; 
-      isCurrentUserAdmin = isAdmin;
-
+      myCurrentAvatar = photo; myCurrentUsername = customName; isCurrentUserAdmin = isAdmin;
       welcomeText.innerHTML = `مرحباً بعودتك، ${customName.split(' ')[0]} 👋`;
 
       const adminButtonHTML = isAdmin ? `
@@ -207,45 +345,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const btnChangeUsername = document.getElementById('btn-change-username');
       const usernameInput = document.getElementById('username-input');
-      
       btnChangeUsername.addEventListener('click', async () => {
         const newName = usernameInput.value.trim();
         if (newName.length < 3) return showToast('اللقب يجب أن يكون 3 أحرف على الأقل!', 'fa-solid fa-circle-exclamation');
-        
-        btnChangeUsername.disabled = true;
-        btnChangeUsername.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
+        btnChangeUsername.disabled = true; btnChangeUsername.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         try {
           await setDoc(doc(db, 'users', user.uid), { username: newName }, { merge: true });
           showToast('تم تغيير اللقب بنجاح! 📛', 'fa-solid fa-user-check');
-          userData.username = newName;
-          updateUI(user, userData); 
-        } catch (error) {
-          showToast('فشل تغيير اللقب!', 'fa-solid fa-circle-xmark');
-        } finally {
-          btnChangeUsername.disabled = false;
-          btnChangeUsername.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>';
-        }
+          userData.username = newName; updateUI(user, userData); 
+        } catch (error) { showToast('فشل تغيير اللقب!', 'fa-solid fa-circle-xmark'); } 
+        finally { btnChangeUsername.disabled = false; btnChangeUsername.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>'; }
       });
 
       const fileInput = document.getElementById('avatar-upload');
       const imgPreview = document.getElementById('profile-img-preview');
-      
       fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
         if (file.size > 300 * 1024) return showToast('الصورة كبيرة جداً! الحد الأقصى 300KB', 'fa-solid fa-triangle-exclamation');
-
         const reader = new FileReader();
         reader.onload = async (ev) => {
-          const base64 = ev.target.result;
-          imgPreview.src = base64; 
-          myCurrentAvatar = base64; 
-          initChat(); 
+          const base64 = ev.target.result; imgPreview.src = base64; myCurrentAvatar = base64; initChat(); 
           try {
             await setDoc(doc(db, 'users', user.uid), { photoURL: base64 }, { merge: true });
-            showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image');
-            userData.photoURL = base64; 
+            showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image'); userData.photoURL = base64; 
           } catch (err) { showToast('فشل تحديث الصورة', 'fa-solid fa-circle-xmark'); }
         };
         reader.readAsDataURL(file);
@@ -253,44 +376,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const btnApplyPromo = document.getElementById('btn-apply-promo');
       const promoInput = document.getElementById('promo-input');
-
       btnApplyPromo.addEventListener('click', async () => {
         const code = promoInput.value.trim().toUpperCase();
         if (!code) return showToast('الرجاء إدخال كود صحيح!', 'fa-solid fa-circle-exclamation');
-        
-        btnApplyPromo.disabled = true;
-        btnApplyPromo.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
+        btnApplyPromo.disabled = true; btnApplyPromo.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         try {
-          const promoRef = doc(db, 'promos', code);
-          const promoSnap = await getDoc(promoRef);
-          
-          if (!promoSnap.exists()) {
-            showToast('هذه التعويذة غير صحيحة أو منتهية الصلاحية!', 'fa-solid fa-circle-xmark');
-            return;
-          }
+          const promoRef = doc(db, 'promos', code); const promoSnap = await getDoc(promoRef);
+          if (!promoSnap.exists()) { showToast('هذه التعويذة غير صحيحة أو منتهية الصلاحية!', 'fa-solid fa-circle-xmark'); return; }
+          if (userData.activatedPromos && userData.activatedPromos.includes(code)) { showToast('لقد استخدمت هذه التعويذة من قبل!', 'fa-solid fa-circle-info'); return; }
 
-          if (userData.activatedPromos && userData.activatedPromos.includes(code)) {
-            showToast('لقد استخدمت هذه التعويذة من قبل!', 'fa-solid fa-circle-info');
-            return;
-          }
+          const promoData = promoSnap.data(); const starsToAdd = promoData.stars || 0;
+          const newStars = (userData.stars || 0) + starsToAdd; const newLevel = Math.floor(newStars / 50);
+          const activatedPromos = userData.activatedPromos || []; activatedPromos.push(code);
 
-          const promoData = promoSnap.data();
-          const starsToAdd = promoData.stars || 0;
-          const newStars = (userData.stars || 0) + starsToAdd;
-          const newLevel = Math.floor(newStars / 50);
-          
-          const activatedPromos = userData.activatedPromos || [];
-          activatedPromos.push(code);
-
-          await setDoc(doc(db, 'users', user.uid), {
-            stars: newStars, level: newLevel, activatedPromos: activatedPromos
-          }, { merge: true });
-
+          await setDoc(doc(db, 'users', user.uid), { stars: newStars, level: newLevel, activatedPromos: activatedPromos }, { merge: true });
           showToast(`تم التفعيل! حصلت على ${starsToAdd} نجمة 🌟`, 'fa-solid fa-wand-magic-sparkles');
-          promoInput.value = '';
-          updateUI(user, { ...userData, stars: newStars, level: newLevel, activatedPromos: activatedPromos });
-
+          promoInput.value = ''; updateUI(user, { ...userData, stars: newStars, level: newLevel, activatedPromos: activatedPromos });
         } catch (error) { showToast('حدث خلل سحري أثناء التفعيل!', 'fa-solid fa-bug'); } 
         finally { btnApplyPromo.disabled = false; btnApplyPromo.innerHTML = '<i class="fa-solid fa-check"></i>'; }
       });
@@ -308,62 +409,10 @@ document.addEventListener('DOMContentLoaded', () => {
           </button>
         </div>
       `;
-
       document.getElementById('login-btn').addEventListener('click', async () => {
-        try { await signInWithPopup(auth, provider); } 
-        catch (err) { showToast("حدث خطأ أثناء تسجيل الدخول!", "fa-solid fa-triangle-exclamation"); }
+        try { await signInWithPopup(auth, provider); } catch (err) { showToast("حدث خطأ أثناء تسجيل الدخول!", "fa-solid fa-triangle-exclamation"); }
       });
     }
-    initNews();
-  }
-
-  // ==========================================
-  // === 5. نظام المهام (استلام النجوم) ===
-  // ==========================================
-  const questBtn = document.querySelector('.quest-card .btn-primary');
-  function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
-
-  function checkQuestStatus(userData) {
-    if (!questBtn) return;
-    const today = getTodayDate();
-    if (userData && userData.lastClaimDate === today) {
-      questBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> تمت المهمة';
-      questBtn.style.background = 'rgba(255,255,255,0.1)'; questBtn.style.color = 'var(--text-muted)'; questBtn.disabled = true;
-    } else {
-      questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام';
-      questBtn.style.background = 'var(--accent)'; questBtn.style.color = '#fff'; questBtn.disabled = false;
-    }
-  }
-
-  if (questBtn) {
-    questBtn.addEventListener('click', async () => {
-      const user = auth.currentUser;
-      if (!user) return showToast('يجب تسجيل الدخول أولاً أيها المغامر!', 'fa-solid fa-circle-exclamation');
-
-      questBtn.disabled = true; questBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاستلام...';
-      const userRef = doc(db, 'users', user.uid);
-      
-      try {
-        const snap = await getDoc(userRef);
-        if (!snap.exists()) return;
-        const data = snap.data();
-        const today = getTodayDate();
-
-        if (data.lastClaimDate === today) {
-          showToast('لقد أنهيت هذه المهمة اليوم بالفعل!', 'fa-solid fa-circle-info');
-          checkQuestStatus(data); return;
-        }
-
-        const newStars = (data.stars || 0) + 5;
-        const newLevel = Math.floor(newStars / 50);
-
-        await setDoc(userRef, { stars: newStars, level: newLevel, lastClaimDate: today }, { merge: true });
-        showToast(`عاش! حصلت على 5 نجوم. رصيدك الآن: ${newStars}`, 'fa-solid fa-star');
-        checkQuestStatus({ lastClaimDate: today });
-        updateUI(user, { ...data, stars: newStars, level: newLevel, lastClaimDate: today });
-
-      } catch (error) { showToast('حدث خلل سحري! حاول مرة أخرى.', 'fa-solid fa-bug'); questBtn.disabled = false; questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام'; }
-    });
   }
 
   // ==========================================
@@ -387,16 +436,20 @@ document.addEventListener('DOMContentLoaded', () => {
           await setDoc(userRef, { isAdmin: true }, { merge: true });
         }
       }
-      updateUI(user, userData); checkQuestStatus(userData); 
+      updateUI(user, userData); 
+      checkDailyQuestStatus(userData); 
+      initQuests(user, userData); // تمرير البيانات لبرمجة المهام المؤقتة
     } else {
-      updateUI(null); checkQuestStatus(null);
+      updateUI(null); 
+      checkDailyQuestStatus(null);
+      initQuests(null, null);
       isCurrentUserAdmin = false;
-      initNews();
     }
+    initNews();
   });
 
   // ==========================================
-  // === 7. نظام الحانة (الدردشة العامة السريعة) ===
+  // === 7. نظام الحانة (الدردشة السريعة) ===
   // ==========================================
   const chatMessages = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
@@ -404,14 +457,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const messagesCol = collection(db, "chats", "global", "messages");
 
   function initChat() {
-    // 🚀 جلب أحدث 50 رسالة فقط لتسريع الموقع 🚀
     const q = query(messagesCol, orderBy("createdAt", "desc"), limit(50));
-    
     onSnapshot(q, (snapshot) => {
       chatMessages.innerHTML = '';
       const currentUser = auth.currentUser;
-      
-      // نجمع الرسائل في مصفوفة ونعكسها عشان القديم يظهر فوق والجديد تحت
       const messagesArray = [];
       snapshot.forEach((docSnap) => messagesArray.push(docSnap.data()));
       messagesArray.reverse();
@@ -443,10 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = auth.currentUser;
     if (!user) return showToast("يجب تسجيل الدخول للتحدث في الحانة!", "fa-solid fa-lock");
     chatInput.value = '';
-    
-    try {
-      await addDoc(messagesCol, { text: text, authorName: myCurrentUsername, authorId: user.uid, avatar: myCurrentAvatar, createdAt: serverTimestamp() });
-    } catch (e) { showToast("فشل الإرسال. تأكد من اتصالك.", "fa-solid fa-wifi"); }
+    try { await addDoc(messagesCol, { text: text, authorName: myCurrentUsername, authorId: user.uid, avatar: myCurrentAvatar, createdAt: serverTimestamp() }); } 
+    catch (e) { showToast("فشل الإرسال. تأكد من اتصالك.", "fa-solid fa-wifi"); }
   }
 
   if (btnSend && chatInput) {

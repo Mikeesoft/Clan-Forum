@@ -15,20 +15,17 @@
   </style>
 </head>
 <body>
-
   <div class="admin-container">
     <header class="top-bar" style="border-radius: 16px; margin-bottom: 20px;">
       <div class="logo"><i class="fa-solid fa-crown" style="color: var(--gold);"></i> غرفة القيادة</div>
-      <a href="index.html" class="btn-danger" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">العودة للنقابة</a>
+      <a href="index.html" class="btn-danger" style="text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">العودة</a>
     </header>
 
     <div id="auth-check" class="text-center" style="margin-top: 50px;">
       <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--accent);"></i>
-      <p class="text-muted" style="margin-top: 10px;">جاري التحقق من هويتك الملكية...</p>
     </div>
 
     <div id="admin-content" style="display: none;">
-      
       <div class="welcome-banner" style="background: linear-gradient(135deg, #111827, #1f2937); border: 1px solid var(--gold);">
         <h2 style="color: var(--gold);">مرحباً بك يا نقيب 👑</h2>
         <p class="text-muted">من هنا يمكنك إدارة شؤون النقابة، إصدار التعاويذ، نشر الأخبار، وتكليف الأعضاء بالمهام.</p>
@@ -36,15 +33,15 @@
 
       <div class="admin-grid">
         <div class="glass-card">
-          <h3 class="section-title"><i class="fa-solid fa-wand-sparkles" style="color: var(--accent);"></i> توليد تعويذة (Promo Code)</h3>
-          <input type="text" id="promo-code" class="chat-input" placeholder="اسم الكود (مثال: ANIME2026)" style="width: 100%; margin-bottom: 12px;">
-          <input type="number" id="promo-stars" class="chat-input" placeholder="عدد النجوم (مثال: 100)" style="width: 100%; margin-bottom: 20px;">
+          <h3 class="section-title"><i class="fa-solid fa-wand-sparkles" style="color: var(--accent);"></i> توليد تعويذة (Promo)</h3>
+          <input type="text" id="promo-code" class="chat-input" placeholder="اسم الكود (مثال: GIFT50)" style="width: 100%; margin-bottom: 12px;">
+          <input type="number" id="promo-stars" class="chat-input" placeholder="المكافأة (نجوم)" style="width: 100%; margin-bottom: 20px;">
           <button id="btn-create-promo" class="btn-primary" style="width: 100%;"><i class="fa-solid fa-plus"></i> توليد الكود</button>
         </div>
 
         <div class="glass-card">
-          <h3 class="section-title"><i class="fa-solid fa-bullhorn" style="color: var(--accent);"></i> نشر إعلان بالنقابة</h3>
-          <input type="text" id="news-title" class="chat-input" placeholder="عنوان الخبر (مثال: تحديث الرتب)" style="width: 100%; margin-bottom: 12px;">
+          <h3 class="section-title"><i class="fa-solid fa-bullhorn" style="color: var(--accent);"></i> نشر إعلان</h3>
+          <input type="text" id="news-title" class="chat-input" placeholder="عنوان الخبر" style="width: 100%; margin-bottom: 12px;">
           <textarea id="news-body" class="chat-input" placeholder="تفاصيل الإعلان..." style="width: 100%; height: 100px; resize: vertical; margin-bottom: 20px;"></textarea>
           <button id="btn-publish-news" class="btn-primary" style="width: 100%;"><i class="fa-solid fa-paper-plane"></i> نشر الإعلان</button>
         </div>
@@ -52,17 +49,16 @@
         <div class="glass-card" style="grid-column: 1 / -1;">
           <h3 class="section-title"><i class="fa-solid fa-scroll" style="color: var(--gold);"></i> تكليف بمهام جديدة</h3>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="text" id="quest-title" class="chat-input" placeholder="عنوان المهمة (مثال: شارك في الشات 5 مرات)" style="flex: 1; min-width: 200px;">
-            <input type="number" id="quest-reward" class="chat-input" placeholder="المكافأة (عدد النجوم)" style="width: 150px;">
+            <input type="text" id="quest-title" class="chat-input" placeholder="عنوان المهمة" style="flex: 1; min-width: 200px;">
+            <input type="number" id="quest-reward" class="chat-input" placeholder="النجوم" style="width: 100px;">
+            <input type="number" id="quest-hours" class="chat-input" placeholder="المدة (ساعات)" style="width: 120px;">
           </div>
-          <textarea id="quest-desc" class="chat-input" placeholder="وصف المهمة بالتفصيل..." style="width: 100%; height: 80px; resize: vertical; margin-top: 12px; margin-bottom: 15px;"></textarea>
-          <button id="btn-add-quest" class="btn-primary" style="width: 100%; background: var(--gold); color: #000;"><i class="fa-solid fa-plus"></i> تعليق المهمة في لوحة النقابة</button>
+          <textarea id="quest-desc" class="chat-input" placeholder="تفاصيل المهمة..." style="width: 100%; height: 80px; resize: vertical; margin-top: 12px; margin-bottom: 15px;"></textarea>
+          <button id="btn-add-quest" class="btn-primary" style="width: 100%; background: var(--gold); color: #000;"><i class="fa-solid fa-hourglass-half"></i> تعليق المهمة بوقت محدد</button>
         </div>
       </div>
-
     </div>
   </div>
-
   <script type="module" src="admin.js"></script>
 </body>
 </html>

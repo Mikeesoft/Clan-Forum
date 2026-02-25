@@ -79,39 +79,45 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 🌟 4. إضافة مهام جديدة (Quests) 🌟
+  // 🌟 4. إضافة مهام جديدة بوقت محدد ⏳ 🌟
   // ==========================================
   const btnQuest = document.getElementById('btn-add-quest');
   btnQuest.addEventListener('click', async () => {
     const title = document.getElementById('quest-title').value.trim();
     const desc = document.getElementById('quest-desc').value.trim();
     const reward = parseInt(document.getElementById('quest-reward').value);
+    const hours = parseInt(document.getElementById('quest-hours').value);
 
-    if (!title || !desc || isNaN(reward) || reward <= 0) {
-      return showToast('الرجاء إدخال بيانات المهمة والمكافأة بشكل صحيح!', 'fa-solid fa-triangle-exclamation');
+    if (!title || !desc || isNaN(reward) || reward <= 0 || isNaN(hours) || hours <= 0) {
+      return showToast('الرجاء إدخال كل البيانات بشكل صحيح (النجوم والساعات)!', 'fa-solid fa-triangle-exclamation');
     }
 
     btnQuest.disabled = true; 
     btnQuest.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تعليق المهمة...';
+
+    // 🌟 حساب وقت الانتهاء 🌟
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + (hours * 60 * 60 * 1000)); 
 
     try {
       await addDoc(collection(db, 'quests'), { 
         title: title, 
         desc: desc, 
         reward: reward, 
-        createdAt: serverTimestamp() 
+        createdAt: serverTimestamp(),
+        expiresAt: expiresAt // حفظ وقت الانتهاء في قاعدة البيانات
       });
       showToast('تمت إضافة المهمة للوحة النقابة بنجاح! ⚔️', 'fa-solid fa-scroll');
       document.getElementById('quest-title').value = ''; 
       document.getElementById('quest-desc').value = '';
       document.getElementById('quest-reward').value = '';
+      document.getElementById('quest-hours').value = '';
     } catch (e) { 
       console.error(e);
       showToast('حدث خطأ أثناء إضافة المهمة!', 'fa-solid fa-circle-xmark'); 
-    } 
-    finally { 
+    } finally { 
       btnQuest.disabled = false; 
-      btnQuest.innerHTML = '<i class="fa-solid fa-plus"></i> تعليق المهمة في لوحة النقابة'; 
+      btnQuest.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> تعليق المهمة بوقت محدد'; 
     }
   });
 
