@@ -1,8 +1,32 @@
 // firebase-core.js
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// ⚠️ تم إيقاف استيراد App Check مؤقتاً لتجنب توقف الموقع على Netlify
+// import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js";
+
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  signOut 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  serverTimestamp, 
+  collection, 
+  query, 
+  orderBy, 
+  limit, 
+  onSnapshot, 
+  addDoc, 
+  getDocs 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // 1. إعدادات مشروعك
 const firebaseConfig = {
@@ -17,14 +41,21 @@ const firebaseConfig = {
 // 2. تهيئة فايربيس
 const app = initializeApp(firebaseConfig);
 
-// 3. تفعيل الحماية (App Check) على مستوى الموقع كله
-const appCheck = initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider('6LejEyesAAAAABQwxNg_Bz_zg4nZm4MznKjSuGJ3'),
-  isTokenAutoRefreshEnabled: true
-});
+// 3. ⚠️ تم إيقاف تفعيل الحماية (App Check) مؤقتاً حتى تعمل التبويبات والموقع بدون مشاكل
+// const appCheck = initializeAppCheck(app, {
+//   provider: new ReCaptchaV3Provider('6LejEyesAAAAABQwxNg_Bz_zg4nZm4MznKjSuGJ3'),
+//   isTokenAutoRefreshEnabled: true
+// });
 
-// 4. تصدير الخدمات عشان نستخدمها في باقي الملفات
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const provider = new GoogleAuthProvider();
-export { signInWithPopup, onAuthStateChanged, signOut, doc, getDoc, setDoc, serverTimestamp };
+// 4. تجهيز الخدمات
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// 5. تصدير الخدمات والدوال لاستخدامها في التطبيق
+export { 
+  auth, db, provider, 
+  signInWithPopup, onAuthStateChanged, signOut, 
+  doc, getDoc, setDoc, serverTimestamp, 
+  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs 
+};
