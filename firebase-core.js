@@ -2,9 +2,6 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
-// ⚠️ تم إيقاف استيراد App Check مؤقتاً
-// import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js";
-
 import { 
   getAuth, 
   GoogleAuthProvider, 
@@ -18,15 +15,19 @@ import {
   doc, 
   getDoc, 
   setDoc, 
+  updateDoc,        // 👈 ضفنا التحديث
   serverTimestamp, 
   collection, 
   query, 
+  where,            // 👈 ضفنا الفلترة لبريد النقيب
   orderBy, 
   limit, 
   onSnapshot, 
   addDoc, 
   getDocs,
-  deleteDoc // 👈 🌟 أضفنا أمر الحذف هنا 🌟
+  deleteDoc,
+  arrayUnion,       // 👈 ضفنا إضافة الإشعارات
+  arrayRemove       // 👈 ضفنا مسح المهام المرفوضة
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // 1. إعدادات مشروعك
@@ -51,7 +52,6 @@ const provider = new GoogleAuthProvider();
 export { 
   auth, db, provider, 
   signInWithPopup, onAuthStateChanged, signOut, 
-  doc, getDoc, setDoc, serverTimestamp, 
-  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs, 
-  deleteDoc // 👈 🌟 وأضفناها هنا كمان عشان الـ app.js يقدر يستخدمها 🌟
+  doc, getDoc, setDoc, updateDoc, serverTimestamp, 
+  collection, query, where, orderBy, limit, onSnapshot, addDoc, getDocs, deleteDoc, arrayUnion, arrayRemove
 };
