@@ -1,14 +1,15 @@
 // sw.js
-const CACHE_NAME = 'guild-app-v1';
+const CACHE_NAME = 'guild-app-v2'; // غيرنا الرقم لـ 2
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css',
+  '/admin.html',
+  '/style.css?v=2', // ضفنا v=2 هنا كمان
   '/app.js',
+  '/admin.js',
   '/firebase-core.js'
 ];
 
-// تنصيب عامل الخدمة وتخزين الملفات الأساسية
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -18,12 +19,26 @@ self.addEventListener('install', event => {
   );
 });
 
-// استرجاع الملفات عند انقطاع الإنترنت
+// 🌟 الكود السحري الجديد اللي بيمسح الكاش القديم أوتوماتيك 🌟
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => {
+          if (cache !== CACHE_NAME) {
+            console.log('تم مسح الكاش القديم:', cache);
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+});
+
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // لو الملف موجود في الكاش رجعه، لو لأ هاته من النت
         return response || fetch(event.request);
       })
   );
