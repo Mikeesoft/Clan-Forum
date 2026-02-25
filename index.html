@@ -11,86 +11,88 @@
 </head>
 <body>
 
-  <header class="top-bar">
-    <div class="logo">
-      <i class="fa-solid fa-dragon" style="color: var(--accent);"></i> نقابة الأبطال
-    </div>
-    <div class="top-actions">
-      <i class="fa-solid fa-bell notification-icon"></i>
-    </div>
-  </header>
-
-  <main id="main-content">
+  <div id="app-wrapper">
     
-    <section id="tab-home" class="page-section active">
-      <div class="welcome-banner">
-        <h2 id="welcome-text">مرحباً بك في النقابة 👋</h2>
-        <p>يوم رائع لإنجاز مهام النقابة!</p>
+    <header class="top-bar">
+      <div class="logo">
+        <i class="fa-solid fa-dragon" style="color: var(--accent);"></i> نقابة الأبطال
       </div>
-
-      <div class="section-title">أحدث الإعلانات 📢</div>
-      <div class="glass-card">
-        <h3>تحديث الرتب والمستويات</h3>
-        <p class="text-muted">تمت إضافة رتبة S-Class للأعضاء الذين يتجاوزون 5000 نجمة. استعدوا للتحدي!</p>
-        <span class="date-badge">منذ ساعتين</span>
+      <div class="top-actions">
+        <i class="fa-solid fa-bell notification-icon"></i>
       </div>
-    </section>
+    </header>
 
-    <section id="tab-quests" class="page-section">
-      <div class="section-title">لوحة المهام ⚔️</div>
-      <div class="glass-card quest-card">
-        <div class="quest-info">
-          <h3>تسجيل الدخول اليومي</h3>
-          <p class="text-muted">افتح التطبيق يومياً للحصول على 5 نجوم.</p>
+    <main id="main-content">
+      
+      <section id="tab-home" class="page-section active">
+        <div class="welcome-banner">
+          <h2 id="welcome-text">مرحباً بك في النقابة 👋</h2>
+          <p>يوم رائع لإنجاز مهام النقابة!</p>
         </div>
-        <button class="btn-primary"><i class="fa-solid fa-star"></i> استلام</button>
-      </div>
-    </section>
 
-    <section id="tab-tavern" class="page-section">
-      <div class="section-title">حانة النقابة 🍻</div>
-      <div id="chat-messages" class="chat-container">
-        <p class="text-muted text-center" style="margin-top: 50px;">جاري تحميل رسائل المغامرين...</p>
-      </div>
-      <div class="chat-input-wrapper">
-        <input type="text" id="chat-input" placeholder="اكتب رسالتك..." class="chat-input">
-        <button id="btn-send" class="btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
-      </div>
-    </section>
+        <div class="section-title">أحدث الإعلانات 📢</div>
+        <div class="glass-card">
+          <h3>تحديث الرتب والمستويات</h3>
+          <p class="text-muted">تمت إضافة رتبة S-Class للأعضاء الذين يتجاوزون 5000 نجمة. استعدوا للتحدي!</p>
+          <span class="date-badge">منذ ساعتين</span>
+        </div>
+      </section>
 
-    <section id="tab-leaderboard" class="page-section">
-      <div class="section-title">قاعة الأساطير 🏆</div>
-      <div id="leaderboard-list">
-        <p class="text-muted text-center" style="margin-top: 50px;"><i class="fas fa-spinner fa-spin"></i> جاري استدعاء الأساطير...</p>
-      </div>
-    </section>
+      <section id="tab-quests" class="page-section">
+        <div class="section-title">لوحة المهام ⚔️</div>
+        <div class="glass-card quest-card">
+          <div class="quest-info">
+            <h3>تسجيل الدخول اليومي</h3>
+            <p class="text-muted">افتح التطبيق يومياً للحصول على 5 نجوم.</p>
+          </div>
+          <button class="btn-primary"><i class="fa-solid fa-star"></i> استلام</button>
+        </div>
+      </section>
 
-    <section id="tab-profile" class="page-section">
-      <div id="profile-content">
-        <p class="text-muted text-center" style="margin-top: 50px;"><i class="fas fa-spinner fa-spin"></i> جاري استدعاء هويتك...</p>
-      </div>
-    </section>
+      <section id="tab-tavern" class="page-section">
+        <div class="section-title">حانة النقابة 🍻</div>
+        <div id="chat-messages" class="chat-container">
+          <p class="text-muted text-center" style="margin-top: 50px;">جاري تحميل رسائل المغامرين...</p>
+        </div>
+        <div class="chat-input-wrapper">
+          <input type="text" id="chat-input" placeholder="اكتب رسالتك..." class="chat-input">
+          <button id="btn-send" class="btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </section>
 
-  </main>
+      <section id="tab-leaderboard" class="page-section">
+        <div class="section-title">قاعة الأساطير 🏆</div>
+        <div id="leaderboard-list">
+          <p class="text-muted text-center" style="margin-top: 50px;"><i class="fas fa-spinner fa-spin"></i> جاري استدعاء الأساطير...</p>
+        </div>
+      </section>
 
-  <nav class="bottom-nav">
-    <a href="#" class="nav-item active" data-target="tab-home">
-      <i class="fa-solid fa-house"></i><span>الرئيسية</span>
-    </a>
-    <a href="#" class="nav-item" data-target="tab-quests">
-      <i class="fa-solid fa-scroll"></i><span>المهام</span>
-    </a>
-    <a href="#" class="nav-item" data-target="tab-tavern">
-      <i class="fa-solid fa-comments"></i><span>الحانة</span>
-    </a>
-    <a href="#" class="nav-item" data-target="tab-leaderboard">
-      <i class="fa-solid fa-ranking-star"></i><span>الأساطير</span>
-    </a>
-    <a href="#" class="nav-item" data-target="tab-profile">
-      <i class="fa-solid fa-user-astronaut"></i><span>هويتي</span>
-    </a>
-  </nav>
+      <section id="tab-profile" class="page-section">
+        <div id="profile-content">
+          <p class="text-muted text-center" style="margin-top: 50px;"><i class="fas fa-spinner fa-spin"></i> جاري استدعاء هويتك...</p>
+        </div>
+      </section>
 
-  <script type="module" src="app.js"></script>
+    </main>
+
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item active" data-target="tab-home">
+        <i class="fa-solid fa-house"></i><span>الرئيسية</span>
+      </a>
+      <a href="#" class="nav-item" data-target="tab-quests">
+        <i class="fa-solid fa-scroll"></i><span>المهام</span>
+      </a>
+      <a href="#" class="nav-item" data-target="tab-tavern">
+        <i class="fa-solid fa-comments"></i><span>الحانة</span>
+      </a>
+      <a href="#" class="nav-item" data-target="tab-leaderboard">
+        <i class="fa-solid fa-ranking-star"></i><span>الأساطير</span>
+      </a>
+      <a href="#" class="nav-item" data-target="tab-profile">
+        <i class="fa-solid fa-user-astronaut"></i><span>هويتي</span>
+      </a>
+    </nav>
+
+  </div> <script type="module" src="app.js"></script>
 </body>
 </html>
