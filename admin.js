@@ -10,27 +10,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminContent = document.getElementById('admin-content');
 
   // ==========================================
+  // === 🔔 نظام الإشعارات الفخم للأدمن ===
+  // ==========================================
+  function showToast(message, icon = 'fa-solid fa-bell') {
+    const oldToast = document.querySelector('.toast-notification');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `<i class="${icon} toast-icon"></i> <span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 100);
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 400);
+    }, 3000);
+  }
+
+  // ==========================================
   // 1. نظام الحماية: التحقق من هوية النقيب
   // ==========================================
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // لو مش مسجل دخول، اطرده للصفحة الرئيسية
       window.location.replace('index.html');
       return;
     }
 
-    // جلب بيانات المستخدم من Firestore
     const userRef = doc(db, 'users', user.uid);
     const snap = await getDoc(userRef);
     
-    // التحقق هل يمتلك صلاحية (isAdmin: true)
     if (snap.exists() && snap.data().isAdmin === true) {
-      // أهلاً بالنقيب! افتح الأبواب
       authCheck.style.display = 'none';
       adminContent.style.display = 'block';
     } else {
-      // محاولة اختراق! اطرده
-      alert('عذراً! هذه الغرفة السرية مخصصة لنقيب الأبطال فقط 🛡️');
       window.location.replace('index.html');
     }
   });
@@ -44,25 +58,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const code = document.getElementById('promo-code').value.trim().toUpperCase();
     const stars = parseInt(document.getElementById('promo-stars').value);
 
+    // 🌟 استبدال نافذة المتصفح المزعجة بالإشعار الفخم
     if (!code || isNaN(stars) || stars <= 0) {
-      return alert('الرجاء إدخال كود صحيح وعدد نجوم أكبر من الصفر!');
+      return showToast('الرجاء إدخال كود صحيح وعدد نجوم أكبر من الصفر!', 'fa-solid fa-triangle-exclamation');
     }
 
     btnPromo.disabled = true;
     btnPromo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوليد...';
 
     try {
-      // حفظ الكود في كوليكشن promos
       await setDoc(doc(db, 'promos', code), {
         stars: stars,
         createdAt: serverTimestamp()
       });
-      alert(`تم توليد التعويذة [ ${code} ] بنجاح! 🪄`);
+      showToast(`تم توليد التعويذة [ ${code} ] بنجاح! 🪄`, 'fa-solid fa-wand-magic-sparkles');
       document.getElementById('promo-code').value = '';
       document.getElementById('promo-stars').value = '';
     } catch (e) {
       console.error(e);
-      alert('حدث خلل سحري أثناء التوليد!');
+      showToast('حدث خلل سحري أثناء التوليد!', 'fa-solid fa-bug');
     } finally {
       btnPromo.disabled = false;
       btnPromo.innerHTML = '<i class="fa-solid fa-plus"></i> توليد الكود';
@@ -78,27 +92,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = document.getElementById('news-title').value.trim();
     const body = document.getElementById('news-body').value.trim();
 
+    // 🌟 استبدال نافذة المتصفح المزعجة بالإشعار الفخم
     if (!title || !body) {
-      return alert('الرجاء كتابة عنوان وتفاصيل الخبر أولاً!');
+      return showToast('الرجاء كتابة عنوان وتفاصيل الخبر أولاً!', 'fa-solid fa-circle-exclamation');
     }
 
     btnNews.disabled = true;
     btnNews.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
 
     try {
-      // حفظ الخبر في كوليكشن news
       await addDoc(collection(db, 'news'), {
         title: title,
         body: body,
-        author: auth.currentUser.displayName,
+        author: auth.currentUser.displayName || "النقيب",
         createdAt: serverTimestamp()
       });
-      alert('تم نشر الإعلان في النقابة بنجاح! 📰');
+      showToast('تم نشر الإعلان في النقابة بنجاح! 📰', 'fa-solid fa-bullhorn');
       document.getElementById('news-title').value = '';
       document.getElementById('news-body').value = '';
     } catch (e) {
       console.error(e);
-      alert('حدث خطأ أثناء نشر الخبر!');
+      showToast('حدث خطأ أثناء نشر الخبر!', 'fa-solid fa-circle-xmark');
     } finally {
       btnNews.disabled = false;
       btnNews.innerHTML = '<i class="fa-solid fa-bullhorn"></i> نشر الإعلان';
