@@ -10,7 +10,7 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
 
   let myCurrentAvatar = 'https://via.placeholder.com/35';
-  // متغير لحفظ حالة الأدمن الحالية لاستخدامها في عرض الأخبار
+  let myCurrentUsername = 'مغامر'; // 🌟 متغير جديد لحفظ اللقب
   let isCurrentUserAdmin = false;
 
   // ==========================================
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // === 1. نظام الإشعارات (Toast) ===
+  // === 1. نظام الإشعارات (Toast الاحترافي) ===
   // ==========================================
   function showToast(message, icon = 'fa-solid fa-bell') {
     const oldToast = document.querySelector('.toast-notification');
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // === 3. نظام الأخبار الديناميكية (مع الحذف) ===
+  // === 3. نظام الأخبار الديناميكية ===
   // ==========================================
   const newsContainer = document.getElementById('news-container');
   const newsCol = collection(db, "news");
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        const newsId = docSnap.id; // معرف الخبر للحذف
+        const newsId = docSnap.id; 
         let timeString = 'الآن';
         
         if (data.createdAt) {
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
           timeString = d.toLocaleDateString('ar-EG') + ' - ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         }
 
-        // 🗑️ زر الحذف: يظهر فقط إذا كان المستخدم الحالي هو الأدمن
         const deleteBtnHTML = isCurrentUserAdmin ? `
           <button class="delete-news-btn" data-id="${newsId}" title="حذف الإعلان">
             <i class="fa-solid fa-trash-can"></i>
@@ -103,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ` : '';
 
         const newsCard = document.createElement('div');
-        newsCard.className = 'glass-card news-card'; // إضافة كلاس news-card للتنسيق
+        newsCard.className = 'glass-card news-card';
         newsCard.innerHTML = `
           ${deleteBtnHTML}
           <h3 style="color: var(--accent); margin-bottom: 8px; padding-right: ${isCurrentUserAdmin ? '40px' : '0'};">${data.title}</h3>
@@ -116,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         newsContainer.appendChild(newsCard);
       });
 
-      // تفعيل أزرار الحذف (للأدمن فقط)
       if (isCurrentUserAdmin) {
         document.querySelectorAll('.delete-news-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
@@ -126,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 await deleteDoc(doc(db, "news", newsId));
                 showToast('تم حذف الإعلان بنجاح!', 'fa-solid fa-trash-can');
               } catch (error) {
-                console.error("Error deleting news:", error);
                 showToast('فشل الحذف. تأكد من صلاحياتك!', 'fa-solid fa-circle-xmark');
               }
             }
@@ -136,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }, (error) => {
       console.error("News error:", error);
-      newsContainer.innerHTML = '<p class="text-danger text-center" style="margin-top: 30px;">حدث خطأ في جلب الأخبار. تأكد من قواعد فايربيس!</p>';
     });
   }
 
@@ -148,18 +144,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateUI(user, userData = null) {
     if (user) {
-      const name = user.displayName || 'مغامر';
+      // 🌟 الأولوية للاسم المخصص (username) ثم اسم جوجل
+      const customName = userData?.username || user.displayName || 'مغامر';
       const photo = userData?.photoURL || user.photoURL || 'https://via.placeholder.com/90';
       const level = userData?.level || 0;
       const stars = userData?.stars || 0;
       const rank = getRank(stars);
       const isAdmin = userData?.isAdmin === true;
 
-      // تحديث المتغيرات العالمية
       myCurrentAvatar = photo;
-      isCurrentUserAdmin = isAdmin; // تحديث حالة الأدمن
+      myCurrentUsername = customName; // حفظ اللقب للشات
+      isCurrentUserAdmin = isAdmin;
 
-      welcomeText.innerHTML = `مرحباً بعودتك، ${name.split(' ')[0]} 👋`;
+      welcomeText.innerHTML = `مرحباً بعودتك، ${customName.split(' ')[0]} 👋`;
 
       const adminButtonHTML = isAdmin ? `
         <button id="go-to-admin-btn" class="btn-primary" style="width: 100%; margin-top: 15px; background: var(--gold); color: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);">
@@ -175,19 +172,30 @@ document.addEventListener('DOMContentLoaded', () => {
             <label for="avatar-upload" class="edit-avatar-btn"><i class="fa-solid fa-camera"></i></label>
             <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
           </div>
-          <h2>${name} <span class="rank-badge" style="color: ${rank.color}; border-color: ${rank.color}; box-shadow: ${rank.shadow};">${rank.title}</span></h2>
+          <h2>${customName} <span class="rank-badge" style="color: ${rank.color}; border-color: ${rank.color}; box-shadow: ${rank.shadow};">${rank.title}</span></h2>
           <p class="text-accent">${user.email}</p>
+          
           <div class="stats-row">
             <div class="stat-box"><h4>${level}</h4><p>المستوى</p></div>
             <div class="stat-box"><h4>${stars.toLocaleString()}</h4><p>النجوم</p></div>
           </div>
-          <div class="promo-section">
+
+          <div class="promo-section" style="margin-top: 25px;">
+            <div class="promo-title"><i class="fa-solid fa-pen-to-square" style="color: var(--accent);"></i> تغيير اللقب السري</div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="username-input" placeholder="اكتب لقبك الجديد..." value="${userData?.username || ''}" class="chat-input" style="flex: 1; padding: 10px;">
+              <button id="btn-change-username" class="btn-primary" style="padding: 10px 15px;"><i class="fa-solid fa-floppy-disk"></i></button>
+            </div>
+          </div>
+
+          <div class="promo-section" style="margin-top: 15px;">
             <div class="promo-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--gold);"></i> هل تمتلك تعويذة (Promo Code)؟</div>
             <div style="display: flex; gap: 10px;">
               <input type="text" id="promo-input" placeholder="أدخل الكود هنا..." class="chat-input" style="flex: 1; padding: 10px;">
               <button id="btn-apply-promo" class="btn-primary" style="padding: 10px 15px;"><i class="fa-solid fa-check"></i></button>
             </div>
           </div>
+
           ${adminButtonHTML}
           <button id="logout-btn" class="btn-danger" style="width: 100%; margin-top: 15px;">
             <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
@@ -196,18 +204,40 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-      
-      if (isAdmin) {
-        document.getElementById('go-to-admin-btn').addEventListener('click', () => { window.location.href = 'admin.html'; });
-      }
+      if (isAdmin) document.getElementById('go-to-admin-btn').addEventListener('click', () => { window.location.href = 'admin.html'; });
 
+      // 🌟 تفعيل تغيير اللقب 🌟
+      const btnChangeUsername = document.getElementById('btn-change-username');
+      const usernameInput = document.getElementById('username-input');
+      
+      btnChangeUsername.addEventListener('click', async () => {
+        const newName = usernameInput.value.trim();
+        if (newName.length < 3) return showToast('اللقب يجب أن يكون 3 أحرف على الأقل!', 'fa-solid fa-circle-exclamation');
+        
+        btnChangeUsername.disabled = true;
+        btnChangeUsername.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+          await setDoc(doc(db, 'users', user.uid), { username: newName }, { merge: true });
+          showToast('تم تغيير اللقب بنجاح! 📛', 'fa-solid fa-user-check');
+          userData.username = newName;
+          updateUI(user, userData); // تحديث الواجهة فوراً
+        } catch (error) {
+          showToast('فشل تغيير اللقب!', 'fa-solid fa-circle-xmark');
+        } finally {
+          btnChangeUsername.disabled = false;
+          btnChangeUsername.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>';
+        }
+      });
+
+      // تفعيل رفع الصورة
       const fileInput = document.getElementById('avatar-upload');
       const imgPreview = document.getElementById('profile-img-preview');
       
       fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 300 * 1024) return showToast('الصورة كبيرة جداً! يجب أن تكون أقل من 300KB', 'fa-solid fa-triangle-exclamation');
+        if (file.size > 300 * 1024) return showToast('الصورة كبيرة جداً! الحد الأقصى 300KB', 'fa-solid fa-triangle-exclamation');
 
         const reader = new FileReader();
         reader.onload = async (ev) => {
@@ -219,11 +249,12 @@ document.addEventListener('DOMContentLoaded', () => {
             await setDoc(doc(db, 'users', user.uid), { photoURL: base64 }, { merge: true });
             showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image');
             userData.photoURL = base64; 
-          } catch (err) { console.error(err); showToast('فشل تحديث الصورة', 'fa-solid fa-circle-xmark'); }
+          } catch (err) { showToast('فشل تحديث الصورة', 'fa-solid fa-circle-xmark'); }
         };
         reader.readAsDataURL(file);
       });
 
+      // تفعيل التعاويذ
       const btnApplyPromo = document.getElementById('btn-apply-promo');
       const promoInput = document.getElementById('promo-input');
 
@@ -264,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
           promoInput.value = '';
           updateUI(user, { ...userData, stars: newStars, level: newLevel, activatedPromos: activatedPromos });
 
-        } catch (error) { console.error(error); showToast('حدث خلل سحري أثناء التفعيل!', 'fa-solid fa-bug'); } 
+        } catch (error) { showToast('حدث خلل سحري أثناء التفعيل!', 'fa-solid fa-bug'); } 
         finally { btnApplyPromo.disabled = false; btnApplyPromo.innerHTML = '<i class="fa-solid fa-check"></i>'; }
       });
 
@@ -287,8 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         catch (err) { showToast("حدث خطأ أثناء تسجيل الدخول!", "fa-solid fa-triangle-exclamation"); }
       });
     }
-    
-    // 🔥 إعادة تشغيل الأخبار بعد تحديث حالة الأدمن للتأكد من ظهور أزرار الحذف 🔥
     initNews();
   }
 
@@ -296,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // === 5. نظام المهام (استلام النجوم) ===
   // ==========================================
   const questBtn = document.querySelector('.quest-card .btn-primary');
-
   function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
 
   function checkQuestStatus(userData) {
@@ -338,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         checkQuestStatus({ lastClaimDate: today });
         updateUI(user, { ...data, stars: newStars, level: newLevel, lastClaimDate: today });
 
-      } catch (error) { console.error(error); showToast('حدث خلل سحري! حاول مرة أخرى.', 'fa-solid fa-bug'); questBtn.disabled = false; questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام'; }
+      } catch (error) { showToast('حدث خلل سحري! حاول مرة أخرى.', 'fa-solid fa-bug'); questBtn.disabled = false; questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام'; }
     });
   }
 
@@ -366,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateUI(user, userData); checkQuestStatus(userData); 
     } else {
       updateUI(null); checkQuestStatus(null);
-      // 🔥 إذا سجل خروجه، نعيد تشغيل الأخبار عشان نخفي أزرار الحذف 🔥
       isCurrentUserAdmin = false;
       initNews();
     }
@@ -414,8 +441,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.value = '';
     
     try {
-      await addDoc(messagesCol, { text: text, authorName: user.displayName || "مغامر", authorId: user.uid, avatar: myCurrentAvatar, createdAt: serverTimestamp() });
-    } catch (e) { showToast("فشل الإرسال. تأكد من اتصالك.", "fa-solid fa-wifi"); console.error(e); }
+      // 🌟 يتم إرسال الرسالة باستخدام اللقب الحالي 🌟
+      await addDoc(messagesCol, { text: text, authorName: myCurrentUsername, authorId: user.uid, avatar: myCurrentAvatar, createdAt: serverTimestamp() });
+    } catch (e) { showToast("فشل الإرسال. تأكد من اتصالك.", "fa-solid fa-wifi"); }
   }
 
   if (btnSend && chatInput) {
@@ -445,6 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = docSnap.data();
         const stars = data.stars || 0;
         const level = data.level || 0;
+        // 🌟 الأولوية للاسم المخصص في المتصدرين 🌟
         const name = data.username || data.displayName || "مغامر مجهول";
         const avatar = data.photoURL || "https://via.placeholder.com/50";
         const animeRank = getRank(stars);
@@ -468,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboardList.appendChild(card);
         rank++;
       });
-    } catch (error) { console.error(error); leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل سحري أثناء جلب البيانات!</p>'; }
+    } catch (error) { leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل سحري أثناء جلب البيانات!</p>'; }
   }
 
   // تشغيل الوظائف الأساسية
