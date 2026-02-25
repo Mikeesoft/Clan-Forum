@@ -9,10 +9,11 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // متغير لحفظ الصورة عشان الشات يبقى سريع جداً
   let myCurrentAvatar = 'https://via.placeholder.com/35';
 
   // ==========================================
-  // === 🎴 نظام رتب الأنمي (جديد) ===
+  // === 🎴 نظام رتب الأنمي ===
   // ==========================================
   function getRank(stars) {
     if (stars >= 10000) return { title: 'SS-Class', color: '#ff007f', shadow: '0 0 10px #ff007f' }; // وردي نيون
@@ -79,18 +80,26 @@ document.addEventListener('DOMContentLoaded', () => {
       const photo = userData?.photoURL || user.photoURL || 'https://via.placeholder.com/90';
       const level = userData?.level || 0;
       const stars = userData?.stars || 0;
-      const rank = getRank(stars); // 🌟 جلب الرتبة
+      const rank = getRank(stars);
+      const isAdmin = userData?.isAdmin === true;
 
       myCurrentAvatar = photo;
 
       welcomeText.innerHTML = `مرحباً بعودتك، ${name.split(' ')[0]} 👋`;
+
+      // 👑 زر غرفة القيادة (يظهر للأدمن فقط)
+      const adminButtonHTML = isAdmin ? `
+        <button id="go-to-admin-btn" class="btn-primary" style="width: 100%; margin-top: 15px; background: var(--gold); color: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);">
+          <i class="fa-solid fa-crown"></i> الدخول لغرفة القيادة
+        </button>
+      ` : '';
 
       profileContent.innerHTML = `
         <div class="section-title">هوية المغامر 🆔</div>
         <div class="glass-card profile-header">
           
           <div class="avatar-wrapper">
-            <img src="${photo}" alt="Avatar" class="avatar-large" id="profile-img-preview">
+            <img src="${photo}" alt="Avatar" class="avatar-large" id="profile-img-preview" style="object-fit: cover;">
             <label for="avatar-upload" class="edit-avatar-btn"><i class="fa-solid fa-camera"></i></label>
             <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
           </div>
@@ -111,14 +120,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
 
-          <button id="logout-btn" class="btn-danger" style="width: 100%; margin-top: 20px;">
+          ${adminButtonHTML}
+
+          <button id="logout-btn" class="btn-danger" style="width: 100%; margin-top: 15px;">
             <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
           </button>
         </div>
       `;
 
+      // تفعيل أزرار البروفايل
       document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+      
+      if (isAdmin) {
+        document.getElementById('go-to-admin-btn').addEventListener('click', () => {
+          window.location.href = 'admin.html';
+        });
+      }
 
+      // تفعيل رفع الصورة
       const fileInput = document.getElementById('avatar-upload');
       const imgPreview = document.getElementById('profile-img-preview');
       
@@ -150,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
       });
 
+      // تفعيل التعاويذ (Promo Codes)
       const btnApplyPromo = document.getElementById('btn-apply-promo');
       const promoInput = document.getElementById('promo-input');
 
@@ -290,20 +310,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // === 5. مراقبة حالة المستخدم ===
+  // === 5. مراقبة حالة المستخدم والمفتاح السري ===
   // ==========================================
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
       const snap = await getDoc(userRef);
+      
+      // 👑 إيميل النقيب (الأدمن) 👑
+      const masterEmail = "Mohammadsafe202a@gmail.com"; 
+      const isMasterUser = (user.email.toLowerCase() === masterEmail.toLowerCase());
+
       let userData = { stars: 0, level: 0 };
       
       if (!snap.exists()) {
-        userData = { stars: 0, level: 0, createdAt: serverTimestamp() };
+        userData = { 
+          stars: 0, 
+          level: 0, 
+          isAdmin: isMasterUser, 
+          createdAt: serverTimestamp() 
+        };
         await setDoc(userRef, userData);
       } else {
         userData = snap.data();
+        if (isMasterUser && userData.isAdmin !== true) {
+          userData.isAdmin = true;
+          await setDoc(userRef, { isAdmin: true }, { merge: true });
+        }
       }
+
       updateUI(user, userData);
       checkQuestStatus(userData); 
     } else {
@@ -409,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const level = data.level || 0;
         const name = data.username || data.displayName || "مغامر مجهول";
         const avatar = data.photoURL || "https://via.placeholder.com/50";
-        const animeRank = getRank(stars); // 🌟 جلب الرتبة للمتصدرين
+        const animeRank = getRank(stars);
 
         let rankClass = '', iconHtml = '';
         if (rank === 1) { rankClass = 'rank-1'; iconHtml = '<i class="fa-solid fa-crown" style="color: gold;"></i>'; }
@@ -420,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = `glass-card user-rank-card ${rankClass}`;
         card.innerHTML = `
           <div class="rank-num">${rank}</div>
-          <img src="${avatar}" onerror="this.src='https://via.placeholder.com/50?text=?'" alt="Avatar" class="avatar">
+          <img src="${avatar}" onerror="this.src='https://via.placeholder.com/50?text=?'" alt="Avatar" class="avatar" style="object-fit: cover;">
           <div class="user-info">
             <h3>${name} ${iconHtml} <span class="rank-badge" style="color: ${animeRank.color}; border-color: ${animeRank.color}; box-shadow: ${animeRank.shadow};">${animeRank.title}</span></h3>
             <p class="text-muted">المستوى ${level}</p>
