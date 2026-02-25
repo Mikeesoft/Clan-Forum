@@ -140,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const req = docSnap.data();
       const reqId = docSnap.id;
 
-      // 💡 التعديل السحري هنا لمعالجة الروابط الناقصة
       let finalUrl = req.proofUrl.trim();
       if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
         finalUrl = 'https://' + finalUrl;
@@ -157,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 10px;">
-          <button class="btn-primary btn-accept" data-id="${reqId}" data-uid="${req.userId}" data-reward="${req.reward}" data-qtitle="${req.questTitle}" style="background: #22c55e; color: #fff; padding: 8px 15px;"><i class="fa-solid fa-check"></i> قبول</button>
+          <button class="btn-primary btn-accept" data-id="${reqId}" data-uid="${req.userId}" data-qid="${req.questId}" data-reward="${req.reward}" data-qtitle="${req.questTitle}" style="background: #22c55e; color: #fff; padding: 8px 15px;"><i class="fa-solid fa-check"></i> قبول</button>
           <button class="btn-danger btn-reject" data-id="${reqId}" data-uid="${req.userId}" data-qid="${req.questId}" data-qtitle="${req.questTitle}" style="padding: 8px 15px;"><i class="fa-solid fa-xmark"></i> رفض</button>
         </div>
       `;
@@ -169,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async (e) => {
         const reqId = e.currentTarget.getAttribute('data-id');
         const uid = e.currentTarget.getAttribute('data-uid');
+        const qId = e.currentTarget.getAttribute('data-qid'); // استدعاء آي دي المهمة
         const reward = parseInt(e.currentTarget.getAttribute('data-reward'));
         const qTitle = e.currentTarget.getAttribute('data-qtitle');
         
@@ -186,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
               await updateDoc(userRef, {
                 stars: newStars,
                 level: newLevel,
+                claimedQuests: arrayUnion(qId),    // 🌟 السحر هنا: بتتحول لمكتملة
+                pendingQuests: arrayRemove(qId),   // 🌟 السحر هنا: بتتشال من قيد المراجعة
                 notifications: arrayUnion(`أحسنت! تمت إضافة ${reward} نجمة لحسابك لإنجاز مهمة: ${qTitle} 🌟`)
               });
             }
@@ -212,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const userRef = doc(db, 'users', uid);
             await updateDoc(userRef, {
-              pendingQuests: arrayRemove(qId), // بيمسح المهمة من قائمة قيد المراجعة عشان يقدر يعيدها
+              pendingQuests: arrayRemove(qId),
               notifications: arrayUnion(`للأسف، تم رفض دليلك لمهمة: ${qTitle} لأن الدليل غير صحيح. حاول مرة أخرى! ❌`)
             });
 
