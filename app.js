@@ -471,4 +471,51 @@ document.addEventListener('DOMContentLoaded', () => {
       leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل سحري أثناء جلب البيانات!</p>';
     }
   }
+    // ==========================================
+  // === 8. نظام الأخبار الديناميكية (الرئيسية) ===
+  // ==========================================
+  const newsContainer = document.getElementById('news-container');
+  const newsCol = collection(db, "news");
+
+  function initNews() {
+    if (!newsContainer) return;
+    
+    // جلب أحدث الإعلانات وترتيبها من الأحدث للأقدم
+    const q = query(newsCol, orderBy("createdAt", "desc"), limit(5));
+    
+    onSnapshot(q, (snapshot) => {
+      newsContainer.innerHTML = ''; // تفريغ المكان
+      
+      if (snapshot.empty) {
+        newsContainer.innerHTML = '<p class="text-muted text-center" style="margin-top: 30px;">لا توجد إعلانات حالياً في النقابة.</p>';
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        let timeString = 'الآن';
+        
+        if (data.createdAt) {
+          const d = data.createdAt.toDate();
+          timeString = d.toLocaleDateString('ar-EG') + ' - ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        const newsCard = document.createElement('div');
+        newsCard.className = 'glass-card';
+        newsCard.innerHTML = `
+          <h3 style="color: var(--accent); margin-bottom: 8px;">${data.title}</h3>
+          <p class="text-muted" style="line-height: 1.6; white-space: pre-wrap;">${data.body}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid var(--card-border); padding-top: 10px;">
+            <span class="date-badge" style="margin-top: 0;"><i class="fa-regular fa-clock"></i> ${timeString}</span>
+            <span style="font-size: 0.8rem; color: var(--gold);"><i class="fa-solid fa-pen-nib"></i> ${data.author || 'النقيب'}</span>
+          </div>
+        `;
+        newsContainer.appendChild(newsCard);
+      });
+    });
+  }
+
+  // تشغيل الأخبار فوراً
+  initNews();
+
 });
