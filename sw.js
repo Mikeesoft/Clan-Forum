@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'guild-app-v2'; // غيرنا الرقم لـ 2
+const CACHE_NAME = 'guild-app-v3'; // غيرنا الرقم لـ 3
 const urlsToCache = [
   '/',
   '/index.html',

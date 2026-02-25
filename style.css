@@ -25,7 +25,7 @@ body {
 }
 
 /* ========================================= */
-/* الشريط العلوي الثابت مع بلورات الثلج السداسية */
+/* الشريط العلوي الثابت مع تأثير الزجاج الثلجي الفخم ❄️ */
 /* ========================================= */
 .top-bar {
   /* 🌟 التثبيت الإجباري (Fixed) 🌟 */
@@ -42,14 +42,14 @@ body {
   padding: 15px 20px; 
   z-index: 2000; 
   
-  /* ❄️ خلفية بلورات الثلج السداسية + تأثير الزجاج ❄️ */
-  background-color: rgba(11, 15, 25, 0.85);
-  background-image: url("data:image/svg+xml,%3Csvg width='28' height='49' viewBox='0 0 28 49' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.06' fill-rule='evenodd'%3E%3Cpolygon points='14 0 28 8 28 24 14 32 0 24 0 8'/%3E%3Cpolygon points='14 49 28 41 28 25 14 17 0 25 0 41'/%3E%3C/g%3E%3C/svg%3E");
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  /* ❄️ السحر هنا: تأثير الزجاج الثلجي (Frosted Glass) ❄️ */
+  background: rgba(11, 15, 25, 0.4); /* شفافية عالية عشان المحتوى يبان من تحته */
+  backdrop-filter: blur(25px); /* تمويه قوي جداً يدي إحساس التلج */
+  -webkit-backdrop-filter: blur(25px); /* عشان يشتغل على الآيفون بكفاءة */
   
-  border-bottom: 1px solid var(--card-border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  /* حواف زجاجية لامعة خفيفة من تحت */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* ضل قوي عشان يفصله عن المحتوى */
 }
 
 .logo { font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
