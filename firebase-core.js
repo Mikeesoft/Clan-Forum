@@ -2,7 +2,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
-// ⚠️ تم إيقاف استيراد App Check مؤقتاً لتجنب توقف الموقع على Netlify
+// ⚠️ تم إيقاف استيراد App Check مؤقتاً
 // import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app-check.js";
 
 import { 
@@ -25,7 +25,8 @@ import {
   limit, 
   onSnapshot, 
   addDoc, 
-  getDocs 
+  getDocs,
+  deleteDoc // 👈 🌟 أضفنا أمر الحذف هنا 🌟
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // 1. إعدادات مشروعك
@@ -41,12 +42,6 @@ const firebaseConfig = {
 // 2. تهيئة فايربيس
 const app = initializeApp(firebaseConfig);
 
-// 3. ⚠️ تم إيقاف تفعيل الحماية (App Check) مؤقتاً حتى تعمل التبويبات والموقع بدون مشاكل
-// const appCheck = initializeAppCheck(app, {
-//   provider: new ReCaptchaV3Provider('6LejEyesAAAAABQwxNg_Bz_zg4nZm4MznKjSuGJ3'),
-//   isTokenAutoRefreshEnabled: true
-// });
-
 // 4. تجهيز الخدمات
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -57,5 +52,6 @@ export {
   auth, db, provider, 
   signInWithPopup, onAuthStateChanged, signOut, 
   doc, getDoc, setDoc, serverTimestamp, 
-  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs 
+  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs, 
+  deleteDoc // 👈 🌟 وأضفناها هنا كمان عشان الـ app.js يقدر يستخدمها 🌟
 };
