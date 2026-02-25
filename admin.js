@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(toast);
 
     setTimeout(() => toast.classList.add('show'), 100);
-
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 400);
@@ -30,92 +29,89 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 1. نظام الحماية: التحقق من هوية النقيب
+  // 1. نظام الحماية
   // ==========================================
   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.replace('index.html');
-      return;
-    }
-
+    if (!user) { window.location.replace('index.html'); return; }
     const userRef = doc(db, 'users', user.uid);
     const snap = await getDoc(userRef);
-    
     if (snap.exists() && snap.data().isAdmin === true) {
-      authCheck.style.display = 'none';
-      adminContent.style.display = 'block';
+      authCheck.style.display = 'none'; adminContent.style.display = 'block';
     } else {
       window.location.replace('index.html');
     }
   });
 
   // ==========================================
-  // 2. نظام توليد التعاويذ (Promo Codes)
+  // 2. توليد التعاويذ
   // ==========================================
   const btnPromo = document.getElementById('btn-create-promo');
-  
   btnPromo.addEventListener('click', async () => {
     const code = document.getElementById('promo-code').value.trim().toUpperCase();
     const stars = parseInt(document.getElementById('promo-stars').value);
-
-    // 🌟 استبدال نافذة المتصفح المزعجة بالإشعار الفخم
-    if (!code || isNaN(stars) || stars <= 0) {
-      return showToast('الرجاء إدخال كود صحيح وعدد نجوم أكبر من الصفر!', 'fa-solid fa-triangle-exclamation');
-    }
-
-    btnPromo.disabled = true;
-    btnPromo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التوليد...';
-
+    if (!code || isNaN(stars) || stars <= 0) return showToast('أدخل كود صحيح ونجوم أكبر من الصفر!', 'fa-solid fa-triangle-exclamation');
+    
+    btnPromo.disabled = true; btnPromo.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     try {
-      await setDoc(doc(db, 'promos', code), {
-        stars: stars,
-        createdAt: serverTimestamp()
-      });
+      await setDoc(doc(db, 'promos', code), { stars: stars, createdAt: serverTimestamp() });
       showToast(`تم توليد التعويذة [ ${code} ] بنجاح! 🪄`, 'fa-solid fa-wand-magic-sparkles');
-      document.getElementById('promo-code').value = '';
-      document.getElementById('promo-stars').value = '';
-    } catch (e) {
-      console.error(e);
-      showToast('حدث خلل سحري أثناء التوليد!', 'fa-solid fa-bug');
-    } finally {
-      btnPromo.disabled = false;
-      btnPromo.innerHTML = '<i class="fa-solid fa-plus"></i> توليد الكود';
-    }
+      document.getElementById('promo-code').value = ''; document.getElementById('promo-stars').value = '';
+    } catch (e) { showToast('حدث خلل سحري!', 'fa-solid fa-bug'); } 
+    finally { btnPromo.disabled = false; btnPromo.innerHTML = '<i class="fa-solid fa-plus"></i> توليد الكود'; }
   });
 
   // ==========================================
-  // 3. نظام نشر الأخبار (الإعلانات)
+  // 3. نشر الأخبار
   // ==========================================
   const btnNews = document.getElementById('btn-publish-news');
-  
   btnNews.addEventListener('click', async () => {
     const title = document.getElementById('news-title').value.trim();
     const body = document.getElementById('news-body').value.trim();
+    if (!title || !body) return showToast('اكتب عنوان وتفاصيل الخبر أولاً!', 'fa-solid fa-circle-exclamation');
+    
+    btnNews.disabled = true; btnNews.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+      await addDoc(collection(db, 'news'), { title: title, body: body, author: auth.currentUser.displayName || "النقيب", createdAt: serverTimestamp() });
+      showToast('تم نشر الإعلان بنجاح! 📰', 'fa-solid fa-bullhorn');
+      document.getElementById('news-title').value = ''; document.getElementById('news-body').value = '';
+    } catch (e) { showToast('حدث خطأ أثناء النشر!', 'fa-solid fa-circle-xmark'); } 
+    finally { btnNews.disabled = false; btnNews.innerHTML = '<i class="fa-solid fa-paper-plane"></i> نشر الإعلان'; }
+  });
 
-    // 🌟 استبدال نافذة المتصفح المزعجة بالإشعار الفخم
-    if (!title || !body) {
-      return showToast('الرجاء كتابة عنوان وتفاصيل الخبر أولاً!', 'fa-solid fa-circle-exclamation');
+  // ==========================================
+  // 🌟 4. إضافة مهام جديدة (Quests) 🌟
+  // ==========================================
+  const btnQuest = document.getElementById('btn-add-quest');
+  btnQuest.addEventListener('click', async () => {
+    const title = document.getElementById('quest-title').value.trim();
+    const desc = document.getElementById('quest-desc').value.trim();
+    const reward = parseInt(document.getElementById('quest-reward').value);
+
+    if (!title || !desc || isNaN(reward) || reward <= 0) {
+      return showToast('الرجاء إدخال بيانات المهمة والمكافأة بشكل صحيح!', 'fa-solid fa-triangle-exclamation');
     }
 
-    btnNews.disabled = true;
-    btnNews.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري النشر...';
+    btnQuest.disabled = true; 
+    btnQuest.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تعليق المهمة...';
 
     try {
-      await addDoc(collection(db, 'news'), {
-        title: title,
-        body: body,
-        author: auth.currentUser.displayName || "النقيب",
-        createdAt: serverTimestamp()
+      await addDoc(collection(db, 'quests'), { 
+        title: title, 
+        desc: desc, 
+        reward: reward, 
+        createdAt: serverTimestamp() 
       });
-      showToast('تم نشر الإعلان في النقابة بنجاح! 📰', 'fa-solid fa-bullhorn');
-      document.getElementById('news-title').value = '';
-      document.getElementById('news-body').value = '';
-    } catch (e) {
+      showToast('تمت إضافة المهمة للوحة النقابة بنجاح! ⚔️', 'fa-solid fa-scroll');
+      document.getElementById('quest-title').value = ''; 
+      document.getElementById('quest-desc').value = '';
+      document.getElementById('quest-reward').value = '';
+    } catch (e) { 
       console.error(e);
-      showToast('حدث خطأ أثناء نشر الخبر!', 'fa-solid fa-circle-xmark');
-    } finally {
-      btnNews.disabled = false;
-      btnNews.innerHTML = '<i class="fa-solid fa-bullhorn"></i> نشر الإعلان';
+      showToast('حدث خطأ أثناء إضافة المهمة!', 'fa-solid fa-circle-xmark'); 
+    } 
+    finally { 
+      btnQuest.disabled = false; 
+      btnQuest.innerHTML = '<i class="fa-solid fa-plus"></i> تعليق المهمة في لوحة النقابة'; 
     }
   });
 
