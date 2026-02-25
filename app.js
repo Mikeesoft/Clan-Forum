@@ -1,4 +1,6 @@
 // app.js
+
+// === 1. استيراد خدمات فايربيس من الملف المركزي ===
 import { 
   auth, db, provider, 
   signInWithPopup, onAuthStateChanged, signOut, 
@@ -8,7 +10,29 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // === 1. التنقل بين الأقسام ===
+  // ==========================================
+  // === 2. نظام الإشعارات الأنيق (Toast) ===
+  // ==========================================
+  function showToast(message, icon = 'fa-solid fa-bell') {
+    const oldToast = document.querySelector('.toast-notification');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `<i class="${icon} toast-icon"></i> <span>${message}</span>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 100);
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 400);
+    }, 3000);
+  }
+
+  // ==========================================
+  // === 3. التنقل بين الأقسام (Bottom Nav) ===
+  // ==========================================
   const navItems = document.querySelectorAll('.nav-item');
   const sections = document.querySelectorAll('.page-section');
 
@@ -17,21 +41,25 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const targetId = item.getAttribute('data-target');
 
+      // تفريغ التفعيل من الكل
       navItems.forEach(nav => nav.classList.remove('active'));
       sections.forEach(sec => sec.classList.remove('active'));
 
+      // تفعيل العنصر المطلوب
       item.classList.add('active');
       document.getElementById(targetId).classList.add('active');
       document.getElementById('main-content').scrollTop = 0;
       
-      // جلب بيانات المتصدرين عند فتح القسم الخاص بهم فقط
+      // جلب بيانات المتصدرين عند فتح القسم الخاص بهم فقط لتوفير استهلاك البيانات
       if (targetId === 'tab-leaderboard') {
         loadLeaderboard();
       }
     });
   });
 
-  // === 2. نظام تسجيل الدخول وتحديث الواجهة ===
+  // ==========================================
+  // === 4. نظام تسجيل الدخول وتحديث الواجهة ===
+  // ==========================================
   const profileContent = document.getElementById('profile-content');
   const welcomeText = document.getElementById('welcome-text');
 
@@ -52,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p class="text-accent">${user.email}</p>
           <div class="stats-row">
             <div class="stat-box"><h4>${level}</h4><p>المستوى</p></div>
-            <div class="stat-box"><h4>${stars}</h4><p>النجوم</p></div>
+            <div class="stat-box"><h4>${stars.toLocaleString()}</h4><p>النجوم</p></div>
           </div>
           <button id="logout-btn" class="btn-danger" style="width: 100%; margin-top: 20px;">
             <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
@@ -68,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="glass-card profile-header">
           <img src="https://via.placeholder.com/90?text=?" alt="Unknown" class="avatar-large" style="border-color: var(--text-muted);">
           <h2>مغامر مجهول</h2>
-          <p class="text-muted">يرجى إثبات هويتك</p>
+          <p class="text-muted">يرجى إثبات هويتك للنقابة</p>
           <button id="login-btn" class="btn-primary" style="width: 100%; margin-top: 30px;">
             <i class="fa-brands fa-google"></i> تسجيل الدخول بجوجل
           </button>
@@ -77,11 +105,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
       document.getElementById('login-btn').addEventListener('click', async () => {
         try { await signInWithPopup(auth, provider); } 
-        catch (err) { alert("حدث خطأ أثناء تسجيل الدخول!"); console.error(err); }
+        catch (err) { showToast("حدث خطأ أثناء تسجيل الدخول!", "fa-solid fa-triangle-exclamation"); console.error(err); }
       });
     }
   }
 
+  // ==========================================
+  // === 5. نظام المهام (استلام النجوم) ===
+  // ==========================================
+  const questBtn = document.querySelector('.quest-card .btn-primary');
+
+  function getTodayDate() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  }
+
+  function checkQuestStatus(userData) {
+    if (!questBtn) return;
+    const today = getTodayDate();
+    
+    if (userData && userData.lastClaimDate === today) {
+      questBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> تمت المهمة';
+      questBtn.style.background = 'rgba(255,255,255,0.1)';
+      questBtn.style.color = 'var(--text-muted)';
+      questBtn.disabled = true;
+    } else {
+      questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام';
+      questBtn.style.background = 'var(--accent)';
+      questBtn.style.color = '#fff';
+      questBtn.disabled = false;
+    }
+  }
+
+  if (questBtn) {
+    questBtn.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        showToast('يجب تسجيل الدخول أولاً أيها المغامر!', 'fa-solid fa-circle-exclamation');
+        return;
+      }
+
+      questBtn.disabled = true;
+      questBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاستلام...';
+
+      const userRef = doc(db, 'users', user.uid);
+      
+      try {
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+        const today = getTodayDate();
+
+        if (data.lastClaimDate === today) {
+          showToast('لقد أنهيت هذه المهمة اليوم بالفعل!', 'fa-solid fa-circle-info');
+          checkQuestStatus(data);
+          return;
+        }
+
+        const newStars = (data.stars || 0) + 5;
+        const newLevel = Math.floor(newStars / 50); // كل 50 نجمة مستوى
+
+        await setDoc(userRef, { 
+          stars: newStars, 
+          level: newLevel,
+          lastClaimDate: today 
+        }, { merge: true });
+
+        showToast(`عاش! حصلت على 5 نجوم. رصيدك الآن: ${newStars}`, 'fa-solid fa-star');
+        checkQuestStatus({ lastClaimDate: today });
+        updateUI(user, { stars: newStars, level: newLevel }); // تحديث البروفايل فوراً
+
+      } catch (error) {
+        console.error(error);
+        showToast('حدث خلل سحري! حاول مرة أخرى.', 'fa-solid fa-bug');
+        questBtn.disabled = false;
+        questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام';
+      }
+    });
+  }
+
+  // ==========================================
+  // === 6. مراقبة حالة المستخدم (Auth State) ===
+  // ==========================================
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
@@ -95,13 +201,17 @@ document.addEventListener('DOMContentLoaded', () => {
         userData = snap.data();
       }
       updateUI(user, userData);
+      checkQuestStatus(userData); // فحص حالة المهمة اليومية
     } else {
       updateUI(null);
+      checkQuestStatus(null);
     }
   });
 
 
-  // === 3. نظام الحانة (الدردشة) ===
+  // ==========================================
+  // === 7. نظام الحانة (الدردشة العامة) ===
+  // ==========================================
   const chatMessages = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
   const btnSend = document.getElementById('btn-send');
@@ -142,7 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!text) return;
     
     const user = auth.currentUser;
-    if (!user) return alert("يجب تسجيل الدخول للتحدث في الحانة!");
+    if (!user) {
+      showToast("يجب تسجيل الدخول للتحدث في الحانة!", "fa-solid fa-lock");
+      return;
+    }
 
     chatInput.value = '';
     
@@ -155,21 +268,28 @@ document.addEventListener('DOMContentLoaded', () => {
         createdAt: serverTimestamp()
       });
     } catch (e) {
-      alert("فشل الإرسال."); console.error(e);
+      showToast("فشل الإرسال. تأكد من اتصالك.", "fa-solid fa-wifi");
+      console.error(e);
     }
   }
 
-  btnSend.addEventListener('click', sendMessage);
-  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-  initChat(); // تشغيل مراقبة الدردشة فوراً
+  if (btnSend && chatInput) {
+    btnSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+  }
+  initChat(); // تشغيل الشات تلقائياً
 
 
-  // === 4. قاعة الأساطير (المتصدرون) ===
+  // ==========================================
+  // === 8. قاعة الأساطير (المتصدرون) ===
+  // ==========================================
   const leaderboardList = document.getElementById('leaderboard-list');
   const usersCol = collection(db, "users");
 
   async function loadLeaderboard() {
+    if (!leaderboardList) return;
     leaderboardList.innerHTML = '<p class="text-muted text-center"><i class="fas fa-spinner fa-spin"></i> جاري استدعاء الأساطير...</p>';
+    
     try {
       const q = query(usersCol, orderBy("stars", "desc"), limit(20));
       const querySnapshot = await getDocs(q);
@@ -211,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (error) {
       console.error(error);
-      leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل أثناء جلب البيانات!</p>';
+      leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل سحري أثناء جلب البيانات!</p>';
     }
   }
 
