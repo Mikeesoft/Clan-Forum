@@ -149,6 +149,20 @@ button {
 .nav-item i { font-size: 1.4rem; transition: 0.3s; }
 .nav-item.active { color: var(--accent); font-weight: 700; }
 .nav-item.active i { transform: translateY(-4px); }
+/* ========================================= */
+/* 🎴 شارة رتب الأنمي (Rank Badge) */
+/* ========================================= */
+.rank-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 900;
+  margin-inline-start: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  vertical-align: middle;
+}
 
 /* شاشات الموبايل الصغيرة جداً */
 @media (max-width: 480px) {

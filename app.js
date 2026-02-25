@@ -9,8 +9,20 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // متغير عالمي لحفظ صورة المستخدم الحالي عشان نستخدمها في الشات
   let myCurrentAvatar = 'https://via.placeholder.com/35';
+
+  // ==========================================
+  // === 🎴 نظام رتب الأنمي (جديد) ===
+  // ==========================================
+  function getRank(stars) {
+    if (stars >= 10000) return { title: 'SS-Class', color: '#ff007f', shadow: '0 0 10px #ff007f' }; // وردي نيون
+    if (stars >= 5000) return { title: 'S-Class', color: '#fbbf24', shadow: '0 0 10px #fbbf24' }; // ذهبي
+    if (stars >= 2500) return { title: 'A-Class', color: '#ef4444', shadow: '0 0 10px #ef4444' }; // أحمر
+    if (stars >= 1000) return { title: 'B-Class', color: '#8b5cf6', shadow: '0 0 10px #8b5cf6' }; // بنفسجي
+    if (stars >= 500) return { title: 'C-Class', color: '#3b82f6', shadow: '0 0 10px #3b82f6' };  // أزرق
+    if (stars >= 100) return { title: 'D-Class', color: '#22c55e', shadow: '0 0 10px #22c55e' };  // أخضر
+    return { title: 'F-Class', color: '#94a3b8', shadow: 'none' }; // رمادي
+  }
 
   // ==========================================
   // === 1. نظام الإشعارات الأنيق (Toast) ===
@@ -25,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(toast);
 
     setTimeout(() => toast.classList.add('show'), 100);
-
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 400);
@@ -68,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const photo = userData?.photoURL || user.photoURL || 'https://via.placeholder.com/90';
       const level = userData?.level || 0;
       const stars = userData?.stars || 0;
+      const rank = getRank(stars); // 🌟 جلب الرتبة
 
-      // تحديث متغير الصورة الحالي
       myCurrentAvatar = photo;
 
       welcomeText.innerHTML = `مرحباً بعودتك، ${name.split(' ')[0]} 👋`;
@@ -84,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
           </div>
           
-          <h2>${name}</h2>
+          <h2>${name} <span class="rank-badge" style="color: ${rank.color}; border-color: ${rank.color}; box-shadow: ${rank.shadow};">${rank.title}</span></h2>
           <p class="text-accent">${user.email}</p>
           
           <div class="stats-row">
@@ -124,8 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = async (ev) => {
           const base64 = ev.target.result;
           imgPreview.src = base64; 
-          myCurrentAvatar = base64; // تحديث المتغير فوراً
-          initChat(); // تحديث الشات عشان الرسايل القديمة تاخد الصورة الجديدة فوراً
+          myCurrentAvatar = base64; 
+          initChat(); 
           
           try {
             await setDoc(doc(db, 'users', user.uid), { photoURL: base64 }, { merge: true });
@@ -324,13 +335,12 @@ document.addEventListener('DOMContentLoaded', () => {
            timeString = data.createdAt.toDate().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         }
 
-        // 🔥 التعديل السحري: لو دي رسالتي، استخدم صورتي الحالية اللي أنا رافعها.. لو مش رسالتي استخدم صورة العضو اللي متسجلة
         const finalAvatar = isMe ? myCurrentAvatar : (data.avatar || 'https://via.placeholder.com/35');
 
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg-box ${isMe ? 'sent' : 'received'}`;
         msgDiv.innerHTML = `
-          <img src="${finalAvatar}" alt="avatar" class="avatar" style="object-fit: cover;">
+          <img src="${finalAvatar}" onerror="this.src='https://via.placeholder.com/35?text=?'" alt="avatar" class="avatar" style="object-fit: cover;">
           <div>
             ${!isMe ? `<span class="msg-meta">${data.authorName} • ${timeString}</span>` : `<span class="msg-meta">${timeString}</span>`}
             <div class="msg-bubble">${data.text}</div>
@@ -352,7 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.value = '';
     
     try {
-      // إرسال الرسالة باستخدام الصورة الحالية بشكل أسرع بدون قراءة إضافية من الداتا بيز
       await addDoc(messagesCol, {
         text: text,
         authorName: user.displayName || "مغامر",
@@ -373,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initChat(); 
 
   // ==========================================
-  // === 7. قاعة الأساطير (المتصدرون) ===
+  // === 7. قاعة الأساطير (المتصدرون مع الرتب) ===
   // ==========================================
   const leaderboardList = document.getElementById('leaderboard-list');
   const usersCol = collection(db, "users");
@@ -400,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const level = data.level || 0;
         const name = data.username || data.displayName || "مغامر مجهول";
         const avatar = data.photoURL || "https://via.placeholder.com/50";
+        const animeRank = getRank(stars); // 🌟 جلب الرتبة للمتصدرين
 
         let rankClass = '', iconHtml = '';
         if (rank === 1) { rankClass = 'rank-1'; iconHtml = '<i class="fa-solid fa-crown" style="color: gold;"></i>'; }
@@ -410,9 +420,9 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = `glass-card user-rank-card ${rankClass}`;
         card.innerHTML = `
           <div class="rank-num">${rank}</div>
-          <img src="${avatar}" alt="Avatar" class="avatar">
+          <img src="${avatar}" onerror="this.src='https://via.placeholder.com/50?text=?'" alt="Avatar" class="avatar">
           <div class="user-info">
-            <h3>${name} ${iconHtml}</h3>
+            <h3>${name} ${iconHtml} <span class="rank-badge" style="color: ${animeRank.color}; border-color: ${animeRank.color}; box-shadow: ${animeRank.shadow};">${animeRank.title}</span></h3>
             <p class="text-muted">المستوى ${level}</p>
           </div>
           <div class="stars">${stars.toLocaleString()} <i class="fa-solid fa-star"></i></div>
