@@ -4,12 +4,14 @@ import {
   auth, db, provider, 
   signInWithPopup, onAuthStateChanged, signOut, 
   doc, getDoc, setDoc, serverTimestamp, 
-  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs 
+  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs, deleteDoc 
 } from './firebase-core.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
   let myCurrentAvatar = 'https://via.placeholder.com/35';
+  // متغير لحفظ حالة الأدمن الحالية لاستخدامها في عرض الأخبار
+  let isCurrentUserAdmin = false;
 
   // ==========================================
   // === 🎴 نظام رتب الأنمي ===
@@ -66,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // === 3. نظام الأخبار الديناميكية (الرئيسية) ===
+  // === 3. نظام الأخبار الديناميكية (مع الحذف) ===
   // ==========================================
   const newsContainer = document.getElementById('news-container');
   const newsCol = collection(db, "news");
@@ -85,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
+        const newsId = docSnap.id; // معرف الخبر للحذف
         let timeString = 'الآن';
         
         if (data.createdAt) {
@@ -92,10 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
           timeString = d.toLocaleDateString('ar-EG') + ' - ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         }
 
+        // 🗑️ زر الحذف: يظهر فقط إذا كان المستخدم الحالي هو الأدمن
+        const deleteBtnHTML = isCurrentUserAdmin ? `
+          <button class="delete-news-btn" data-id="${newsId}" title="حذف الإعلان">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        ` : '';
+
         const newsCard = document.createElement('div');
-        newsCard.className = 'glass-card';
+        newsCard.className = 'glass-card news-card'; // إضافة كلاس news-card للتنسيق
         newsCard.innerHTML = `
-          <h3 style="color: var(--accent); margin-bottom: 8px;">${data.title}</h3>
+          ${deleteBtnHTML}
+          <h3 style="color: var(--accent); margin-bottom: 8px; padding-right: ${isCurrentUserAdmin ? '40px' : '0'};">${data.title}</h3>
           <p class="text-muted" style="line-height: 1.6; white-space: pre-wrap;">${data.body}</p>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid var(--card-border); padding-top: 10px;">
             <span class="date-badge" style="margin-top: 0;"><i class="fa-regular fa-clock"></i> ${timeString}</span>
@@ -104,6 +115,25 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         newsContainer.appendChild(newsCard);
       });
+
+      // تفعيل أزرار الحذف (للأدمن فقط)
+      if (isCurrentUserAdmin) {
+        document.querySelectorAll('.delete-news-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const newsId = e.currentTarget.getAttribute('data-id');
+            if (confirm('هل أنت متأكد يا نقيب أنك تريد حذف هذا الإعلان؟ 🗑️')) {
+              try {
+                await deleteDoc(doc(db, "news", newsId));
+                showToast('تم حذف الإعلان بنجاح!', 'fa-solid fa-trash-can');
+              } catch (error) {
+                console.error("Error deleting news:", error);
+                showToast('فشل الحذف. تأكد من صلاحياتك!', 'fa-solid fa-circle-xmark');
+              }
+            }
+          });
+        });
+      }
+
     }, (error) => {
       console.error("News error:", error);
       newsContainer.innerHTML = '<p class="text-danger text-center" style="margin-top: 30px;">حدث خطأ في جلب الأخبار. تأكد من قواعد فايربيس!</p>';
@@ -125,7 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const rank = getRank(stars);
       const isAdmin = userData?.isAdmin === true;
 
+      // تحديث المتغيرات العالمية
       myCurrentAvatar = photo;
+      isCurrentUserAdmin = isAdmin; // تحديث حالة الأدمن
+
       welcomeText.innerHTML = `مرحباً بعودتك، ${name.split(' ')[0]} 👋`;
 
       const adminButtonHTML = isAdmin ? `
@@ -254,6 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
         catch (err) { showToast("حدث خطأ أثناء تسجيل الدخول!", "fa-solid fa-triangle-exclamation"); }
       });
     }
+    
+    // 🔥 إعادة تشغيل الأخبار بعد تحديث حالة الأدمن للتأكد من ظهور أزرار الحذف 🔥
+    initNews();
   }
 
   // ==========================================
@@ -330,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
       updateUI(user, userData); checkQuestStatus(userData); 
     } else {
       updateUI(null); checkQuestStatus(null);
+      // 🔥 إذا سجل خروجه، نعيد تشغيل الأخبار عشان نخفي أزرار الحذف 🔥
+      isCurrentUserAdmin = false;
+      initNews();
     }
   });
 
@@ -432,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) { console.error(error); leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل سحري أثناء جلب البيانات!</p>'; }
   }
 
-  // تشغيل الأخبار والشات عند فتح التطبيق
-  initNews();
+  // تشغيل الوظائف الأساسية
   initChat(); 
 });

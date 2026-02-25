@@ -171,3 +171,33 @@ button {
   .nav-item span { font-size: 0.65rem; }
   .msg-bubble { font-size: 0.85rem; }
 }
+/* ========================================= */
+/* 🗑️ زر حذف الأخبار (للأدمن فقط) */
+/* ========================================= */
+.news-card {
+  position: relative; /* عشان نقدر نثبت زر الحذف جواه */
+}
+
+.delete-news-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(239, 68, 68, 0.1); /* خلفية حمراء خفيفة */
+  color: var(--danger);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  transition: all 0.2s ease;
+  z-index: 10; /* عشان يبقى فوق أي حاجة تانية */
+}
+
+.delete-news-btn:hover {
+  background: var(--danger);
+  color: #fff;
+  transform: scale(1.1); /* تكبير بسيط عند الوقوف عليه */
+}
