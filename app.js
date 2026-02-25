@@ -9,6 +9,9 @@ import {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // متغير عالمي لحفظ صورة المستخدم الحالي عشان نستخدمها في الشات
+  let myCurrentAvatar = 'https://via.placeholder.com/35';
+
   // ==========================================
   // === 1. نظام الإشعارات الأنيق (Toast) ===
   // ==========================================
@@ -62,10 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateUI(user, userData = null) {
     if (user) {
       const name = user.displayName || 'مغامر';
-      // استخدام الصورة المخصصة من قاعدة البيانات إن وجدت، أو صورة جوجل
       const photo = userData?.photoURL || user.photoURL || 'https://via.placeholder.com/90';
       const level = userData?.level || 0;
       const stars = userData?.stars || 0;
+
+      // تحديث متغير الصورة الحالي
+      myCurrentAvatar = photo;
 
       welcomeText.innerHTML = `مرحباً بعودتك، ${name.split(' ')[0]} 👋`;
 
@@ -101,10 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      // 1. تفعيل زر تسجيل الخروج
       document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-      // 2. تفعيل رفع الصورة
       const fileInput = document.getElementById('avatar-upload');
       const imgPreview = document.getElementById('profile-img-preview');
       
@@ -121,11 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = async (ev) => {
           const base64 = ev.target.result;
           imgPreview.src = base64; 
+          myCurrentAvatar = base64; // تحديث المتغير فوراً
+          initChat(); // تحديث الشات عشان الرسايل القديمة تاخد الصورة الجديدة فوراً
           
           try {
             await setDoc(doc(db, 'users', user.uid), { photoURL: base64 }, { merge: true });
             showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image');
-            userData.photoURL = base64; // تحديث البيانات المحلية
+            userData.photoURL = base64; 
           } catch (err) {
             console.error(err);
             showToast('فشل تحديث الصورة', 'fa-solid fa-circle-xmark');
@@ -134,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
       });
 
-      // 3. تفعيل نظام الـ Promo Codes
       const btnApplyPromo = document.getElementById('btn-apply-promo');
       const promoInput = document.getElementById('promo-input');
 
@@ -320,10 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
            timeString = data.createdAt.toDate().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         }
 
+        // 🔥 التعديل السحري: لو دي رسالتي، استخدم صورتي الحالية اللي أنا رافعها.. لو مش رسالتي استخدم صورة العضو اللي متسجلة
+        const finalAvatar = isMe ? myCurrentAvatar : (data.avatar || 'https://via.placeholder.com/35');
+
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg-box ${isMe ? 'sent' : 'received'}`;
         msgDiv.innerHTML = `
-          <img src="${data.avatar || 'https://via.placeholder.com/35'}" alt="avatar" class="avatar" style="object-fit: cover;">
+          <img src="${finalAvatar}" alt="avatar" class="avatar" style="object-fit: cover;">
           <div>
             ${!isMe ? `<span class="msg-meta">${data.authorName} • ${timeString}</span>` : `<span class="msg-meta">${timeString}</span>`}
             <div class="msg-bubble">${data.text}</div>
@@ -345,16 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.value = '';
     
     try {
-      // نجلب الصورة المخصصة للعضو عشان تظهر في الشات بدل صورة جوجل القديمة
-      const userRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(userRef);
-      const avatarUrl = snap.exists() ? (snap.data().photoURL || user.photoURL) : user.photoURL;
-
+      // إرسال الرسالة باستخدام الصورة الحالية بشكل أسرع بدون قراءة إضافية من الداتا بيز
       await addDoc(messagesCol, {
         text: text,
         authorName: user.displayName || "مغامر",
         authorId: user.uid,
-        avatar: avatarUrl,
+        avatar: myCurrentAvatar,
         createdAt: serverTimestamp()
       });
     } catch (e) {
