@@ -3,8 +3,8 @@
 import { 
   auth, db, provider, 
   signInWithPopup, onAuthStateChanged, signOut, 
-  doc, getDoc, setDoc, serverTimestamp, 
-  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs, deleteDoc 
+  doc, getDoc, setDoc, updateDoc, serverTimestamp, 
+  collection, query, orderBy, limit, onSnapshot, addDoc, getDocs, deleteDoc, arrayUnion 
 } from './firebase-core.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let myCurrentAvatar = 'https://via.placeholder.com/35';
   let myCurrentUsername = 'مغامر';
   let isCurrentUserAdmin = false;
+  let userDocListener = null; // لمراقبة الإشعارات
 
   // ==========================================
   // === 🎴 نظام رتب الأنمي ===
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 400);
-    }, 3000);
+    }, 4000); // خليناها 4 ثواني عشان يلحق يقرأ الإشعار
   }
 
   // ==========================================
@@ -55,14 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       const targetId = item.getAttribute('data-target');
-
       navItems.forEach(nav => nav.classList.remove('active'));
       sections.forEach(sec => sec.classList.remove('active'));
-
       item.classList.add('active');
       document.getElementById(targetId).classList.add('active');
       document.getElementById('main-content').scrollTop = 0;
-      
       if (targetId === 'tab-leaderboard') loadLeaderboard();
     });
   });
@@ -75,30 +73,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initNews() {
     if (!newsContainer) return;
-    
     const q = query(newsCol, orderBy("createdAt", "desc"), limit(5));
     onSnapshot(q, (snapshot) => {
       newsContainer.innerHTML = ''; 
-      
       if (snapshot.empty) {
         newsContainer.innerHTML = '<p class="text-muted text-center" style="margin-top: 30px;">لا توجد إعلانات حالياً في النقابة.</p>';
         return;
       }
-
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
         const newsId = docSnap.id; 
         let timeString = 'الآن';
-        
         if (data.createdAt) {
           const d = data.createdAt.toDate();
           timeString = d.toLocaleDateString('ar-EG') + ' - ' + d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         }
-
         const deleteBtnHTML = isCurrentUserAdmin ? `
           <button class="delete-news-btn" data-id="${newsId}" title="حذف الإعلان"><i class="fa-solid fa-trash-can"></i></button>
         ` : '';
-
         const newsCard = document.createElement('div');
         newsCard.className = 'glass-card news-card';
         newsCard.innerHTML = `
@@ -124,11 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
       }
-    }, (error) => { console.error("News error:", error); });
+    });
   }
 
   // ==========================================
-  // === 4. نظام المهام (اليومي + المؤقت) ⚔️ ===
+  // === 4. نظام المهام ⚔️ (ثابت ومؤقت) ===
   // ==========================================
   const dailyQuestBtn = document.getElementById('daily-quest-btn');
   const questsContainer = document.getElementById('quests-container');
@@ -137,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
 
-  // 🔴 4.1 المهمة اليومية (الثابتة)
+  // 🔴 4.1 المهمة اليومية
   function checkDailyQuestStatus(userData) {
     if (!dailyQuestBtn) return;
     const today = getTodayDate();
@@ -154,33 +146,27 @@ document.addEventListener('DOMContentLoaded', () => {
     dailyQuestBtn.addEventListener('click', async () => {
       const user = auth.currentUser;
       if (!user) return showToast('يجب تسجيل الدخول لاستلام المهمة اليومية!', 'fa-solid fa-lock');
-
       dailyQuestBtn.disabled = true; dailyQuestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
       const userRef = doc(db, 'users', user.uid);
-      
       try {
         const snap = await getDoc(userRef);
         if (!snap.exists()) return;
         const data = snap.data();
         const today = getTodayDate();
-
         if (data.lastClaimDate === today) {
           showToast('لقد استلمت مهمة اليوم بالفعل!', 'fa-solid fa-circle-info');
           checkDailyQuestStatus(data); return;
         }
-
         const newStars = (data.stars || 0) + 5;
         const newLevel = Math.floor(newStars / 50);
-
         await setDoc(userRef, { stars: newStars, level: newLevel, lastClaimDate: today }, { merge: true });
         showToast(`دخول يومي ناجح! حصلت على 5 نجوم 🌟`, 'fa-solid fa-calendar-check');
         checkDailyQuestStatus({ lastClaimDate: today });
-        updateUI(user, { ...data, stars: newStars, level: newLevel, lastClaimDate: today });
       } catch (error) { showToast('حدث خلل سحري!', 'fa-solid fa-bug'); dailyQuestBtn.disabled = false; dailyQuestBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام 5'; }
     });
   }
 
-  // 🔴 4.2 المهام الديناميكية (المؤقتة)
+  // 🔴 4.2 المهام الديناميكية (التي تحتاج مراجعة النقيب)
   function initQuests(user, userData) {
     if (!questsContainer) return;
     const q = query(questsCol, orderBy("createdAt", "desc"));
@@ -190,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (homeQuestsContainer) homeQuestsContainer.innerHTML = '';
       
       let claimedQuests = userData?.claimedQuests || [];
+      let pendingQuests = userData?.pendingQuests || []; // المهام اللي قيد المراجعة
       const now = new Date();
       let activeQuestsCount = 0;
 
@@ -199,31 +186,57 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!quest.expiresAt) return;
         const expiryDate = quest.expiresAt.toDate();
-        if (now > expiryDate) return; // إخفاء المهمة إذا انتهى وقتها
+        if (now > expiryDate) return; 
 
         const timeLeftMs = expiryDate - now;
         const hoursLeft = Math.floor(timeLeftMs / (1000 * 60 * 60));
         const timeText = hoursLeft > 0 ? `ينتهي بعد ${hoursLeft} ساعة` : 'ينتهي قريباً جداً!';
-        const isClaimed = claimedQuests.includes(questId);
         
+        const isClaimed = claimedQuests.includes(questId);
+        const isPending = pendingQuests.includes(questId);
+        
+        // زرار حذف المهمة (للأدمن فقط)
+        const deleteBtnHTML = isCurrentUserAdmin ? `
+          <button class="delete-news-btn delete-quest-btn" data-id="${questId}" title="حذف المهمة"><i class="fa-solid fa-trash-can"></i></button>
+        ` : '';
+
+        // تحديد شكل زرار المهمة
+        let btnHTML = '';
+        if (isClaimed) {
+          btnHTML = `<button class="btn-primary" disabled style="background: rgba(255,255,255,0.1); color: var(--text-muted);"><i class="fa-solid fa-check-double"></i> مكتملة</button>`;
+        } else if (isPending) {
+          btnHTML = `<button class="btn-primary" disabled style="background: var(--gold); color: #000;"><i class="fa-solid fa-hourglass-half"></i> جاري تحقق النقيب</button>`;
+        } else {
+          btnHTML = `
+            <div class="proof-container" id="proof-container-${questId}" style="display: none; width: 100%; margin-top: 10px;">
+              <input type="text" id="proof-input-${questId}" class="chat-input" placeholder="ضع رابط الإثبات هنا..." style="width: 100%; margin-bottom: 8px;">
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-primary btn-submit-proof" data-id="${questId}" data-title="${quest.title}" data-reward="${quest.reward}" style="flex: 1; background: var(--gold); color: #000;"><i class="fa-solid fa-paper-plane"></i> إرسال للدليل</button>
+                <button class="btn-danger btn-cancel-proof" data-id="${questId}" style="padding: 10px 15px;"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+            <button class="btn-primary claim-btn" id="claim-btn-${questId}" data-id="${questId}"><i class="fa-solid fa-star"></i> استلام ${quest.reward}</button>
+          `;
+        }
+
         const questCard = document.createElement('div');
-        questCard.className = 'glass-card quest-card';
+        questCard.className = 'glass-card quest-card news-card'; // أضفنا news-card عشان زر الحذف يظهر صح
         questCard.innerHTML = `
-          <div class="quest-info" style="flex: 1;">
-            <h3 style="color: ${isClaimed ? 'var(--text-muted)' : 'var(--text-main)'};">
+          ${deleteBtnHTML}
+          <div class="quest-info" style="flex: 1; width: 100%;">
+            <h3 style="color: ${isClaimed ? 'var(--text-muted)' : 'var(--text-main)'}; padding-right: ${isCurrentUserAdmin ? '40px' : '0'};">
               ${isClaimed ? '<i class="fa-solid fa-check-double" style="color: var(--gold);"></i>' : ''} ${quest.title}
             </h3>
             <p class="text-muted" style="font-size: 0.85rem; margin-top: 5px;">${quest.desc}</p>
             <span class="date-badge" style="color: var(--danger); border: 1px solid var(--danger); background: rgba(239, 68, 68, 0.1);"><i class="fa-solid fa-hourglass-half"></i> ${timeText}</span>
           </div>
-          <button class="btn-primary claim-btn" data-id="${questId}" data-reward="${quest.reward}" ${isClaimed ? 'disabled style="background: rgba(255,255,255,0.1); color: var(--text-muted);"' : ''}>
-            ${isClaimed ? 'مكتملة' : `<i class="fa-solid fa-star"></i> استلام ${quest.reward}`}
-          </button>
+          <div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 10px;">
+            ${btnHTML}
+          </div>
         `;
 
         questsContainer.appendChild(questCard);
         
-        // عرض مهمتين فقط في الرئيسية
         if (homeQuestsContainer && activeQuestsCount < 2) {
           homeQuestsContainer.appendChild(questCard.cloneNode(true));
         }
@@ -235,47 +248,84 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeQuestsContainer) homeQuestsContainer.innerHTML = '<p class="text-muted" style="font-size: 0.85rem;">لا توجد مهام عاجلة.</p>';
       }
 
-      // تفعيل زر استلام المهمة المؤقتة
-      document.querySelectorAll('.claim-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          if (!user) return showToast('يجب تسجيل الدخول لاستلام المهام!', 'fa-solid fa-lock');
-          
-          const targetBtn = e.currentTarget;
-          const qId = targetBtn.getAttribute('data-id');
-          const reward = parseInt(targetBtn.getAttribute('data-reward'));
-
-          targetBtn.disabled = true; targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-          try {
-            const freshUserSnap = await getDoc(doc(db, 'users', user.uid));
-            const freshData = freshUserSnap.data();
-            const currentClaimed = freshData.claimedQuests || [];
-
-            if (currentClaimed.includes(qId)) {
-              showToast('لقد استلمت هذه المهمة بالفعل!', 'fa-solid fa-circle-info'); return;
-            }
-
-            currentClaimed.push(qId);
-            const newStars = (freshData.stars || 0) + reward;
-            const newLevel = Math.floor(newStars / 50);
-
-            await setDoc(doc(db, 'users', user.uid), {
-              stars: newStars, level: newLevel, claimedQuests: currentClaimed
-            }, { merge: true });
-
-            showToast(`عاش! أنجزت المهمة وحصلت على ${reward} نجمة 🌟`, 'fa-solid fa-khanda');
-            
-            // تحديث بيانات الواجهة فوراً
-            freshData.claimedQuests = currentClaimed; freshData.stars = newStars; freshData.level = newLevel;
-            updateUI(user, freshData);
-            initQuests(user, freshData);
-
-          } catch (error) { showToast('حدث خلل سحري أثناء الاستلام!', 'fa-solid fa-bug'); targetBtn.disabled = false; targetBtn.innerHTML = `<i class="fa-solid fa-star"></i> استلام ${reward}`; }
-        });
-      });
+      // تفعيل برمجة الأزرار
+      bindQuestButtons(user);
     });
   }
 
+  function bindQuestButtons(user) {
+    // 1. إظهار مربع الدليل
+    document.querySelectorAll('.claim-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (!user) return showToast('يجب تسجيل الدخول لاستلام المهام!', 'fa-solid fa-lock');
+        const qId = e.currentTarget.getAttribute('data-id');
+        e.currentTarget.style.display = 'none';
+        document.getElementById(`proof-container-${qId}`).style.display = 'block';
+      });
+    });
+
+    // 2. إخفاء مربع الدليل (إلغاء)
+    document.querySelectorAll('.btn-cancel-proof').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const qId = e.currentTarget.getAttribute('data-id');
+        document.getElementById(`proof-container-${qId}`).style.display = 'none';
+        document.getElementById(`claim-btn-${qId}`).style.display = 'inline-flex';
+      });
+    });
+
+    // 3. إرسال الدليل للنقيب
+    document.querySelectorAll('.btn-submit-proof').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const qId = e.currentTarget.getAttribute('data-id');
+        const qTitle = e.currentTarget.getAttribute('data-title');
+        const reward = parseInt(e.currentTarget.getAttribute('data-reward'));
+        const proofUrl = document.getElementById(`proof-input-${qId}`).value.trim();
+
+        if (!proofUrl) return showToast('الرجاء وضع رابط الإثبات أولاً!', 'fa-solid fa-triangle-exclamation');
+
+        const targetBtn = e.currentTarget;
+        targetBtn.disabled = true; targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+          // إضافة الطلب لصندوق النقيب
+          await addDoc(collection(db, 'quest_requests'), {
+            userId: user.uid,
+            userName: myCurrentUsername,
+            questId: qId,
+            questTitle: qTitle,
+            reward: reward,
+            proofUrl: proofUrl,
+            status: 'pending',
+            createdAt: serverTimestamp()
+          });
+
+          // إضافة المهمة لقائمة "قيد المراجعة" للعضو
+          await updateDoc(doc(db, 'users', user.uid), {
+            pendingQuests: arrayUnion(qId)
+          });
+
+          showToast('تم إرسال الدليل للنقيب! انتظر الموافقة ⏳', 'fa-solid fa-envelope-circle-check');
+        } catch (error) {
+          console.error(error);
+          showToast('حدث خلل أثناء الإرسال!', 'fa-solid fa-bug');
+          targetBtn.disabled = false; targetBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال الدليل';
+        }
+      });
+    });
+
+    // 4. حذف المهمة (للأدمن)
+    if (isCurrentUserAdmin) {
+      document.querySelectorAll('.delete-quest-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const qId = e.currentTarget.getAttribute('data-id');
+          if (confirm('هل تريد مسح هذه المهمة من لوحة النقابة نهائياً؟ 🗑️')) {
+            try { await deleteDoc(doc(db, "quests", qId)); showToast('تم مسح المهمة!', 'fa-solid fa-trash-can'); } 
+            catch (error) { showToast('فشل الحذف!', 'fa-solid fa-circle-xmark'); }
+          }
+        });
+      });
+    }
+  }
 
   // ==========================================
   // === 5. تسجيل الدخول وتحديث الواجهة ===
@@ -352,7 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           await setDoc(doc(db, 'users', user.uid), { username: newName }, { merge: true });
           showToast('تم تغيير اللقب بنجاح! 📛', 'fa-solid fa-user-check');
-          userData.username = newName; updateUI(user, userData); 
         } catch (error) { showToast('فشل تغيير اللقب!', 'fa-solid fa-circle-xmark'); } 
         finally { btnChangeUsername.disabled = false; btnChangeUsername.innerHTML = '<i class="fa-solid fa-floppy-disk"></i>'; }
       });
@@ -368,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const base64 = ev.target.result; imgPreview.src = base64; myCurrentAvatar = base64; initChat(); 
           try {
             await setDoc(doc(db, 'users', user.uid), { photoURL: base64 }, { merge: true });
-            showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image'); userData.photoURL = base64; 
+            showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image');
           } catch (err) { showToast('فشل تحديث الصورة', 'fa-solid fa-circle-xmark'); }
         };
         reader.readAsDataURL(file);
@@ -391,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           await setDoc(doc(db, 'users', user.uid), { stars: newStars, level: newLevel, activatedPromos: activatedPromos }, { merge: true });
           showToast(`تم التفعيل! حصلت على ${starsToAdd} نجمة 🌟`, 'fa-solid fa-wand-magic-sparkles');
-          promoInput.value = ''; updateUI(user, { ...userData, stars: newStars, level: newLevel, activatedPromos: activatedPromos });
+          promoInput.value = '';
         } catch (error) { showToast('حدث خلل سحري أثناء التفعيل!', 'fa-solid fa-bug'); } 
         finally { btnApplyPromo.disabled = false; btnApplyPromo.innerHTML = '<i class="fa-solid fa-check"></i>'; }
       });
@@ -416,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // === 6. مراقبة حالة المستخدم ===
+  // === 6. مراقبة حالة المستخدم + الإشعارات الذكية ===
   // ==========================================
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -424,28 +473,49 @@ document.addEventListener('DOMContentLoaded', () => {
       const snap = await getDoc(userRef);
       const masterEmail = "Mohammadsafe202a@gmail.com"; 
       const isMasterUser = (user.email.toLowerCase() === masterEmail.toLowerCase());
-      let userData = { stars: 0, level: 0 };
       
       if (!snap.exists()) {
-        userData = { stars: 0, level: 0, isAdmin: isMasterUser, createdAt: serverTimestamp() };
-        await setDoc(userRef, userData);
-      } else {
-        userData = snap.data();
-        if (isMasterUser && userData.isAdmin !== true) {
-          userData.isAdmin = true;
-          await setDoc(userRef, { isAdmin: true }, { merge: true });
-        }
+        await setDoc(userRef, { stars: 0, level: 0, isAdmin: isMasterUser, createdAt: serverTimestamp() });
+      } else if (isMasterUser && snap.data().isAdmin !== true) {
+        await updateDoc(userRef, { isAdmin: true });
       }
-      updateUI(user, userData); 
-      checkDailyQuestStatus(userData); 
-      initQuests(user, userData); // تمرير البيانات لبرمجة المهام المؤقتة
+
+      // 🌟 تشغيل المراقبة الحية لحساب العضو 🌟
+      if (userDocListener) userDocListener(); // مسح المراقبة القديمة إن وجدت
+      
+      userDocListener = onSnapshot(userRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const userData = docSnapshot.data();
+          
+          // تحديث الواجهة والمهام تلقائياً لو حصل أي تغيير في حسابه
+          updateUI(user, userData); 
+          checkDailyQuestStatus(userData); 
+          initQuests(user, userData); 
+          initNews();
+
+          // 🔔 نظام استلام الإشعارات من النقيب
+          if (userData.notifications && userData.notifications.length > 0) {
+            userData.notifications.forEach(msg => {
+              if (msg.includes('رفض')) {
+                showToast(msg, 'fa-solid fa-circle-xmark'); // إشعار أحمر للرفض
+              } else {
+                showToast(msg, 'fa-solid fa-gift'); // إشعار هدية للقبول
+              }
+            });
+            // مسح الإشعارات بعد قراءتها عشان متظهرش تاني
+            updateDoc(userRef, { notifications: [] });
+          }
+        }
+      });
+
     } else {
+      if (userDocListener) userDocListener(); // إيقاف المراقبة عند تسجيل الخروج
       updateUI(null); 
       checkDailyQuestStatus(null);
       initQuests(null, null);
+      initNews();
       isCurrentUserAdmin = false;
     }
-    initNews();
   });
 
   // ==========================================

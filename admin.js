@@ -2,7 +2,7 @@
 
 import { 
   auth, db, onAuthStateChanged, 
-  doc, getDoc, setDoc, serverTimestamp, collection, addDoc 
+  doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, addDoc, query, where, onSnapshot, arrayUnion, arrayRemove 
 } from './firebase-core.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 1. نظام الحماية
+  // 1. نظام الحماية (التحقق من النقيب)
   // ==========================================
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.replace('index.html'); return; }
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 🌟 4. إضافة مهام جديدة بوقت محدد ⏳ 🌟
+  // 4. إضافة مهام جديدة بوقت محدد ⏳
   // ==========================================
   const btnQuest = document.getElementById('btn-add-quest');
   btnQuest.addEventListener('click', async () => {
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnQuest.disabled = true; 
     btnQuest.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تعليق المهمة...';
 
-    // 🌟 حساب وقت الانتهاء 🌟
     const now = new Date();
     const expiresAt = new Date(now.getTime() + (hours * 60 * 60 * 1000)); 
 
@@ -105,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         desc: desc, 
         reward: reward, 
         createdAt: serverTimestamp(),
-        expiresAt: expiresAt // حفظ وقت الانتهاء في قاعدة البيانات
+        expiresAt: expiresAt 
       });
       showToast('تمت إضافة المهمة للوحة النقابة بنجاح! ⚔️', 'fa-solid fa-scroll');
       document.getElementById('quest-title').value = ''; 
@@ -119,6 +118,111 @@ document.addEventListener('DOMContentLoaded', () => {
       btnQuest.disabled = false; 
       btnQuest.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> تعليق المهمة بوقت محدد'; 
     }
+  });
+
+  // ==========================================
+  // 🌟 5. صندوق بريد النقيب (مراجعة المهام) 🌟
+  // ==========================================
+  const requestsContainer = document.getElementById('requests-container');
+  const requestsCol = collection(db, "quest_requests");
+
+  // جلب الطلبات اللي لسه متراجعتش (وضعها pending)
+  const qRequests = query(requestsCol, where("status", "==", "pending"));
+  
+  onSnapshot(qRequests, (snapshot) => {
+    requestsContainer.innerHTML = '';
+    
+    if (snapshot.empty) {
+      requestsContainer.innerHTML = '<p class="text-muted text-center" style="margin-top: 20px;"><i class="fa-solid fa-check-double"></i> صندوق البريد فارغ، لا توجد طلبات معلقة!</p>';
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const req = docSnap.data();
+      const reqId = docSnap.id;
+
+      const box = document.createElement('div');
+      box.className = 'request-box';
+      box.innerHTML = `
+        <div style="flex: 1; min-width: 200px;">
+          <h4 style="color: var(--gold); margin-bottom: 5px;"><i class="fa-solid fa-user-ninja"></i> ${req.userName}</h4>
+          <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 8px;">أنجز مهمة: <strong style="color: #fff;">${req.questTitle}</strong> (المكافأة: ${req.reward} نجمة)</p>
+          <a href="${req.proofUrl}" target="_blank" style="color: var(--accent); font-size: 0.9rem; text-decoration: none; display: inline-block; background: rgba(139, 92, 246, 0.1); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
+            <i class="fa-solid fa-link"></i> عرض دليل الإنجاز
+          </a>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button class="btn-primary btn-accept" data-id="${reqId}" data-uid="${req.userId}" data-reward="${req.reward}" data-qtitle="${req.questTitle}" style="background: #22c55e; color: #fff; padding: 8px 15px;"><i class="fa-solid fa-check"></i> قبول</button>
+          <button class="btn-danger btn-reject" data-id="${reqId}" data-uid="${req.userId}" data-qid="${req.questId}" data-qtitle="${req.questTitle}" style="padding: 8px 15px;"><i class="fa-solid fa-xmark"></i> رفض</button>
+        </div>
+      `;
+      requestsContainer.appendChild(box);
+    });
+
+    // --- برمجة زر القبول ✅ ---
+    document.querySelectorAll('.btn-accept').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const reqId = e.currentTarget.getAttribute('data-id');
+        const uid = e.currentTarget.getAttribute('data-uid');
+        const reward = parseInt(e.currentTarget.getAttribute('data-reward'));
+        const qTitle = e.currentTarget.getAttribute('data-qtitle');
+        
+        if(confirm('هل أنت متأكد من قبول الدليل ومنح النجوم للمغامر؟')) {
+          try {
+            // 1. تحديث حالة الطلب لمقبول
+            await updateDoc(doc(db, "quest_requests", reqId), { status: "approved" });
+            
+            // 2. تزويد النجوم وبعت الإشعار للعضو
+            const userRef = doc(db, 'users', uid);
+            const userSnap = await getDoc(userRef);
+            if(userSnap.exists()) {
+              const uData = userSnap.data();
+              const newStars = (uData.stars || 0) + reward;
+              const newLevel = Math.floor(newStars / 50);
+              
+              await updateDoc(userRef, {
+                stars: newStars,
+                level: newLevel,
+                notifications: arrayUnion(`أحسنت! تمت إضافة ${reward} نجمة لحسابك لإنجاز مهمة: ${qTitle} 🌟`)
+              });
+            }
+            showToast('تم قبول المهمة وإرسال النجوم بنجاح!', 'fa-solid fa-check-circle');
+          } catch(err) {
+            console.error(err);
+            showToast('حدث خطأ أثناء القبول', 'fa-solid fa-bug');
+          }
+        }
+      });
+    });
+
+    // --- برمجة زر الرفض ❌ ---
+    document.querySelectorAll('.btn-reject').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const reqId = e.currentTarget.getAttribute('data-id');
+        const uid = e.currentTarget.getAttribute('data-uid');
+        const qId = e.currentTarget.getAttribute('data-qid');
+        const qTitle = e.currentTarget.getAttribute('data-qtitle');
+
+        if(confirm('هل أنت متأكد من رفض هذا الدليل؟')) {
+          try {
+            // 1. تحديث حالة الطلب لمرفوض
+            await updateDoc(doc(db, "quest_requests", reqId), { status: "rejected" });
+            
+            // 2. مسح المهمة من قائمة العضو عشان يقدر يعملها تاني
+            const userRef = doc(db, 'users', uid);
+            await updateDoc(userRef, {
+              claimedQuests: arrayRemove(qId), // بيمسح المهمة من سجله
+              notifications: arrayUnion(`للأسف، تم رفض دليلك لمهمة: ${qTitle} لأن الدليل غير صحيح. حاول مرة أخرى! ❌`)
+            });
+
+            showToast('تم رفض المهمة وإبلاغ المغامر!', 'fa-solid fa-times-circle');
+          } catch(err) {
+            console.error(err);
+            showToast('حدث خطأ أثناء الرفض', 'fa-solid fa-bug');
+          }
+        }
+      });
+    });
   });
 
 });
