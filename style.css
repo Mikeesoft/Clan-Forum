@@ -28,17 +28,18 @@ body {
 /* الشريط العلوي الثابت مع بلورات الثلج السداسية */
 /* ========================================= */
 .top-bar {
-  margin: 0 auto; 
+  /* 🌟 التثبيت الإجباري (Fixed) 🌟 */
+  position: fixed; 
+  top: 0; 
+  left: 50%; 
+  transform: translateX(-50%);
+  
   width: 100%; 
   max-width: var(--app-max-width); 
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
   padding: 15px 20px; 
-  
-  /* 🌟 التثبيت في الأعلى (Sticky) 🌟 */
-  position: sticky;
-  top: 0;
   z-index: 2000; 
   
   /* ❄️ خلفية بلورات الثلج السداسية + تأثير الزجاج ❄️ */
@@ -56,8 +57,11 @@ body {
 .notification-icon:hover { color: var(--accent); }
 
 #main-content {
-  margin: 0 auto; width: 100%; max-width: var(--app-max-width);
-  padding: 15px 15px 120px 15px; 
+  margin: 0 auto; 
+  width: 100%; 
+  max-width: var(--app-max-width);
+  /* 💡 التعديل هنا: مسافة 80px من فوق عشان الكلام مايدخلش تحت الشريط الثابت */
+  padding: 80px 15px 120px 15px; 
 }
 
 .page-section { display: none; animation: fadeIn 0.3s ease; }
@@ -151,8 +155,8 @@ button {
 /* 🔔 الإشعارات المنبثقة (بشكل ألعاب الأنمي) */
 /* ========================================= */
 .toast-notification {
-  position: fixed; /* تم التعديل من absolute إلى fixed عشان تفضل ظاهرة حتى لو نزلت في الصفحة */
-  top: 80px; /* تم تعديل المسافة من الأعلى عشان متغطيش على الشريط الثابت */
+  position: fixed; 
+  top: 80px; 
   left: 50%; 
   transform: translateX(-50%) translateY(-50px);
   background: rgba(15, 23, 42, 0.95); 
@@ -200,6 +204,7 @@ button {
 .nav-item i { font-size: 1.4rem; transition: 0.3s; }
 .nav-item.active { color: var(--accent); font-weight: 700; }
 .nav-item.active i { transform: translateY(-4px); }
+
 /* ========================================= */
 /* 🎴 شارة رتب الأنمي (Rank Badge) */
 /* ========================================= */
@@ -222,6 +227,7 @@ button {
   .nav-item span { font-size: 0.65rem; }
   .msg-bubble { font-size: 0.85rem; }
 }
+
 /* ========================================= */
 /* 🗑️ زر حذف الأخبار (للأدمن فقط) */
 /* ========================================= */
