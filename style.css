@@ -128,16 +128,48 @@ button {
 .promo-title { font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
 /* الإشعارات (Toast) */
+/* ========================================= */
+/* 🔔 الإشعارات المنبثقة (بشكل ألعاب الأنمي) */
+/* ========================================= */
 .toast-notification {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(50px);
-  background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); color: #fff;
-  padding: 12px 24px; border-radius: 50px; border: 1px solid var(--accent);
-  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4); font-weight: 700; font-size: 0.95rem;
-  z-index: 9999; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  position: absolute; 
+  top: 20px; /* تظهر من الأعلى الآن بدلاً من الأسفل */
+  left: 50%; 
+  transform: translateX(-50%) translateY(-50px);
+  background: rgba(15, 23, 42, 0.95); 
+  backdrop-filter: blur(12px); 
+  color: #fff;
+  padding: 15px 20px; 
+  border-radius: 12px; 
+  border-right: 4px solid var(--accent); /* لمسة جانبية أنيقة */
+  border-left: 1px solid var(--card-border);
+  border-top: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(139, 92, 246, 0.4); 
+  font-weight: 700; 
+  font-size: 0.95rem;
+  z-index: 9999; 
+  opacity: 0; 
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  display: flex; 
+  align-items: center; 
+  gap: 15px; 
+  min-width: 280px;
+  pointer-events: none;
 }
-.toast-notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast-icon { font-size: 1.2rem; color: var(--gold); }
+
+.toast-notification.show { 
+  opacity: 1; 
+  transform: translateX(-50%) translateY(0); 
+}
+
+.toast-icon { 
+  font-size: 1.5rem; 
+  color: var(--accent); 
+  background: rgba(139, 92, 246, 0.1); /* خلفية خفيفة للأيقونة */
+  padding: 10px;
+  border-radius: 8px;
+}
 
 /* شريط التنقل السفلي */
 .bottom-nav {
