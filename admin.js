@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const requestsContainer = document.getElementById('requests-container');
   const requestsCol = collection(db, "quest_requests");
 
-  // جلب الطلبات اللي لسه متراجعتش (وضعها pending)
   const qRequests = query(requestsCol, where("status", "==", "pending"));
   
   onSnapshot(qRequests, (snapshot) => {
@@ -141,13 +140,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const req = docSnap.data();
       const reqId = docSnap.id;
 
+      // 💡 التعديل السحري هنا لمعالجة الروابط الناقصة
+      let finalUrl = req.proofUrl.trim();
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+        finalUrl = 'https://' + finalUrl;
+      }
+
       const box = document.createElement('div');
       box.className = 'request-box';
       box.innerHTML = `
         <div style="flex: 1; min-width: 200px;">
           <h4 style="color: var(--gold); margin-bottom: 5px;"><i class="fa-solid fa-user-ninja"></i> ${req.userName}</h4>
           <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 8px;">أنجز مهمة: <strong style="color: #fff;">${req.questTitle}</strong> (المكافأة: ${req.reward} نجمة)</p>
-          <a href="${req.proofUrl}" target="_blank" style="color: var(--accent); font-size: 0.9rem; text-decoration: none; display: inline-block; background: rgba(139, 92, 246, 0.1); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
+          <a href="${finalUrl}" target="_blank" style="color: var(--accent); font-size: 0.9rem; text-decoration: none; display: inline-block; background: rgba(139, 92, 246, 0.1); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3);">
             <i class="fa-solid fa-link"></i> عرض دليل الإنجاز
           </a>
         </div>
@@ -169,10 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if(confirm('هل أنت متأكد من قبول الدليل ومنح النجوم للمغامر؟')) {
           try {
-            // 1. تحديث حالة الطلب لمقبول
             await updateDoc(doc(db, "quest_requests", reqId), { status: "approved" });
             
-            // 2. تزويد النجوم وبعت الإشعار للعضو
             const userRef = doc(db, 'users', uid);
             const userSnap = await getDoc(userRef);
             if(userSnap.exists()) {
@@ -205,13 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(confirm('هل أنت متأكد من رفض هذا الدليل؟')) {
           try {
-            // 1. تحديث حالة الطلب لمرفوض
             await updateDoc(doc(db, "quest_requests", reqId), { status: "rejected" });
             
-            // 2. مسح المهمة من قائمة العضو عشان يقدر يعملها تاني
             const userRef = doc(db, 'users', uid);
             await updateDoc(userRef, {
-              claimedQuests: arrayRemove(qId), // بيمسح المهمة من سجله
+              pendingQuests: arrayRemove(qId), // بيمسح المهمة من قائمة قيد المراجعة عشان يقدر يعيدها
               notifications: arrayUnion(`للأسف، تم رفض دليلك لمهمة: ${qTitle} لأن الدليل غير صحيح. حاول مرة أخرى! ❌`)
             });
 
