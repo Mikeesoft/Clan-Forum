@@ -1,6 +1,5 @@
 // app.js
 
-// === 1. استيراد خدمات فايربيس من الملف المركزي ===
 import { 
   auth, db, provider, 
   signInWithPopup, onAuthStateChanged, signOut, 
@@ -11,7 +10,7 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
 
   // ==========================================
-  // === 2. نظام الإشعارات الأنيق (Toast) ===
+  // === 1. نظام الإشعارات الأنيق (Toast) ===
   // ==========================================
   function showToast(message, icon = 'fa-solid fa-bell') {
     const oldToast = document.querySelector('.toast-notification');
@@ -31,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // === 3. التنقل بين الأقسام (Bottom Nav) ===
+  // === 2. التنقل بين الأقسام (Bottom Nav) ===
   // ==========================================
   const navItems = document.querySelectorAll('.nav-item');
   const sections = document.querySelectorAll('.page-section');
@@ -41,16 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const targetId = item.getAttribute('data-target');
 
-      // تفريغ التفعيل من الكل
       navItems.forEach(nav => nav.classList.remove('active'));
       sections.forEach(sec => sec.classList.remove('active'));
 
-      // تفعيل العنصر المطلوب
       item.classList.add('active');
       document.getElementById(targetId).classList.add('active');
       document.getElementById('main-content').scrollTop = 0;
       
-      // جلب بيانات المتصدرين عند فتح القسم الخاص بهم فقط لتوفير استهلاك البيانات
       if (targetId === 'tab-leaderboard') {
         loadLeaderboard();
       }
@@ -58,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // === 4. نظام تسجيل الدخول وتحديث الواجهة ===
+  // === 3. نظام تسجيل الدخول وتحديث الواجهة ===
   // ==========================================
   const profileContent = document.getElementById('profile-content');
   const welcomeText = document.getElementById('welcome-text');
@@ -66,7 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateUI(user, userData = null) {
     if (user) {
       const name = user.displayName || 'مغامر';
-      const photo = user.photoURL || 'https://via.placeholder.com/90';
+      // استخدام الصورة المخصصة من قاعدة البيانات إن وجدت، أو صورة جوجل
+      const photo = userData?.photoURL || user.photoURL || 'https://via.placeholder.com/90';
       const level = userData?.level || 0;
       const stars = userData?.stars || 0;
 
@@ -75,20 +72,122 @@ document.addEventListener('DOMContentLoaded', () => {
       profileContent.innerHTML = `
         <div class="section-title">هوية المغامر 🆔</div>
         <div class="glass-card profile-header">
-          <img src="${photo}" alt="Avatar" class="avatar-large">
+          
+          <div class="avatar-wrapper">
+            <img src="${photo}" alt="Avatar" class="avatar-large" id="profile-img-preview">
+            <label for="avatar-upload" class="edit-avatar-btn"><i class="fa-solid fa-camera"></i></label>
+            <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+          </div>
+          
           <h2>${name}</h2>
           <p class="text-accent">${user.email}</p>
+          
           <div class="stats-row">
             <div class="stat-box"><h4>${level}</h4><p>المستوى</p></div>
             <div class="stat-box"><h4>${stars.toLocaleString()}</h4><p>النجوم</p></div>
           </div>
+
+          <div class="promo-section">
+            <div class="promo-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--gold);"></i> هل تمتلك تعويذة (Promo Code)؟</div>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="promo-input" placeholder="أدخل الكود هنا..." class="chat-input" style="flex: 1; padding: 10px;">
+              <button id="btn-apply-promo" class="btn-primary" style="padding: 10px 15px;"><i class="fa-solid fa-check"></i></button>
+            </div>
+          </div>
+
           <button id="logout-btn" class="btn-danger" style="width: 100%; margin-top: 20px;">
             <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
           </button>
         </div>
       `;
 
+      // 1. تفعيل زر تسجيل الخروج
       document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+      // 2. تفعيل رفع الصورة
+      const fileInput = document.getElementById('avatar-upload');
+      const imgPreview = document.getElementById('profile-img-preview');
+      
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 300 * 1024) { 
+          showToast('الصورة كبيرة جداً! يجب أن تكون أقل من 300KB', 'fa-solid fa-triangle-exclamation');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          const base64 = ev.target.result;
+          imgPreview.src = base64; 
+          
+          try {
+            await setDoc(doc(db, 'users', user.uid), { photoURL: base64 }, { merge: true });
+            showToast('تم تحديث مظهرك بنجاح ✨', 'fa-solid fa-image');
+            userData.photoURL = base64; // تحديث البيانات المحلية
+          } catch (err) {
+            console.error(err);
+            showToast('فشل تحديث الصورة', 'fa-solid fa-circle-xmark');
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // 3. تفعيل نظام الـ Promo Codes
+      const btnApplyPromo = document.getElementById('btn-apply-promo');
+      const promoInput = document.getElementById('promo-input');
+
+      btnApplyPromo.addEventListener('click', async () => {
+        const code = promoInput.value.trim().toUpperCase();
+        if (!code) return showToast('الرجاء إدخال كود صحيح!', 'fa-solid fa-circle-exclamation');
+        
+        btnApplyPromo.disabled = true;
+        btnApplyPromo.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+          const promoRef = doc(db, 'promos', code);
+          const promoSnap = await getDoc(promoRef);
+          
+          if (!promoSnap.exists()) {
+            showToast('هذه التعويذة غير صحيحة أو منتهية الصلاحية!', 'fa-solid fa-circle-xmark');
+            return;
+          }
+
+          if (userData.activatedPromos && userData.activatedPromos.includes(code)) {
+            showToast('لقد استخدمت هذه التعويذة من قبل!', 'fa-solid fa-circle-info');
+            return;
+          }
+
+          const promoData = promoSnap.data();
+          const starsToAdd = promoData.stars || 0;
+          
+          const newStars = (userData.stars || 0) + starsToAdd;
+          const newLevel = Math.floor(newStars / 50);
+          
+          const activatedPromos = userData.activatedPromos || [];
+          activatedPromos.push(code);
+
+          await setDoc(doc(db, 'users', user.uid), {
+            stars: newStars,
+            level: newLevel,
+            activatedPromos: activatedPromos
+          }, { merge: true });
+
+          showToast(`تم التفعيل! حصلت على ${starsToAdd} نجمة 🌟`, 'fa-solid fa-wand-magic-sparkles');
+          promoInput.value = '';
+          
+          updateUI(user, { ...userData, stars: newStars, level: newLevel, activatedPromos: activatedPromos });
+
+        } catch (error) {
+          console.error(error);
+          showToast('حدث خلل سحري أثناء التفعيل!', 'fa-solid fa-bug');
+        } finally {
+          btnApplyPromo.disabled = false;
+          btnApplyPromo.innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+      });
+
     } else {
       welcomeText.innerHTML = `مرحباً بك في النقابة 👋`;
       profileContent.innerHTML = `
@@ -111,13 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // === 5. نظام المهام (استلام النجوم) ===
+  // === 4. نظام المهام (استلام النجوم) ===
   // ==========================================
   const questBtn = document.querySelector('.quest-card .btn-primary');
 
   function getTodayDate() {
-    const d = new Date();
-    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   }
 
   function checkQuestStatus(userData) {
@@ -140,16 +238,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (questBtn) {
     questBtn.addEventListener('click', async () => {
       const user = auth.currentUser;
-      if (!user) {
-        showToast('يجب تسجيل الدخول أولاً أيها المغامر!', 'fa-solid fa-circle-exclamation');
-        return;
-      }
+      if (!user) return showToast('يجب تسجيل الدخول أولاً أيها المغامر!', 'fa-solid fa-circle-exclamation');
 
       questBtn.disabled = true;
       questBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الاستلام...';
 
       const userRef = doc(db, 'users', user.uid);
-      
       try {
         const snap = await getDoc(userRef);
         if (!snap.exists()) return;
@@ -164,29 +258,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const newStars = (data.stars || 0) + 5;
-        const newLevel = Math.floor(newStars / 50); // كل 50 نجمة مستوى
+        const newLevel = Math.floor(newStars / 50);
 
-        await setDoc(userRef, { 
-          stars: newStars, 
-          level: newLevel,
-          lastClaimDate: today 
-        }, { merge: true });
+        await setDoc(userRef, { stars: newStars, level: newLevel, lastClaimDate: today }, { merge: true });
 
         showToast(`عاش! حصلت على 5 نجوم. رصيدك الآن: ${newStars}`, 'fa-solid fa-star');
         checkQuestStatus({ lastClaimDate: today });
-        updateUI(user, { stars: newStars, level: newLevel }); // تحديث البروفايل فوراً
+        updateUI(user, { ...data, stars: newStars, level: newLevel, lastClaimDate: today });
 
       } catch (error) {
         console.error(error);
         showToast('حدث خلل سحري! حاول مرة أخرى.', 'fa-solid fa-bug');
-        questBtn.disabled = false;
-        questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام';
+        questBtn.disabled = false; questBtn.innerHTML = '<i class="fa-solid fa-star"></i> استلام';
       }
     });
   }
 
   // ==========================================
-  // === 6. مراقبة حالة المستخدم (Auth State) ===
+  // === 5. مراقبة حالة المستخدم ===
   // ==========================================
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -201,16 +290,15 @@ document.addEventListener('DOMContentLoaded', () => {
         userData = snap.data();
       }
       updateUI(user, userData);
-      checkQuestStatus(userData); // فحص حالة المهمة اليومية
+      checkQuestStatus(userData); 
     } else {
       updateUI(null);
       checkQuestStatus(null);
     }
   });
 
-
   // ==========================================
-  // === 7. نظام الحانة (الدردشة العامة) ===
+  // === 6. نظام الحانة (الدردشة العامة) ===
   // ==========================================
   const chatMessages = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
@@ -235,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg-box ${isMe ? 'sent' : 'received'}`;
         msgDiv.innerHTML = `
-          <img src="${data.avatar || 'https://via.placeholder.com/35'}" alt="avatar" class="avatar">
+          <img src="${data.avatar || 'https://via.placeholder.com/35'}" alt="avatar" class="avatar" style="object-fit: cover;">
           <div>
             ${!isMe ? `<span class="msg-meta">${data.authorName} • ${timeString}</span>` : `<span class="msg-meta">${timeString}</span>`}
             <div class="msg-bubble">${data.text}</div>
@@ -252,19 +340,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!text) return;
     
     const user = auth.currentUser;
-    if (!user) {
-      showToast("يجب تسجيل الدخول للتحدث في الحانة!", "fa-solid fa-lock");
-      return;
-    }
+    if (!user) return showToast("يجب تسجيل الدخول للتحدث في الحانة!", "fa-solid fa-lock");
 
     chatInput.value = '';
     
     try {
+      // نجلب الصورة المخصصة للعضو عشان تظهر في الشات بدل صورة جوجل القديمة
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+      const avatarUrl = snap.exists() ? (snap.data().photoURL || user.photoURL) : user.photoURL;
+
       await addDoc(messagesCol, {
         text: text,
         authorName: user.displayName || "مغامر",
         authorId: user.uid,
-        avatar: user.photoURL,
+        avatar: avatarUrl,
         createdAt: serverTimestamp()
       });
     } catch (e) {
@@ -277,11 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSend.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
   }
-  initChat(); // تشغيل الشات تلقائياً
-
+  initChat(); 
 
   // ==========================================
-  // === 8. قاعة الأساطير (المتصدرون) ===
+  // === 7. قاعة الأساطير (المتصدرون) ===
   // ==========================================
   const leaderboardList = document.getElementById('leaderboard-list');
   const usersCol = collection(db, "users");
@@ -334,5 +423,4 @@ document.addEventListener('DOMContentLoaded', () => {
       leaderboardList.innerHTML = '<p class="text-danger text-center">حدث خلل سحري أثناء جلب البيانات!</p>';
     }
   }
-
 });
