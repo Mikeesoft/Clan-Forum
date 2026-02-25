@@ -24,12 +24,31 @@ body {
   background-color: var(--bg-color); color: var(--text-main); direction: rtl;
 }
 
-/* الشريط العلوي والمحتوى */
+/* ========================================= */
+/* الشريط العلوي الثابت مع بلورات الثلج السداسية */
+/* ========================================= */
 .top-bar {
-  margin: 0 auto; width: 100%; max-width: var(--app-max-width); display: flex; 
-  justify-content: space-between; align-items: center; padding: 15px 20px; 
-  background: rgba(11, 15, 25, 0.9); backdrop-filter: blur(10px); 
+  margin: 0 auto; 
+  width: 100%; 
+  max-width: var(--app-max-width); 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 15px 20px; 
+  
+  /* 🌟 التثبيت في الأعلى (Sticky) 🌟 */
+  position: sticky;
+  top: 0;
+  z-index: 2000; 
+  
+  /* ❄️ خلفية بلورات الثلج السداسية + تأثير الزجاج ❄️ */
+  background-color: rgba(11, 15, 25, 0.85);
+  background-image: url("data:image/svg+xml,%3Csvg width='28' height='49' viewBox='0 0 28 49' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.06' fill-rule='evenodd'%3E%3Cpolygon points='14 0 28 8 28 24 14 32 0 24 0 8'/%3E%3Cpolygon points='14 49 28 41 28 25 14 17 0 25 0 41'/%3E%3C/g%3E%3C/svg%3E");
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  
   border-bottom: 1px solid var(--card-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .logo { font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
@@ -132,8 +151,8 @@ button {
 /* 🔔 الإشعارات المنبثقة (بشكل ألعاب الأنمي) */
 /* ========================================= */
 .toast-notification {
-  position: absolute; 
-  top: 20px; /* تظهر من الأعلى الآن بدلاً من الأسفل */
+  position: fixed; /* تم التعديل من absolute إلى fixed عشان تفضل ظاهرة حتى لو نزلت في الصفحة */
+  top: 80px; /* تم تعديل المسافة من الأعلى عشان متغطيش على الشريط الثابت */
   left: 50%; 
   transform: translateX(-50%) translateY(-50px);
   background: rgba(15, 23, 42, 0.95); 
@@ -141,7 +160,7 @@ button {
   color: #fff;
   padding: 15px 20px; 
   border-radius: 12px; 
-  border-right: 4px solid var(--accent); /* لمسة جانبية أنيقة */
+  border-right: 4px solid var(--accent); 
   border-left: 1px solid var(--card-border);
   border-top: 1px solid var(--card-border);
   border-bottom: 1px solid var(--card-border);
@@ -166,7 +185,7 @@ button {
 .toast-icon { 
   font-size: 1.5rem; 
   color: var(--accent); 
-  background: rgba(139, 92, 246, 0.1); /* خلفية خفيفة للأيقونة */
+  background: rgba(139, 92, 246, 0.1); 
   padding: 10px;
   border-radius: 8px;
 }
@@ -207,14 +226,14 @@ button {
 /* 🗑️ زر حذف الأخبار (للأدمن فقط) */
 /* ========================================= */
 .news-card {
-  position: relative; /* عشان نقدر نثبت زر الحذف جواه */
+  position: relative; 
 }
 
 .delete-news-btn {
   position: absolute;
   top: 15px;
   left: 15px;
-  background: rgba(239, 68, 68, 0.1); /* خلفية حمراء خفيفة */
+  background: rgba(239, 68, 68, 0.1); 
   color: var(--danger);
   width: 30px;
   height: 30px;
@@ -225,11 +244,11 @@ button {
   cursor: pointer;
   border: 1px solid rgba(239, 68, 68, 0.2);
   transition: all 0.2s ease;
-  z-index: 10; /* عشان يبقى فوق أي حاجة تانية */
+  z-index: 10; 
 }
 
 .delete-news-btn:hover {
   background: var(--danger);
   color: #fff;
-  transform: scale(1.1); /* تكبير بسيط عند الوقوف عليه */
+  transform: scale(1.1); 
 }
