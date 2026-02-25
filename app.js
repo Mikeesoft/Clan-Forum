@@ -10,7 +10,7 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
 
   let myCurrentAvatar = 'https://via.placeholder.com/35';
-  let myCurrentUsername = 'مغامر'; // 🌟 متغير جديد لحفظ اللقب
+  let myCurrentUsername = 'مغامر';
   let isCurrentUserAdmin = false;
 
   // ==========================================
@@ -144,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateUI(user, userData = null) {
     if (user) {
-      // 🌟 الأولوية للاسم المخصص (username) ثم اسم جوجل
       const customName = userData?.username || user.displayName || 'مغامر';
       const photo = userData?.photoURL || user.photoURL || 'https://via.placeholder.com/90';
       const level = userData?.level || 0;
@@ -153,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isAdmin = userData?.isAdmin === true;
 
       myCurrentAvatar = photo;
-      myCurrentUsername = customName; // حفظ اللقب للشات
+      myCurrentUsername = customName; 
       isCurrentUserAdmin = isAdmin;
 
       welcomeText.innerHTML = `مرحباً بعودتك، ${customName.split(' ')[0]} 👋`;
@@ -206,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
       if (isAdmin) document.getElementById('go-to-admin-btn').addEventListener('click', () => { window.location.href = 'admin.html'; });
 
-      // 🌟 تفعيل تغيير اللقب 🌟
       const btnChangeUsername = document.getElementById('btn-change-username');
       const usernameInput = document.getElementById('username-input');
       
@@ -221,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
           await setDoc(doc(db, 'users', user.uid), { username: newName }, { merge: true });
           showToast('تم تغيير اللقب بنجاح! 📛', 'fa-solid fa-user-check');
           userData.username = newName;
-          updateUI(user, userData); // تحديث الواجهة فوراً
+          updateUI(user, userData); 
         } catch (error) {
           showToast('فشل تغيير اللقب!', 'fa-solid fa-circle-xmark');
         } finally {
@@ -230,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // تفعيل رفع الصورة
       const fileInput = document.getElementById('avatar-upload');
       const imgPreview = document.getElementById('profile-img-preview');
       
@@ -254,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
       });
 
-      // تفعيل التعاويذ
       const btnApplyPromo = document.getElementById('btn-apply-promo');
       const promoInput = document.getElementById('promo-input');
 
@@ -400,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // === 7. نظام الحانة (الدردشة العامة) ===
+  // === 7. نظام الحانة (الدردشة العامة السريعة) ===
   // ==========================================
   const chatMessages = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
@@ -408,15 +404,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const messagesCol = collection(db, "chats", "global", "messages");
 
   function initChat() {
-    const q = query(messagesCol, orderBy("createdAt", "asc"));
+    // 🚀 جلب أحدث 50 رسالة فقط لتسريع الموقع 🚀
+    const q = query(messagesCol, orderBy("createdAt", "desc"), limit(50));
+    
     onSnapshot(q, (snapshot) => {
       chatMessages.innerHTML = '';
       const currentUser = auth.currentUser;
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+      
+      // نجمع الرسائل في مصفوفة ونعكسها عشان القديم يظهر فوق والجديد تحت
+      const messagesArray = [];
+      snapshot.forEach((docSnap) => messagesArray.push(docSnap.data()));
+      messagesArray.reverse();
+
+      messagesArray.forEach((data) => {
         const isMe = currentUser && data.authorId === currentUser.uid;
         let timeString = '';
         if (data.createdAt) timeString = data.createdAt.toDate().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        
         const finalAvatar = isMe ? myCurrentAvatar : (data.avatar || 'https://via.placeholder.com/35');
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg-box ${isMe ? 'sent' : 'received'}`;
@@ -441,7 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.value = '';
     
     try {
-      // 🌟 يتم إرسال الرسالة باستخدام اللقب الحالي 🌟
       await addDoc(messagesCol, { text: text, authorName: myCurrentUsername, authorId: user.uid, avatar: myCurrentAvatar, createdAt: serverTimestamp() });
     } catch (e) { showToast("فشل الإرسال. تأكد من اتصالك.", "fa-solid fa-wifi"); }
   }
@@ -473,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = docSnap.data();
         const stars = data.stars || 0;
         const level = data.level || 0;
-        // 🌟 الأولوية للاسم المخصص في المتصدرين 🌟
         const name = data.username || data.displayName || "مغامر مجهول";
         const avatar = data.photoURL || "https://via.placeholder.com/50";
         const animeRank = getRank(stars);
