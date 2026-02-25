@@ -1,20 +1,20 @@
 {
-  "name": "نقابة الأبطال",
+  "name": "WOLVES",
   "short_name": "WOLVES",
-  "description": "نظام إدارة نقابة الأبطال والمهام",
+  "description": "نقابة WOLVES الأسطورية",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0b0f19",
   "theme_color": "#8b5cf6",
   "icons": [
     {
-      "src": "logo-192.png",
+      "src": "https://dummyimage.com/192x192/8b5cf6/ffffff.png&text=W",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "logo-512.png",
+      "src": "https://dummyimage.com/512x512/8b5cf6/ffffff.png&text=W",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
