@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 
 </head>
 <body>
@@ -60,6 +60,37 @@
         </div>
       </section>
 
+      <section id="tab-manuscripts" class="page-section">
+        <div class="welcome-banner" style="background: linear-gradient(135deg, #0f172a, #1e1b4b); border: 1px solid var(--gold);">
+          <h2 style="color: var(--gold);">مكتبة المخطوطات 📜</h2>
+          <p class="text-muted">مكان يتجمع فيه حكماء العشيرة لتدوين مراجعاتهم وتحليلاتهم للأنمي.</p>
+        </div>
+        
+        <button id="btn-show-editor" class="btn-primary" style="width: 100%; margin-bottom: 20px; background: var(--accent);"><i class="fa-solid fa-pen-nib"></i> تدوين مخطوطة جديدة</button>
+
+        <div id="manuscript-editor" class="glass-card" style="display: none; border: 1px solid var(--accent); box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);">
+          <h3 style="color: var(--accent); margin-bottom: 15px;"><i class="fa-solid fa-scroll"></i> كتابة مراجعة أنمي</h3>
+          <input type="text" id="review-title" class="chat-input" placeholder="عنوان المراجعة (مثال: عظمة هجوم العمالقة)..." style="width: 100%; margin-bottom: 10px;">
+          <input type="url" id="review-cover" class="chat-input" placeholder="رابط صورة الغلاف للمقال (اختياري)..." style="width: 100%; margin-bottom: 10px;">
+          <select id="review-category" class="chat-input" style="width: 100%; margin-bottom: 10px; background: var(--card-bg); color: #fff;">
+            <option value="شونين">شونين ⚔️</option>
+            <option value="سينين">سينين 🌑</option>
+            <option value="غموض">غموض 🔍</option>
+            <option value="سحر">سحر 🪄</option>
+            <option value="نظريات">نظريات 🧠</option>
+          </select>
+          <textarea id="review-content" class="chat-input" placeholder="اكتب مراجعتك وتحليلك هنا... (تقدر تاخد مساحتك الكافية للتعبير)" style="width: 100%; height: 200px; resize: vertical; margin-bottom: 15px; font-size: 0.95rem; line-height: 1.6;"></textarea>
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-publish-review" class="btn-primary" style="flex: 1;"><i class="fa-solid fa-paper-plane"></i> نشر المخطوطة (+15 نجمة)</button>
+            <button id="btn-cancel-editor" class="btn-danger"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+
+        <div id="reviews-container">
+           <p class="text-muted text-center" style="margin-top: 30px;"><i class="fas fa-spinner fa-spin"></i> جاري نفض الغبار عن المخطوطات...</p>
+        </div>
+      </section>
+
       <section id="tab-leaderboard" class="page-section">
         <div class="section-title">قاعة الأساطير 🏆</div>
         <div id="leaderboard-list"></div>
@@ -74,6 +105,7 @@
       <a href="#" class="nav-item active" data-target="tab-home"><i class="fa-solid fa-house"></i><span>الرئيسية</span></a>
       <a href="#" class="nav-item" data-target="tab-quests"><i class="fa-solid fa-scroll"></i><span>المهام</span></a>
       <a href="#" class="nav-item" data-target="tab-tavern"><i class="fa-solid fa-comments"></i><span>الحانة</span></a>
+      <a href="#" class="nav-item" data-target="tab-manuscripts"><i class="fa-solid fa-feather-pointed"></i><span>المخطوطات</span></a>
       <a href="#" class="nav-item" data-target="tab-leaderboard"><i class="fa-solid fa-ranking-star"></i><span>الأساطير</span></a>
       <a href="#" class="nav-item" data-target="tab-profile"><i class="fa-solid fa-user-astronaut"></i><span>هويتي</span></a>
     </nav>

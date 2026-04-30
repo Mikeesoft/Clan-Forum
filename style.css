@@ -28,12 +28,10 @@ body {
 /* الشريط العلوي الثابت مع تأثير الزجاج الثلجي الفخم ❄️ */
 /* ========================================= */
 .top-bar {
-  /* 🌟 التثبيت الإجباري (Fixed) 🌟 */
   position: fixed; 
   top: 0; 
   left: 50%; 
   transform: translateX(-50%);
-  
   width: 100%; 
   max-width: var(--app-max-width); 
   display: flex; 
@@ -42,14 +40,12 @@ body {
   padding: 15px 20px; 
   z-index: 2000; 
   
-  /* ❄️ السحر هنا: تأثير الزجاج الثلجي (Frosted Glass) ❄️ */
-  background: rgba(11, 15, 25, 0.4); /* شفافية عالية عشان المحتوى يبان من تحته */
-  backdrop-filter: blur(25px); /* تمويه قوي جداً يدي إحساس التلج */
-  -webkit-backdrop-filter: blur(25px); /* عشان يشتغل على الآيفون بكفاءة */
+  background: rgba(11, 15, 25, 0.4); 
+  backdrop-filter: blur(25px); 
+  -webkit-backdrop-filter: blur(25px); 
   
-  /* حواف زجاجية لامعة خفيفة من تحت */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* ضل قوي عشان يفصله عن المحتوى */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); 
 }
 
 .logo { font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
@@ -60,7 +56,6 @@ body {
   margin: 0 auto; 
   width: 100%; 
   max-width: var(--app-max-width);
-  /* 💡 التعديل هنا: مسافة 80px من فوق عشان الكلام مايدخلش تحت الشريط الثابت */
   padding: 80px 15px 120px 15px; 
 }
 
@@ -97,7 +92,6 @@ button {
 .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; }
 
 /* الحانة (الشات) */
-#tab-tavern.active { display: block; }
 .chat-container { display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
 .chat-input-wrapper {
   position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--app-max-width);
@@ -150,7 +144,6 @@ button {
 }
 .promo-title { font-size: 0.95rem; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 
-/* الإشعارات (Toast) */
 /* ========================================= */
 /* 🔔 الإشعارات المنبثقة (بشكل ألعاب الأنمي) */
 /* ========================================= */
@@ -194,14 +187,17 @@ button {
   border-radius: 8px;
 }
 
-/* شريط التنقل السفلي */
+/* ========================================= */
+/* 🧭 شريط التنقل السفلي */
+/* ========================================= */
 .bottom-nav {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--app-max-width);
   background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(15px); border-top: 1px solid var(--card-border);
   display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 1000;
 }
-.nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-muted); font-size: 0.75rem; text-decoration: none; width: 20%; transition: 0.3s; }
-.nav-item i { font-size: 1.4rem; transition: 0.3s; }
+/* تعديل عرض الأزرار لتناسب 6 عناصر بدلاً من 5 */
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-muted); font-size: 0.70rem; text-decoration: none; width: 16.6%; transition: 0.3s; }
+.nav-item i { font-size: 1.3rem; transition: 0.3s; }
 .nav-item.active { color: var(--accent); font-weight: 700; }
 .nav-item.active i { transform: translateY(-4px); }
 
@@ -218,14 +214,6 @@ button {
   margin-inline-start: 8px;
   background: rgba(0, 0, 0, 0.4);
   vertical-align: middle;
-}
-
-/* شاشات الموبايل الصغيرة جداً */
-@media (max-width: 480px) {
-  .welcome-banner h2 { font-size: 1.3rem; }
-  .section-title { font-size: 1.1rem; }
-  .nav-item span { font-size: 0.65rem; }
-  .msg-bubble { font-size: 0.85rem; }
 }
 
 /* ========================================= */
@@ -257,4 +245,83 @@ button {
   background: var(--danger);
   color: #fff;
   transform: scale(1.1); 
+}
+
+/* ========================================= */
+/* 📜 ستايل المخطوطات (مقالات الأنمي) */
+/* ========================================= */
+.review-card { 
+  padding: 0; 
+  overflow: hidden; 
+  display: flex; 
+  flex-direction: column; 
+  transition: transform 0.3s ease, box-shadow 0.3s ease; 
+}
+.review-card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4); 
+}
+.review-cover { 
+  width: 100%; 
+  height: 180px; 
+  object-fit: cover; 
+  border-bottom: 1px solid var(--card-border); 
+  background: #111; 
+}
+.review-body { 
+  padding: 20px; 
+}
+.review-body h3 { 
+  color: var(--gold); 
+  margin-bottom: 10px; 
+  font-size: 1.3rem; 
+  line-height: 1.4; 
+}
+.review-content-preview { 
+  color: var(--text-main); 
+  font-size: 0.95rem; 
+  line-height: 1.7; 
+  white-space: pre-wrap; 
+  margin-bottom: 15px; 
+}
+.review-meta { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-top: 15px; 
+  border-top: 1px solid var(--card-border); 
+  padding-top: 15px; 
+}
+.review-author { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  font-size: 0.9rem; 
+  font-weight: 700; 
+  color: var(--text-muted); 
+}
+.review-author img { 
+  width: 30px; 
+  height: 30px; 
+  border-radius: 50%; 
+  object-fit: cover; 
+  border: 1px solid var(--accent); 
+}
+.review-category { 
+  background: rgba(251, 191, 36, 0.15); 
+  color: var(--gold); 
+  padding: 4px 10px; 
+  border-radius: 8px; 
+  font-size: 0.8rem; 
+  font-weight: 900; 
+  border: 1px solid rgba(251, 191, 36, 0.3); 
+}
+
+/* شاشات الموبايل الصغيرة جداً */
+@media (max-width: 480px) {
+  .welcome-banner h2 { font-size: 1.3rem; }
+  .section-title { font-size: 1.1rem; }
+  .nav-item span { font-size: 0.60rem; }
+  .nav-item i { font-size: 1.1rem; }
+  .msg-bubble { font-size: 0.85rem; }
 }

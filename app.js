@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 400);
-    }, 4000); // خليناها 4 ثواني عشان يلحق يقرأ الإشعار
+    }, 4000); 
   }
 
   // ==========================================
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // === 4. نظام المهام ⚔️ (ثابت ومؤقت) ===
+  // === 4. نظام المهام ⚔️ ===
   // ==========================================
   const dailyQuestBtn = document.getElementById('daily-quest-btn');
   const questsContainer = document.getElementById('quests-container');
@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
 
-  // 🔴 4.1 المهمة اليومية
   function checkDailyQuestStatus(userData) {
     if (!dailyQuestBtn) return;
     const today = getTodayDate();
@@ -166,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 🔴 4.2 المهام الديناميكية (التي تحتاج مراجعة النقيب)
   function initQuests(user, userData) {
     if (!questsContainer) return;
     const q = query(questsCol, orderBy("createdAt", "desc"));
@@ -176,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (homeQuestsContainer) homeQuestsContainer.innerHTML = '';
       
       let claimedQuests = userData?.claimedQuests || [];
-      let pendingQuests = userData?.pendingQuests || []; // المهام اللي قيد المراجعة
+      let pendingQuests = userData?.pendingQuests || []; 
       const now = new Date();
       let activeQuestsCount = 0;
 
@@ -195,12 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const isClaimed = claimedQuests.includes(questId);
         const isPending = pendingQuests.includes(questId);
         
-        // زرار حذف المهمة (للأدمن فقط)
         const deleteBtnHTML = isCurrentUserAdmin ? `
           <button class="delete-news-btn delete-quest-btn" data-id="${questId}" title="حذف المهمة"><i class="fa-solid fa-trash-can"></i></button>
         ` : '';
 
-        // تحديد شكل زرار المهمة
         let btnHTML = '';
         if (isClaimed) {
           btnHTML = `<button class="btn-primary" disabled style="background: rgba(255,255,255,0.1); color: var(--text-muted);"><i class="fa-solid fa-check-double"></i> مكتملة</button>`;
@@ -220,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const questCard = document.createElement('div');
-        questCard.className = 'glass-card quest-card news-card'; // أضفنا news-card عشان زر الحذف يظهر صح
+        questCard.className = 'glass-card quest-card news-card'; 
         questCard.innerHTML = `
           ${deleteBtnHTML}
           <div class="quest-info" style="flex: 1; width: 100%;">
@@ -248,13 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (homeQuestsContainer) homeQuestsContainer.innerHTML = '<p class="text-muted" style="font-size: 0.85rem;">لا توجد مهام عاجلة.</p>';
       }
 
-      // تفعيل برمجة الأزرار
       bindQuestButtons(user);
     });
   }
 
   function bindQuestButtons(user) {
-    // 1. إظهار مربع الدليل
     document.querySelectorAll('.claim-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         if (!user) return showToast('يجب تسجيل الدخول لاستلام المهام!', 'fa-solid fa-lock');
@@ -264,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 2. إخفاء مربع الدليل (إلغاء)
     document.querySelectorAll('.btn-cancel-proof').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const qId = e.currentTarget.getAttribute('data-id');
@@ -273,7 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 3. إرسال الدليل للنقيب
     document.querySelectorAll('.btn-submit-proof').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const qId = e.currentTarget.getAttribute('data-id');
@@ -287,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
         targetBtn.disabled = true; targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
         try {
-          // إضافة الطلب لصندوق النقيب
           await addDoc(collection(db, 'quest_requests'), {
             userId: user.uid,
             userName: myCurrentUsername,
@@ -299,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
             createdAt: serverTimestamp()
           });
 
-          // إضافة المهمة لقائمة "قيد المراجعة" للعضو
           await updateDoc(doc(db, 'users', user.uid), {
             pendingQuests: arrayUnion(qId)
           });
@@ -313,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 4. حذف المهمة (للأدمن)
     if (isCurrentUserAdmin) {
       document.querySelectorAll('.delete-quest-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -325,6 +314,147 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     }
+  }
+
+  // ==========================================
+  // === 📜 نظام المخطوطات (مراجعات الأنمي) ===
+  // ==========================================
+  const reviewsContainer = document.getElementById('reviews-container');
+  const reviewsCol = collection(db, "reviews");
+
+  const btnShowEditor = document.getElementById('btn-show-editor');
+  const manuscriptEditor = document.getElementById('manuscript-editor');
+  const btnCancelEditor = document.getElementById('btn-cancel-editor');
+  const btnPublishReview = document.getElementById('btn-publish-review');
+
+  if (btnShowEditor) {
+    btnShowEditor.addEventListener('click', () => {
+      const user = auth.currentUser;
+      if (!user) return showToast('يجب إيقاظ سحرك (تسجيل الدخول) لكتابة مخطوطة!', 'fa-solid fa-lock');
+      btnShowEditor.style.display = 'none';
+      manuscriptEditor.style.display = 'block';
+    });
+  }
+
+  if (btnCancelEditor) {
+    btnCancelEditor.addEventListener('click', () => {
+      manuscriptEditor.style.display = 'none';
+      btnShowEditor.style.display = 'block';
+    });
+  }
+
+  if (btnPublishReview) {
+    btnPublishReview.addEventListener('click', async () => {
+      const title = document.getElementById('review-title').value.trim();
+      const cover = document.getElementById('review-cover').value.trim();
+      const category = document.getElementById('review-category').value;
+      const content = document.getElementById('review-content').value.trim();
+      const user = auth.currentUser;
+
+      if (!title || !content) return showToast('لا يمكنك نشر مخطوطة فارغة أو بدون عنوان!', 'fa-solid fa-triangle-exclamation');
+
+      btnPublishReview.disabled = true;
+      btnPublishReview.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التدوين...';
+
+      try {
+        await addDoc(reviewsCol, {
+          title: title,
+          coverUrl: cover || 'https://images.unsplash.com/photo-1618336753974-aae8e04506aa?q=80&w=800&auto=format&fit=crop', 
+          category: category,
+          content: content,
+          authorId: user.uid,
+          authorName: myCurrentUsername,
+          authorAvatar: myCurrentAvatar,
+          createdAt: serverTimestamp()
+        });
+
+        // مكافأة الكاتب (إعطاء 15 نجمة)
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          const newStars = (userData.stars || 0) + 15;
+          const newLevel = Math.floor(newStars / 50);
+          await updateDoc(userRef, { stars: newStars, level: newLevel });
+        }
+
+        showToast('تم تخليد مخطوطتك بنجاح! كسبت 15 نجمة 🌟', 'fa-solid fa-book-open-reader');
+        
+        document.getElementById('review-title').value = '';
+        document.getElementById('review-cover').value = '';
+        document.getElementById('review-content').value = '';
+        manuscriptEditor.style.display = 'none';
+        btnShowEditor.style.display = 'block';
+
+      } catch (error) {
+        console.error(error);
+        showToast('حدث خلل سحري أثناء النشر!', 'fa-solid fa-bug');
+      } finally {
+        btnPublishReview.disabled = false;
+        btnPublishReview.innerHTML = '<i class="fa-solid fa-paper-plane"></i> نشر المخطوطة (+15 نجمة)';
+      }
+    });
+  }
+
+  function initReviews() {
+    if (!reviewsContainer) return;
+    const q = query(reviewsCol, orderBy("createdAt", "desc"));
+    
+    onSnapshot(q, (snapshot) => {
+      reviewsContainer.innerHTML = '';
+      if (snapshot.empty) {
+        reviewsContainer.innerHTML = '<p class="text-muted text-center" style="margin-top: 30px;">المكتبة فارغة حالياً. كن أنت أول حكيم يكتب مخطوطة! 🪶</p>';
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const review = docSnap.data();
+        const reviewId = docSnap.id;
+        
+        let timeString = 'الآن';
+        if (review.createdAt) {
+          const d = review.createdAt.toDate();
+          timeString = d.toLocaleDateString('ar-EG');
+        }
+
+        const deleteBtnHTML = isCurrentUserAdmin ? `
+          <button class="delete-news-btn delete-review-btn" data-id="${reviewId}" title="حرق المخطوطة"><i class="fa-solid fa-fire"></i></button>
+        ` : '';
+
+        const card = document.createElement('div');
+        card.className = 'glass-card review-card news-card';
+        card.innerHTML = `
+          ${deleteBtnHTML}
+          <img src="${review.coverUrl}" class="review-cover" alt="Cover" onerror="this.src='https://images.unsplash.com/photo-1618336753974-aae8e04506aa?q=80&w=800&auto=format&fit=crop'">
+          <div class="review-body">
+            <h3>${review.title}</h3>
+            <div class="review-content-preview">${review.content}</div>
+            
+            <div class="review-meta">
+              <div class="review-author">
+                <img src="${review.authorAvatar}" onerror="this.src='https://via.placeholder.com/30?text=?'">
+                <span>${review.authorName}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">• ${timeString}</span>
+              </div>
+              <span class="review-category">${review.category}</span>
+            </div>
+          </div>
+        `;
+        reviewsContainer.appendChild(card);
+      });
+
+      if (isCurrentUserAdmin) {
+        document.querySelectorAll('.delete-review-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const rId = e.currentTarget.getAttribute('data-id');
+            if (confirm('هل أنت متأكد من إحراق هذه المخطوطة نهائياً؟ 🔥')) {
+              try { await deleteDoc(doc(db, "reviews", rId)); showToast('تم حرق المخطوطة!', 'fa-solid fa-fire'); } 
+              catch (error) { showToast('فشل الحذف!', 'fa-solid fa-circle-xmark'); }
+            }
+          });
+        });
+      }
+    });
   }
 
   // ==========================================
@@ -480,36 +610,32 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateDoc(userRef, { isAdmin: true });
       }
 
-      // 🌟 تشغيل المراقبة الحية لحساب العضو 🌟
-      if (userDocListener) userDocListener(); // مسح المراقبة القديمة إن وجدت
+      if (userDocListener) userDocListener(); 
       
       userDocListener = onSnapshot(userRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const userData = docSnapshot.data();
           
-          // تحديث الواجهة والمهام تلقائياً لو حصل أي تغيير في حسابه
           updateUI(user, userData); 
           checkDailyQuestStatus(userData); 
           initQuests(user, userData); 
           initNews();
 
-          // 🔔 نظام استلام الإشعارات من النقيب
           if (userData.notifications && userData.notifications.length > 0) {
             userData.notifications.forEach(msg => {
               if (msg.includes('رفض')) {
-                showToast(msg, 'fa-solid fa-circle-xmark'); // إشعار أحمر للرفض
+                showToast(msg, 'fa-solid fa-circle-xmark');
               } else {
-                showToast(msg, 'fa-solid fa-gift'); // إشعار هدية للقبول
+                showToast(msg, 'fa-solid fa-gift');
               }
             });
-            // مسح الإشعارات بعد قراءتها عشان متظهرش تاني
             updateDoc(userRef, { notifications: [] });
           }
         }
       });
 
     } else {
-      if (userDocListener) userDocListener(); // إيقاف المراقبة عند تسجيل الخروج
+      if (userDocListener) userDocListener(); 
       updateUI(null); 
       checkDailyQuestStatus(null);
       initQuests(null, null);
@@ -621,4 +747,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // تشغيل الوظائف الأساسية
   initChat(); 
+  initReviews(); // 👈 تفعيل استدعاء المخطوطات
 });
