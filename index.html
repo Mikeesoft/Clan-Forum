@@ -9,32 +9,26 @@
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <div id="auth-screen" class="screen active">
         <div class="glass-panel">
             <h1 class="logo">DeFi Program</h1>
-            <p class="subtitle" style="margin-bottom: 20px;">مرحباً بك في مجتمع المطورين</p>
+            <p class="subtitle" style="margin-bottom: 20px;">مجتمع المطورين</p>
             
             <div id="login-form" class="auth-box active-auth">
                 <input type="email" id="login-email" placeholder="البريد الإلكتروني" required>
                 <input type="password" id="login-password" placeholder="كلمة المرور" required>
                 <button class="primary-btn" onclick="login()">تسجيل الدخول</button>
                 <p class="switch-auth">ليس لديك حساب؟ <span onclick="toggleAuth('register-form')">إنشاء حساب</span></p>
-                <p class="forgot-pass" onclick="toggleAuth('reset-form')">نسيت كلمة المرور؟</p>
             </div>
 
             <div id="register-form" class="auth-box hidden-auth">
                 <input type="text" id="reg-name" placeholder="الاسم" required>
                 <input type="email" id="reg-email" placeholder="البريد الإلكتروني" required>
                 <input type="password" id="reg-password" placeholder="كلمة المرور" required>
-                <button class="primary-btn">إنشاء حساب</button>
+                <button class="primary-btn" id="btn-register">إنشاء حساب</button>
                 <p class="switch-auth">لديك حساب بالفعل؟ <span onclick="toggleAuth('login-form')">تسجيل الدخول</span></p>
-            </div>
-
-            <div id="reset-form" class="auth-box hidden-auth">
-                <p style="font-size: 14px; margin-bottom: 15px; color: #cbd5e1;">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.</p>
-                <input type="email" id="reset-email" placeholder="البريد الإلكتروني" required>
-                <button class="primary-btn">إرسال الرابط</button>
-                <p class="switch-auth">تذكرت كلمة المرور؟ <span onclick="toggleAuth('login-form')">رجوع للدخول</span></p>
             </div>
         </div>
     </div>
@@ -42,93 +36,22 @@
     <div id="app-screen" class="screen hidden">
         
         <main id="content-area">
-            
-            <div id="forum-view" class="view active">
-                <h2 style="padding: 20px; text-align: center;">المنتدى (الصفحة الرئيسية)</h2>
-                </div>
-            
-            <div id="workspace-view" class="view hidden">
-                <h2 style="padding: 20px; text-align: center;">مساحة الأكواد</h2>
-            </div>
-
-            <div id="challenges-view" class="view hidden">
-                <h2 style="padding: 20px; text-align: center;">ساحة التحديات</h2>
-            </div>
-
-            <div id="profile-view" class="view hidden">
-                <div class="profile-header">
-                    <div class="cover-photo">
-                        <div class="settings-icon" onclick="openSettings()">
-                            <i class="fa-solid fa-gear"></i>
-                        </div>
-                    </div>
-                    <div class="avatar-container">
-                        <img src="https://via.placeholder.com/100" alt="Avatar" class="avatar-img">
-                    </div>
-                </div>
-
-                <div class="profile-info">
-                    <h2 class="user-title">
-                        <span id="user-display-name">جاري التحميل...</span>
-                        <span id="user-display-username" class="hidden">@...</span>
-                        <i class="fa-solid fa-repeat switch-icon" onclick="toggleName()"></i>
-                    </h2>
-                    
-                    <div class="stats-glass" style="margin-top: 15px;">
-                        <div class="stat-box">
-                            <span class="stat-value">∞</span>
-                            <span class="stat-label">الرصيد</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="stat-value">0</span>
-                            <span class="stat-label">يتابع</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="stat-value">0</span>
-                            <span class="stat-label">متابع</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="overlay" onclick="closeSettings()"></div>
-                <div id="settings-sheet" class="bottom-sheet glass-panel">
-                    <div class="sheet-handle"></div>
-                    <h3 style="margin-bottom: 20px; text-align: center;">الإعدادات</h3>
-                    
-                    <div class="setting-item" onclick="toggleTheme()">
-                        <span>المظهر (ليلي/نهاري)</span>
-                        <i class="fa-solid fa-sun"></i>
-                    </div>
-                    <div class="setting-item">
-                        <span style="font-size: 12px; color: #94a3b8;" id="settings-email">البريد الإلكتروني</span>
-                        <i class="fa-solid fa-envelope"></i>
-                    </div>
-                    <div class="setting-item text-danger">
-                        <span>تسجيل الخروج</span>
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    </div>
-                </div>
-            </div>
-        </main>
+            </main>
 
         <nav class="bottom-nav floating-nav">
-            <div class="nav-item" onclick="switchTab('profile')">
+            <div class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
                 <i class="fa-solid fa-user"></i>
             </div>
-            <div class="nav-item" onclick="switchTab('workspace')">
+            <div class="nav-item" id="nav-workspace" onclick="switchTab('workspace', this)">
                 <i class="fa-solid fa-code"></i>
             </div>
-            
-            <div class="nav-item center-add" onclick="alert('سيتم برمجة إضافة منشور لاحقاً')">
-                <div class="add-btn">
-                    <i class="fa-solid fa-plus"></i>
-                </div>
+            <div class="nav-item center-add" onclick="showToast('سيتم إضافة المنشورات قريباً', 'info')">
+                <div class="add-btn"><i class="fa-solid fa-plus"></i></div>
             </div>
-
-            <div class="nav-item" onclick="switchTab('challenges')">
+            <div class="nav-item" id="nav-challenges" onclick="switchTab('challenges', this)">
                 <i class="fa-solid fa-trophy"></i>
             </div>
-            <div class="nav-item active" onclick="switchTab('forum')">
+            <div class="nav-item active" id="nav-forum" onclick="switchTab('forum', this)">
                 <i class="fa-solid fa-comments"></i>
             </div>
         </nav>
