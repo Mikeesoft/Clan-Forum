@@ -330,3 +330,55 @@ body.light-theme {
     color: var(--primary-color);
     font-size: 2rem;
 }
+/* ============ إضافات البروفايل (أزرار التعديل) ============ */
+.glass-btn {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+.glass-btn:active { transform: scale(0.9); }
+
+.cover-photo {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden; /* يمنع تأثير التظليل من الخروج عن الحواف */
+}
+
+/* تأثير التظليل والكاميرا عند الضغط على الغلاف */
+.edit-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; transition: opacity 0.3s;
+    font-size: 30px; color: white;
+    z-index: 1;
+}
+.cover-photo:active .edit-overlay { opacity: 1; }
+
+.avatar-container {
+    position: absolute;
+    bottom: -40px; /* لضبط المسافة بعد تكبير الصورة */
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* أيقونة الكاميرا على الصورة الشخصية */
+.edit-avatar {
+    position: absolute;
+    bottom: 5px; right: 0;
+    background: var(--primary-color);
+    color: white;
+    width: 35px; height: 35px;
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    border: 3px solid var(--bg-color);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.2s;
+}
+.avatar-container:active .edit-avatar { transform: scale(0.9); }
