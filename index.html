@@ -4,17 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DeFi Program</title>
+    
     <link rel="stylesheet" href="style.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class' // لتفعيل الوضع الليلي بناءً على طلبك
+        }
+    </script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    </head>
+<body class="bg-[#0f172a] text-slate-100">
 
     <div id="toast-container"></div>
 
-    <div id="auth-screen" class="screen active">
+    <div id="auth-screen" class="screen active flex justify-center items-center h-full">
         <div class="glass-panel">
-            <h1 class="logo">DeFi Program</h1>
-            <p class="subtitle" style="margin-bottom: 20px;">مجتمع المطورين</p>
+            <h1 class="logo text-2xl font-black mb-2">DeFi Program</h1>
+            <p class="subtitle text-sm text-slate-400" style="margin-bottom: 20px;">مجتمع المطورين</p>
             
             <div id="login-form" class="auth-box active-auth">
                 <input type="email" id="login-email" placeholder="البريد الإلكتروني" required>
@@ -38,16 +49,18 @@
         <main id="content-area">
             </main>
 
-        <nav class="bottom-nav floating-nav">
+        <nav class="bottom-nav floating-nav z-[9999]">
             <div class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
                 <i class="fa-solid fa-user"></i>
             </div>
             <div class="nav-item" id="nav-workspace" onclick="switchTab('workspace', this)">
                 <i class="fa-solid fa-code"></i>
             </div>
-            <div class="nav-item center-add" onclick="showToast('سيتم إضافة المنشورات قريباً', 'info')">
+            
+            <div class="nav-item center-add" onclick="showToast('سيتم برمجة الإضافة قريباً', 'info')">
                 <div class="add-btn"><i class="fa-solid fa-plus"></i></div>
             </div>
+
             <div class="nav-item" id="nav-challenges" onclick="switchTab('challenges', this)">
                 <i class="fa-solid fa-trophy"></i>
             </div>
